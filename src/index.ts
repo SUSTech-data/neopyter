@@ -37,10 +37,10 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         return docmanager.createNew(path, widgetName, kernel);
       },
       openFile: (path: string) => {
-        return docmanager.open(path)?.title;
+        return !!docmanager.open(path);
       },
       openOrReveal: (path: string) => {
-        return docmanager.openOrReveal(path);
+        return !!docmanager.openOrReveal(path);
       },
       closeFile: async (path: string) => {
         return await docmanager.closeFile(path);

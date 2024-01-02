@@ -54,7 +54,7 @@ function JupyterLab:_on_bufwinenter(buf)
 
     if notebook:is_exist() then
         if options.jupyter.auto_open_file then
-            notebook:open()
+            -- notebook:open()
         end
         if options.jupyter.auto_activate_file then
             notebook:activate()
