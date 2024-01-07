@@ -20,5 +20,6 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/.ipynb_checkpoints/*'],
   coverageReporters: ['lcov', 'text'],
   testRegex: 'src/.*/.*.spec.ts[x]?$',
+  setupFiles: ['<rootDir>/jest.polyfills.js', ...baseConfig.setupFiles],
   transformIgnorePatterns: [`/node_modules/(?!${esModules}).+`]
 };

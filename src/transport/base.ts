@@ -13,18 +13,4 @@ export abstract class BaseTransport {
   async onNotify(message: NotificationMessage) {
     this.server.dispatchMethod(message);
   }
-
-  // async onRead(data: Uint8Array) {
-  //   const message = deserializeMessage(data);
-  //   switch (message.type) {
-  //     case MessageType.Request:
-  //       await this.onRequest(message);
-  //       break;
-  //     case MessageType.Notification:
-  //       await this.onNotify(message);
-  //       break;
-  //     default:
-  //       throw new RPCError(`Unknown message: ${message}`);
-  //   }
-  // }
 }
