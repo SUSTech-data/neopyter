@@ -40,9 +40,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     if (restorer) {
       restorer.add(sidebar, '@neopyter/graphsidebar');
     }
-    app.restored.then(() => {
-      // sidebar.notebookPanelChanged();
-    });
 
     const settings = ServerConnection.makeSettings();
     const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
@@ -81,6 +78,9 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       echo: (message: string) => {
         const msg = `hello: ${message}`;
         return msg;
+      },
+      executeCommand: async (command: string) => {
+        await app.commands.execute(command);
       }
     };
     const docmanagerDispatcher = {
@@ -189,7 +189,16 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       save: async (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
         const context = docmanager.contextForWidget(notebookPanel);
-        await context!.save();
+        return await context?.save();
+      },
+      runSelectedCell: async (path: string) => {
+        return await app.commands.execute('notebook:run-cell');
+      },
+      runAllAbove: async (path: string) => {
+        return await app.commands.execute('notebook:run-all-above');
+      },
+      runAllBelow: async (path: string) => {
+        return await app.commands.execute('notebook:run-all-below');
       }
     };
     const cellDispatcher = {

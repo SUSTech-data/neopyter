@@ -1,8 +1,13 @@
+local a = require("plenary.async")
+local utils = require("neopyter.utils")
+local uv = a.uv
+local api = a.api
+
 ---@class neopyter.Notebook
 ---@field private client neopyter.RpcClient
 ---@field bufnr number
----@field local_path string realative path
----@field private cellslines string[][]
+---@field local_path string relative path
+---@field private cells_lines string[][]
 ---@field private active_cell_index number
 local Notebook = {
     bufnr = -1,
@@ -33,12 +38,12 @@ end
 
 function Notebook:_attach_event()
     local augroup = vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", self.bufnr), { clear = true })
-    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
         buffer = self.bufnr,
         callback = function()
             local row, col = self:get_cursor_pos()
             local line_count = 0
-            for index, cell_lines in ipairs(self.cellslines) do
+            for index, cell_lines in ipairs(self.cells_lines) do
                 line_count = line_count + #cell_lines
                 if line_count >= row then
                     local active_index = index - 1
@@ -54,7 +59,7 @@ function Notebook:_attach_event()
         group = augroup,
     })
 
-    vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+    utils.nvim_create_autocmd({ "ModeChanged" }, {
         buffer = self.bufnr,
         callback = function()
             local old_mode = vim.v.event.old_mode
@@ -65,7 +70,7 @@ function Notebook:_attach_event()
         group = augroup,
     })
 
-    vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+    utils.nvim_create_autocmd({ "BufWritePre" }, {
         buffer = self.bufnr,
         callback = function()
             self:save()
@@ -73,7 +78,7 @@ function Notebook:_attach_event()
         group = augroup,
     })
 
-    vim.api.nvim_create_autocmd({ "BufUnload" }, {
+    api.nvim_create_autocmd({ "BufUnload" }, {
         buffer = self.bufnr,
         callback = function()
             -- TODO:close notebook, and select previous?
@@ -81,11 +86,13 @@ function Notebook:_attach_event()
         group = augroup,
     })
 
-    vim.api.nvim_buf_attach(self.bufnr, false, {
+    api.nvim_buf_attach(self.bufnr, false, {
         on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
-            -- TODO:particl update
-            self:parse()
-            self:full_sync()
+            a.run(function()
+                -- TODO:particle update
+                self:parse()
+                self:full_sync()
+            end, function() end)
         end,
     })
 end
@@ -94,7 +101,7 @@ function Notebook:_request(method, ...)
     return self.client:request(method, self:remote_path(), ...)
 end
 
----is exist corresponding notebok in remote server
+---is exist corresponding notebook in remote server
 function Notebook:is_exist()
     return self:_request("isFileExist")
 end
@@ -142,7 +149,7 @@ function Notebook:get_active_cell() end
 
 function Notebook:full_sync()
     local cells = {}
-    for i, cell_lines in ipairs(self.cellslines) do
+    for i, cell_lines in ipairs(self.cells_lines) do
         if type(cell_lines[1]) == "string" and cell_lines[1]:match("# %%") then
             cells[i] = {
                 source = table.concat(cell_lines, "\n", 2),
@@ -159,8 +166,22 @@ function Notebook:full_sync()
     self:_request("syncCells", 0, cells)
 end
 
+---save ipynb, same as `Ctrl+S` on jupyter lab
+---@return boolean
 function Notebook:save()
-    self:_request("save")
+    return self:_request("save")
+end
+
+function Notebook:run_selected_cell()
+    return self:_request("runSelectedCell")
+end
+
+function Notebook:run_all_above()
+    return self:_request("runAllAbove")
+end
+
+function Notebook:run_all_below()
+    return self:_request("runAllBelow")
 end
 
 function Notebook:parse()
@@ -172,7 +193,7 @@ function Notebook:parse()
         end
         table.insert(cellslines[#cellslines], line)
     end
-    self.cellslines = cellslines
+    self.cells_lines = cellslines
 end
 
 return Notebook

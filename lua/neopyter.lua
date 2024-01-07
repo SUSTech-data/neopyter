@@ -2,10 +2,14 @@ local highlight = require("neopyter.highlight")
 local utils = require("neopyter.utils")
 local manager = require("neopyter.manager")
 
+
 ---@class neopyter.Option
 ---@field remote_address string
 ---@field file_pattern string[]
 ---@field auto_attach boolean
+---@field rpc_client 
+---| "'async'" # AsyncRpcClient, default
+---| "'block'" # BlockRpcClient
 ---@field filename_mapper fun(ju_path:string):string
 ---@field jupyter neopyter.JupyterOption
 ---@field highlight neopyter.HighlightOption
@@ -23,6 +27,7 @@ M.config = {
 
     --  Automatically attach to the Noepyter server when open file_pattern matched files
     auto_attach = true,
+    rpc_client = "async",
     jupyter = {
         auto_activate_file = true,
         -- Always scroll to the current cell.

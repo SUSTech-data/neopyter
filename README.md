@@ -42,30 +42,45 @@ With 💤lazy.nvim:
 
 ## Quick Start
 
-- Open JupyterLab `jupyter lab`, there is a sidepane named `Neopyter`, which diplay neopyter ip+port
+- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
 - Open a `*.ju.py` file in neovim
 - [Optional] if `auto_attach` is `false`, you can connect jupyterlab manually via `:Neopyter connect 127.0.0.1:9001`
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
+
+### API
+
+`Neopyter` provides rich lua APIs
+
+- Run Cell
+  - `:Neopyter run current` <-> `require("neopyter.jupyter").notebook.run_selected_cell()`
+  - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook.run_all_above()`
+  - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook.run_all_below()`
+
 
 ## Features
 
 - Notebook
   - [x] Full sync
   - [ ] Partial sync: need diff utility
-  - [x] Scoll view automatically
+  - [x] Scroll view automatically
   - [x] Activate cell automatically
   - [x] Save notebook automatically
+  - Run cell
+    - [x] Run selected cell
+    - [x] Run all above selected cell
+    - [x] Run selected cell and all below
+    - [ ] Run all cell
 - Jupyter Lab
   - Notebook manager
     - [x] Open corresponding notebook if exists
     - [x] Sync with untitled notebook default
-    - [ ] Close notebook when buf unload
-  - Status SidePanel
+    - [ ] Close notebook when buffer unload
+  - Status [Sidebar](https://jupyterlab.readthedocs.io/en/stable/user/interface.html#left-and-right-sidebar)
     - [x] Display `ip:port`
     - [ ] Display client info
 - Performance
-  - [ ] Use [promise-async](https://github.com/kevinhwang91/promise-async) and `luv` rewrite RpcClient, replace
+  - [x]  Rewrite `RpcClient`, support async rpc request
         `vim.rpcrequest` and `vim.rpcnotify`
 
 ## Acknowledges
@@ -78,7 +93,7 @@ With 💤lazy.nvim:
 
 #### Development install
 
-Note: You will need NodeJS to build the extension package. Recommend use `pnpm`
+Note: You will need `NodeJS` to build the extension package. Recommend use `pnpm`
 
 ```bash
 # Clone the repo to your local environment

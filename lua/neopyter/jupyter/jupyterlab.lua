@@ -1,6 +1,8 @@
-local RpcClient = require("neopyter.jupyter.rpc_client")
+local rpc = require("neopyter.rpc")
 local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
+local a = require("plenary.async")
+local api = a.api
 
 ---@class neopyter.JupyterOption
 ---@field auto_activate_file boolean
@@ -13,19 +15,30 @@ local JupyterLab = {}
 ---@class neopyter.NewJupyterLabOption
 ---@field address string
 
----create RpcCLient and connect
+---create RpcClient and connect
 ---@param opts neopyter.NewJupyterLabOption
 ---@return neopyter.JupyterLab
-function JupyterLab:create(opts)
+function JupyterLab:new(opts)
     local o = {}
     self.__index = self
     setmetatable(o, self)
 
-    o.client = RpcClient:create({
+    local config = require("neopyter").config
+    local RpcClient
+    if config.rpc_client == "block" then
+        RpcClient = rpc.BlockRpcClient
+    else
+        RpcClient = rpc.AsyncRpcClient
+    end
+    o.client = RpcClient:new({
         address = opts.address,
     })
     self.notebook_map = {}
     return o
+end
+
+function JupyterLab:attach()
+    self.client:connect()
 end
 
 ---get or create notebook from *.ju.* path (global), if not exists, create with buf
@@ -51,7 +64,7 @@ end
 ---called when `BufWinEnter`
 ---@param buf number
 function JupyterLab:_on_bufwinenter(buf)
-    local file_path = vim.api.nvim_buf_get_name(buf)
+    local file_path = api.nvim_buf_get_name(buf)
     local notebook = self:get_notebok(file_path, buf)
     local jupyter = require("neopyter.jupyter")
     jupyter.notebook = notebook

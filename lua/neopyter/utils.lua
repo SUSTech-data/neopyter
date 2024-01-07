@@ -1,4 +1,5 @@
 local Path = require("plenary.path")
+local a = require("plenary.async")
 local M = {}
 
 function M.string_begins_with(str, start)
@@ -109,6 +110,23 @@ end
 
 function M.is_absolute(file_path)
     return Path:new(file_path):is_absolute()
+end
+
+---same with nvim.api.nvim_create_autocmd
+---@param event any
+---@param opts any
+---@see vim.api.nvim_create_autocmd
+function M.nvim_create_autocmd(event, opts)
+    if opts ~= nil and type(opts.callback) == "function" then
+        local old_callback = opts.callback
+        opts.callback = function(...)
+            local args = { ... }
+            a.run(function()
+                old_callback(unpack(args))
+            end, function() end)
+        end
+    end
+    vim.api.nvim_create_autocmd(event, opts)
 end
 
 return M

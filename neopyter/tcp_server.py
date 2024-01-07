@@ -2,7 +2,7 @@ import socket
 from typing import Optional, Sequence
 import asyncio
 from asyncio import StreamReader, StreamWriter, Server
-from .msgpack_queue import labextension_queue, client_queue
+from .msgpack_queue import clear_queue, labextension_queue, client_queue
 
 
 async def check_port(host, port):
@@ -69,11 +69,12 @@ class TcpServer(object):
             await writer.wait_closed()
             return
         print("New client connected ")
+        await clear_queue()
         await asyncio.gather(
             asyncio.create_task(self.start_reader_loop(reader, writer)),
             asyncio.create_task(self.start_writer_loop(writer)),
         )
-        print("Client disconnected, clear queue")
+        print("Client disconnected")
 
     async def start_reader_loop(self, reader: StreamReader, writer: StreamWriter):
         print("Client reader loop start")

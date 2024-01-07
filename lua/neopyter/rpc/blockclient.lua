@@ -1,45 +1,45 @@
 local utils = require("neopyter.utils")
+local RpcClient = require("neopyter.rpc.baseclient")
 
----@class neopyter.RpcClient
----@field address string
+---@class neopyter.BlockRpcClient:neopyter.RpcClient
 ---@field channel_id number # 0 means not connect
-local RpcClient = {
-    address = "localhost:8889",
+local BlockRpcClient = RpcClient:new({
     channel_id = 0,
-}
+}) --[[@as neopyter.BlockRpcClient]]
 
----@class neopyter.NewRpcClientOption
----@field address string
 
----create RpcCLient and connect
----@param o neopyter.NewRpcClientOption
----@return neopyter.RpcClient|nil
-function RpcClient:create(o)
-    self.__index = self
-    setmetatable(o, self)
+-- ---create RpcClient and connect
+-- ---@param o neopyter.NewRpcClientOption
+-- ---@return neopyter.BlockRpcClient
+-- function BlockRpcClient:new(o)
+--     o = o or {}
+--     setmetatable(o, self)
+--     self.__index = self
+--     return o
+-- end
 
-    local status, res = pcall(vim.fn.sockconnect, "tcp", o.address, {
+function BlockRpcClient:connect()
+    local status, res = pcall(vim.fn.sockconnect, "tcp", self.address, {
         rpc = true,
     })
     if not status then
         utils.notify_error("RPC connect failed, with error: " .. res)
     else
-        o.channel_id = res
-        return o --[[@as neopyter.RpcClient]]
+        self.channel_id = res
     end
 end
 
 ---check client is connecting
 ---@return boolean
-function RpcClient:is_connecting()
+function BlockRpcClient:is_connecting()
     return self.channel_id ~= 0
 end
 
 ---send request to server
 ---@param method string
----@param ... unknown
+---@param ... unknown # name
 ---@return unknown|nil
-function RpcClient:request(method, ...)
+function BlockRpcClient:request(method, ...)
     if not self:is_connecting() then
         utils.notify_error("RPC channel not be initialized, please check jupyter lab server or restart connection")
         return
@@ -53,7 +53,7 @@ function RpcClient:request(method, ...)
     end
 end
 
-function RpcClient:notify(event, ...)
+function BlockRpcClient:notify(event, ...)
     if not self:is_connecting() then
         utils.notify_error("RPC channel not be initialized, please check jupyter lab server or restart connection")
         return
@@ -67,8 +67,8 @@ function RpcClient:notify(event, ...)
     end
 end
 
-function RpcClient:close()
+function BlockRpcClient:close()
     vim.fn.chanclose(self.channel_id)
 end
 
-return RpcClient
+return BlockRpcClient
