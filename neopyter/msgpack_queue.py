@@ -1,4 +1,3 @@
-
 from tornado.queues import Queue
 # from asyncio.queues import Queue
 
@@ -9,9 +8,8 @@ labextension_queue = Queue()
 client_queue = Queue()
 
 
-def clear_queue():
-    while labextension_queue.qsize()> 0:
-        labextension_queue.get()
-    while client_queue.qsize()> 0:
-        client_queue.get()
-
+async def clear_queue():
+    while labextension_queue.qsize() > 0:
+        await labextension_queue.get()
+    while client_queue.qsize() > 0:
+        await client_queue.get()

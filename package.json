@@ -33,7 +33,7 @@
         "build:prod": "pnpm clean && pnpm build:lib:prod && pnpm build:labextension",
         "build:labextension": "jupyter labextension build .",
         "build:labextension:dev": "jupyter labextension build --development True .",
-        "build:lib": "tsc --sourceMap",
+        "build:lib": "tsc",
         "build:lib:prod": "tsc",
         "clean": "pnpm clean:lib",
         "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
@@ -52,7 +52,7 @@
         "stylelint:check": "stylelint --cache \"style/**/*.css\"",
         "test": "jest --coverage",
         "watch": "run-p watch:src watch:labextension",
-        "watch:src": "tsc -w --sourceMap",
+        "watch:src": "tsc -w --strict false --sourceMap",
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
@@ -60,7 +60,8 @@
         "@jupyterlab/apputils": "^4.1.4",
         "@jupyterlab/logconsole": "^4.0.4",
         "@jupyterlab/notebook": "^4.0.4",
-        "@lumino/widgets": "^2.3.0"
+        "@lumino/widgets": "^2.3.0",
+        "remeda": "^1.33.0"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
@@ -68,6 +69,7 @@
         "@jupyterlab/docmanager": "^4.0.9",
         "@jupyterlab/services": "^7.0.9",
         "@jupyterlab/testutils": "^4.0.0",
+        "@jupyterlab/ui-components": "^4.0.10",
         "@lumino/disposable": "^2.1.2",
         "@msgpack/msgpack": "3.0.0-beta2",
         "@types/jest": "^29.2.0",

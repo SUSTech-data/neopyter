@@ -50,7 +50,6 @@ export function deserializeMessage(data: Uint8Array): Message {
 }
 
 export function serializeMessage(message: Message): Uint8Array {
-  console.log(message);
   if (message.type === MessageType.Request) {
     return encode([message.type, message.msgid, message.method, message.params]);
   } else if (message.type === MessageType.Response) {

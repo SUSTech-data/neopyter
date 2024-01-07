@@ -30,7 +30,6 @@ export class RpcServer {
     }
     try {
       const result = await this.dispatcher[message.method](...message.params);
-      console.log(`dispatch msg ${result}`);
       if (message.type === MessageType.Request && responseFn) {
         responseFn({
           type: MessageType.Response,
@@ -39,6 +38,7 @@ export class RpcServer {
         });
       }
     } catch (error: unknown) {
+      console.error(error);
       if (message.type === MessageType.Request && responseFn) {
         responseFn({
           type: MessageType.Response,

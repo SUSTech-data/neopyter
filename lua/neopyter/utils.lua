@@ -61,25 +61,41 @@ end
 ---emit info notify via vim.notify
 ---@param msg string
 function M.notify_info(msg)
-    vim.notify(msg, vim.log.levels.INFO, {
-        title = "Neopyter",
-    })
+    vim.schedule(function()
+        vim.notify(msg, vim.log.levels.INFO, {
+            title = "Neopyter",
+        })
+    end)
 end
 
 ---emit debug notify via vim.notify
 ---@param msg string
 function M.notify_debug(msg)
-    vim.notify(msg, vim.log.levels.DEBUG, {
-        title = "Neopyter",
-    })
+    vim.schedule(function()
+        vim.notify(msg, vim.log.levels.DEBUG, {
+            title = "Neopyter",
+        })
+    end)
+end
+
+---emit warning notify via vim.notify
+---@param msg string
+function M.notify_warn(msg)
+    vim.schedule(function()
+        vim.notify(msg, vim.log.levels.WARN, {
+            title = "Neopyter",
+        })
+    end)
 end
 
 ---emit error notify via vim.notify
 ---@param msg string
 function M.notify_error(msg)
-    vim.notify(msg, vim.log.levels.ERROR, {
-        title = "Neopyter",
-    })
+    vim.schedule(function()
+        vim.notify(msg, vim.log.levels.ERROR, {
+            title = "Neopyter",
+        })
+    end)
 end
 
 ---get realtive path

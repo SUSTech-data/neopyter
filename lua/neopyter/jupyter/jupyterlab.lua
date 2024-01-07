@@ -1,7 +1,9 @@
 local RpcClient = require("neopyter.jupyter.rpc_client")
 local Notebook = require("neopyter.jupyter.notebook")
-local options = require("neopyter.options")
 local utils = require("neopyter.utils")
+
+---@class neopyter.JupyterOption
+---@field auto_activate_file boolean
 
 ---@class neopyter.JupyterLab
 ---@field private client neopyter.RpcClient|nil
@@ -51,16 +53,11 @@ end
 function JupyterLab:_on_bufwinenter(buf)
     local file_path = vim.api.nvim_buf_get_name(buf)
     local notebook = self:get_notebok(file_path, buf)
+    local jupyter = require("neopyter.jupyter")
+    jupyter.notebook = notebook
 
     if notebook:is_exist() then
-        if options.jupyter.auto_open_file then
-            -- notebook:open()
-        end
-        if options.jupyter.auto_activate_file then
-            notebook:activate()
-        end
-    elseif options.jupyter.auto_new_file then
-        notebook:create_new()
+        notebook:activate()
     end
 end
 

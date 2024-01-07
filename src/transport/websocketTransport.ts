@@ -25,7 +25,7 @@ export class WebsocketTransport extends BaseTransport {
     this.websocket.binaryType = 'arraybuffer';
     this.readableStream = new ReadableStream({
       start: controller => {
-        console.log('start');
+        // console.log('start');
         this.websocket.addEventListener('open', event => {
           this.onOpen(event);
         });
@@ -46,7 +46,7 @@ export class WebsocketTransport extends BaseTransport {
     });
     setTimeout(async () => {
       for await (const message of deserializeStream(this.readableStream)) {
-        console.log(message);
+        // console.log(message);
         this.onRead(message);
       }
     }, 0);

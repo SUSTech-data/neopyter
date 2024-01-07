@@ -18,7 +18,7 @@ function RpcClient:create(o)
     self.__index = self
     setmetatable(o, self)
 
-    local status, res = pcall(vim.fn.sockconnect, "tcp", self.address, {
+    local status, res = pcall(vim.fn.sockconnect, "tcp", o.address, {
         rpc = true,
     })
     if not status then
