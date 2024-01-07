@@ -33,7 +33,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension noejupy is activated!');
 
     const sidebar = new StatusSidePanel();
-    sidebar.title.caption = 'Graph';
+    sidebar.title.caption = 'Neopyter';
     sidebar.title.icon = statusPageIcon;
     app.shell.add(sidebar, 'right');
 
