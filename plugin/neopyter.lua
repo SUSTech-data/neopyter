@@ -1,59 +1,99 @@
-local manager = require("neopyter.manager")
 local jupyter = require("neopyter.jupyter")
+local utils = require("neopyter.utils")
 local a = require("plenary.async")
 
-vim.api.nvim_create_user_command("Neopyter", function(opts)
-    local function run(cmds)
-        if #cmds < 1 then
-            vim.ui.select({ "connect", "disconnect" }, { prompt = "Neopyter" }, function(item)
-                if item then
-                    table.insert(cmds, item)
-                    run(cmds)
+local cmds = {
+    connect = {
+        execute = function(address)
+            local status = jupyter.jupyterlab:status()
+            if status ~= "idle" then
+                utils.notify_warn("Jupyter lab is connecting, reset current and connect to " .. address)
+                jupyter.jupyterlab:detach()
+                jupyter.jupyterlab:attach(address)
+            else
+                jupyter.jupyterlab:attach(address)
+            end
+        end,
+    },
+    run = {
+        complete = { "current", "allAbove", "allBelow" },
+        execute = function(mode)
+            if mode == "current" then
+                jupyter.notebook:run_selected_cell()
+            elseif mode == "allAbove" then
+                jupyter.notebook:run_all_above()
+            elseif mode == "allBelow" then
+                jupyter.notebook:run_all_below()
+            end
+        end,
+    },
+    disconnect = {
+        execute = function()
+            jupyter.jupyterlab:detach()
+        end,
+    },
+    sync = {
+        complete = { "current" },
+        execute = function(file_or_current)
+            if jupyter.notebook == nil then
+                utils.notify_error("Current notebook not exist in local")
+                return
+            end
+            if file_or_current == "current" then
+                local path = jupyter.jupyterlab:current_ipynb()
+                if path == nil then
+                    utils.notify_error("Current don't open any ipynb!")
+                    return
                 end
-            end)
-        elseif #cmds == 1 then
-            if cmds[1] == "connect" then
-                vim.ui.input({
-                    prompt = "Neopyter",
-                }, function(input)
-                    if input ~= nil and #input > 0 then
-                        table.insert(cmds, input)
-                        run(cmds)
-                    end
-                end)
-            elseif cmds[1] == "run" then
-                vim.ui.select({ "current", "allAbove", "allBelow" }, { prompt = "Neopyter" }, function(item)
-                    if item then
-                        table.insert(cmds, item)
-                        run(cmds)
-                    end
-                end)
-            elseif cmds[1] == "disconnect" then
-                manager.disconnect()
+                file_or_current = path
             end
-        elseif #cmds == 2 then
-            if cmds[1] == "connect" then
-                a.run(function()
-                    manager.manual_attach(cmds[2])
-                end, function() end)
-            elseif cmds[1] == "run" then
-                a.run(function()
-                    if cmds[2] == "current" then
-                        jupyter.notebook:run_selected_cell()
-                    elseif cmds[2] == "allAbove" then
-                        jupyter.notebook:run_all_above()
-                    elseif cmds[3] == "allBelow" then
-                        jupyter.notebook:run_all_below()
-                    end
-                end, function() end)
+            local old_remote_path = jupyter.notebook.remote_path
+            jupyter.notebook.remote_path = file_or_current
+            if jupyter.notebook:is_exist() then
+                jupyter.notebook:full_sync()
+            else
+                utils.notify_error(string.format("The file [%s] not exist in Jupyter lab", file_or_current))
+                jupyter.notebook.remote_path = old_remote_path
+                return
             end
-        end
+        end,
+    },
+    status = {
+        execute = function()
+            vim.cmd("checkhealth neopyter")
+        end,
+    },
+}
+
+vim.api.nvim_create_user_command("Neopyter", function(opts)
+    local cmd = cmds[opts.fargs[1]]
+    if cmd ~= nil then
+        table.remove(opts.fargs, 1)
+        a.run(function()
+            cmd.execute(unpack(opts.fargs))
+        end, function() end)
     end
-    run(opts.fargs)
 end, {
     desc = "Neopyter manager",
     nargs = "*",
     complete = function(_, line, _)
-        return { "connect", "disconnect", "run" }
+        local l = vim.split(line, "%s+")
+        local n = #l - 2
+        if n == 0 then
+            return vim.tbl_filter(function(val)
+                return vim.startswith(val, l[2])
+            end, vim.tbl_keys(cmds))
+        elseif n == 1 and cmds[l[2]] ~= nil then
+            local cmd = cmds[l[2]]
+            local condition = {}
+            if type(cmd["complete"]) == "function" then
+                condition = cmd.complete()
+            elseif type(cmd["complete"]) == "table" then
+                condition = cmd.complete --[[@as table]]
+            end
+            return vim.tbl_filter(function(val)
+                return vim.startswith(val, l[3])
+            end, condition)
+        end
     end,
 })

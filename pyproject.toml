@@ -68,11 +68,11 @@ skip-if-exists = ["neopyter/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
-npm = ["pnpm"]
+npm = ["jlpm"]
 
 [tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
 build_cmd = "install:extension"
-npm = ["pnpm"]
+npm = ["jlpm"]
 source_dir = "src"
 build_dir = "neopyter/labextension"
 
@@ -82,7 +82,7 @@ version_cmd = "hatch version"
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
     "python -m pip install 'jupyterlab>=4.0.0,<5'",
-    "pnpm",
+    "jlpm",
     "pnpm build:prod"
 ]
 before-build-python = ["pnpm clean:all"]

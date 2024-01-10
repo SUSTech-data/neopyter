@@ -29,6 +29,12 @@ function BlockRpcClient:connect()
     end
 end
 
+function BlockRpcClient:disconnect()
+    vim.fn.chanclose(self.channel_id)
+    self.channel_id = 0
+end
+
+
 ---check client is connecting
 ---@return boolean
 function BlockRpcClient:is_connecting()
@@ -65,10 +71,6 @@ function BlockRpcClient:notify(event, ...)
     else
         return res
     end
-end
-
-function BlockRpcClient:close()
-    vim.fn.chanclose(self.channel_id)
 end
 
 return BlockRpcClient

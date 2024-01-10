@@ -1,5 +1,6 @@
 local a = require("plenary.async")
 local utils = require("neopyter.utils")
+local async_wrap = require("neopyter.asyncwrap")
 local uv = a.uv
 local api = a.api
 
@@ -7,8 +8,10 @@ local api = a.api
 ---@field private client neopyter.RpcClient
 ---@field bufnr number
 ---@field local_path string relative path
+---@field remote_path string? #remote ipynb path
 ---@field private cells_lines string[][]
 ---@field private active_cell_index number
+---@field private augroup? number
 local Notebook = {
     bufnr = -1,
     cellslines = {},
@@ -23,21 +26,18 @@ Notebook.__index = Notebook
 ---Notebook Constructor, please don't call directly, obtain from jupyterlab
 ---@param o neopyter.NewNotebokOption
 ---@return neopyter.Notebook
-function Notebook:create(o)
+function Notebook:new(o)
     local obj = setmetatable(o, self) --[[@as neopyter.Notebook]]
-    obj:_attach_event()
-    obj:parse()
-    obj:full_sync()
+    local config = require("neopyter").config
+    obj.remote_path = config.filename_mapper(obj.local_path)
+    obj:_parse()
     return obj
 end
 
-function Notebook:remote_path()
-    local config = require("neopyter").config
-    return config.filename_mapper(self.local_path)
-end
-
-function Notebook:_attach_event()
-    local augroup = vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", self.bufnr), { clear = true })
+---attach autocmd&notebook
+function Notebook:attach()
+    local augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
+    self.augroup = augroup
     utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
         buffer = self.bufnr,
         callback = function()
@@ -48,6 +48,7 @@ function Notebook:_attach_event()
                 if line_count >= row then
                     local active_index = index - 1
                     if active_index ~= self.active_cell_index then
+                        -- cache
                         self.active_cell_index = active_index
                         self:activate_cell(active_index)
                         self:scroll_to_item(active_index, "smart")
@@ -78,27 +79,35 @@ function Notebook:_attach_event()
         group = augroup,
     })
 
-    api.nvim_create_autocmd({ "BufUnload" }, {
-        buffer = self.bufnr,
-        callback = function()
-            -- TODO:close notebook, and select previous?
-        end,
-        group = augroup,
-    })
-
     api.nvim_buf_attach(self.bufnr, false, {
         on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
             a.run(function()
                 -- TODO:particle update
-                self:parse()
+                self:_parse()
                 self:full_sync()
             end, function() end)
         end,
     })
+
+    self:full_sync()
 end
 
+function Notebook:detach()
+    api.nvim_del_augroup_by_id(self.augroup)
+    self.augroup = nil
+end
+
+function Notebook:is_attached()
+    return self.augroup ~= nil
+end
+
+---internal request
+---@param method string
+---@param ... any
+---@return any
+---@package
 function Notebook:_request(method, ...)
-    return self.client:request(method, self:remote_path(), ...)
+    return self.client:request(method, self.remote_path, ...)
 end
 
 ---is exist corresponding notebook in remote server
@@ -184,7 +193,7 @@ function Notebook:run_all_below()
     return self:_request("runAllBelow")
 end
 
-function Notebook:parse()
+function Notebook:_parse()
     local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
     local cellslines = {}
     for i, line in ipairs(lines) do
@@ -195,5 +204,7 @@ function Notebook:parse()
     end
     self.cells_lines = cellslines
 end
+
+Notebook = async_wrap(Notebook, { "is_attached" })
 
 return Notebook

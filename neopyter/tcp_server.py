@@ -84,8 +84,9 @@ class TcpServer(object):
                 continue
             # print("put client_queue", buf)
             await client_queue.put(buf)
-        print("Client reader loop end")
         writer.close()
+        await writer.wait_closed()
+        print("Client reader loop end")
 
     async def start_writer_loop(self, writer: StreamWriter):
         print("Client writer loop start")

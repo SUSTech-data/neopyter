@@ -1,10 +1,7 @@
 ---@class neopyter.RpcClient
----@field host string
----@field request fun(method:string, ...:unknown[]):any
----@field notify fun(event:string, ...:unknown[]):any
-local RpcClient = {
-    address = "localhost:8889",
-}
+---@field address? string
+---@field notify fun(event:string, ...:any):any
+local RpcClient = {}
 
 ---@class neopyter.NewRpcClientOption
 ---@field address? string
@@ -20,7 +17,32 @@ function RpcClient:new(o)
 end
 
 ---start connect
+---@param address? string
 ---@async
-function RpcClient:connect() end
+function RpcClient:connect(address)
+    assert(false, "not implement")
+end
+
+---disconnect connect
+function RpcClient:disconnect()
+    assert(false, "not implement")
+end
+
+---is rpc client connecting
+function RpcClient:is_connecting()
+    assert(false, "not implement")
+end
+
+---@see vim.rpcrequest
+---@param method string
+---@param ... unknown
+function RpcClient:request(method, ...)
+    assert(false, "not implement")
+end
+
+---@see vim.rpcnotify
+---@param event string
+---@param ... unknown
+function RpcClient:notify(event, ...) end
 
 return RpcClient

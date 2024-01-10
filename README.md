@@ -6,9 +6,9 @@
 ## Installation
 
 ### Requirements
-
-- JupyterLab >= 4.0.0
-- Neovim >= 9.0
+- 📔JupyterLab >= 4.0.0
+- ✌️ Neovim >= 9.0
+  - 👍`nvim-lua/plenary.nvim`
 
 ### JupyterLab Extension
 
@@ -36,7 +36,7 @@ With 💤lazy.nvim:
         -- your jupyter host + neopyter port
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
-    }
+    },
 }
 ```
 
@@ -48,14 +48,29 @@ With 💤lazy.nvim:
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
 
+### Available Vim Commands
+- Server
+  - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
+  - `:Neopyter disconnect`
+  - `:Neopyter status` alias to `:checkhealth neopyter` currently
+- Sync
+  - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
+  - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
+
+- Run
+  - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
+  - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
+  - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
+
 ### API
 
 `Neopyter` provides rich lua APIs
 
 - Run Cell
-  - `:Neopyter run current` <-> `require("neopyter.jupyter").notebook.run_selected_cell()`
-  - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook.run_all_above()`
-  - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook.run_all_below()`
+  - `:Neopyter run current` <-> `require("neopyter.jupyter").notebook:run_selected_cell()`
+  - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook:run_all_above()`
+  - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook:run_all_below()`
+
 
 
 ## Features
@@ -66,11 +81,14 @@ With 💤lazy.nvim:
   - [x] Scroll view automatically
   - [x] Activate cell automatically
   - [x] Save notebook automatically
+  - [ ] Kernel manage
   - Run cell
     - [x] Run selected cell
     - [x] Run all above selected cell
     - [x] Run selected cell and all below
     - [ ] Run all cell
+  - Sync
+    - [x] Set synchronized `.ipynb` manually
 - Jupyter Lab
   - Notebook manager
     - [x] Open corresponding notebook if exists
@@ -82,6 +100,8 @@ With 💤lazy.nvim:
 - Performance
   - [x]  Rewrite `RpcClient`, support async rpc request
         `vim.rpcrequest` and `vim.rpcnotify`
+- Document
+  - [ ] API Document
 
 ## Acknowledges
 
@@ -142,7 +162,7 @@ This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
 To execute them, execute:
 
 ```sh
-pnpm
+pnpm install
 pnpm test
 ```
 

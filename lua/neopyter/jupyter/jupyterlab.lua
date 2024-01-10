@@ -1,6 +1,7 @@
 local rpc = require("neopyter.rpc")
 local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
+local async_wrap = require("neopyter.asyncwrap")
 local a = require("plenary.async")
 local api = a.api
 
@@ -8,20 +9,21 @@ local api = a.api
 ---@field auto_activate_file boolean
 
 ---@class neopyter.JupyterLab
----@field private client neopyter.RpcClient|nil
+---@field private client neopyter.RpcClient
+---@field private augroup number
 ---@field notebook_map {[string]: neopyter.Notebook}
 local JupyterLab = {}
 
 ---@class neopyter.NewJupyterLabOption
----@field address string
+---@field address? string
 
 ---create RpcClient and connect
 ---@param opts neopyter.NewJupyterLabOption
 ---@return neopyter.JupyterLab
 function JupyterLab:new(opts)
-    local o = {}
-    self.__index = self
+    local o = opts or {} --[[@as neopyter.JupyterLab]]
     setmetatable(o, self)
+    self.__index = self
 
     local config = require("neopyter").config
     local RpcClient
@@ -31,47 +33,103 @@ function JupyterLab:new(opts)
         RpcClient = rpc.AsyncRpcClient
     end
     o.client = RpcClient:new({
-        address = opts.address,
+        address = o.address,
     })
     self.notebook_map = {}
     return o
 end
 
-function JupyterLab:attach()
-    self.client:connect()
+---attach autocmd and server
+---@param address? string address of neopyter server
+function JupyterLab:attach(address)
+    local config = require("neopyter").config
+    self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
+    assert(self.augroup ~= nil, "auogroupo failed")
+    utils.nvim_create_autocmd({ "BufReadPost" }, {
+        group = self.augroup,
+        pattern = config.file_pattern,
+        callback = function(event)
+            self:_on_buf_loaded(event.buf)
+        end,
+    })
+    utils.nvim_create_autocmd({ "BufUnload" }, {
+        group = self.augroup,
+        pattern = config.file_pattern,
+        callback = function(event)
+            self:_on_buf_unloaded(event.buf)
+        end,
+    })
+    self.client:connect(address)
+    api.nvim_exec_autocmds("BufReadPost", {
+        group = self.augroup,
+        pattern = config.file_pattern,
+    })
 end
 
----get or create notebook from *.ju.* path (global), if not exists, create with buf
----@param ju_path string
----@param buf? number
-function JupyterLab:get_notebok(ju_path, buf)
-    if utils.is_absolute(ju_path) then
-        ju_path = utils.relative_to(ju_path, vim.fn.getcwd())
+function JupyterLab:detach()
+    for _, notebook in pairs(self.notebook_map) do
+        if notebook:is_attached() then
+            notebook:detach()
+        end
     end
+    self.notebook_map = {}
+    self.augroup = nil
+    return self.client:disconnect()
+end
 
-    local notebook = self.notebook_map[ju_path]
-    if notebook == nil and buf ~= nil then
-        notebook = Notebook:create({
+---@alias neopyter.JupyterLabStatus
+---| '"idle"' # initialized status
+---| '"attached"' # attached status, autocmd is created
+---| '"attached_connecting"' # attached and connecting to server
+
+---get status of jupyterlab
+---@return neopyter.JupyterLabStatus
+function JupyterLab:status()
+    if self.augroup ~= nil then
+        if self.client:is_connecting() then
+            return "attached_connecting"
+        else
+            return "attached"
+        end
+    end
+    return "idle"
+end
+
+function JupyterLab:_get_buf_local_path(buf)
+    local file_path = api.nvim_buf_get_name(buf)
+
+    if utils.is_absolute(file_path) then
+        file_path = utils.relative_to(file_path, vim.fn.getcwd())
+    end
+    return file_path
+end
+
+---if not exists, create with buf
+---@param buf number
+function JupyterLab:_on_buf_loaded(buf)
+    local file_path = JupyterLab:_get_buf_local_path(buf)
+    local notebook = self.notebook_map[file_path]
+    if notebook == nil then
+        notebook = Notebook:new({
             client = self.client,
             bufnr = buf,
-            local_path = ju_path,
+            local_path = file_path,
         })
-        self.notebook_map[ju_path] = notebook
+        self.notebook_map[file_path] = notebook
+        if notebook:is_exist() then
+            notebook:attach()
+            notebook:activate()
+        end
     end
-    return notebook
-end
-
----called when `BufWinEnter`
----@param buf number
-function JupyterLab:_on_bufwinenter(buf)
-    local file_path = api.nvim_buf_get_name(buf)
-    local notebook = self:get_notebok(file_path, buf)
     local jupyter = require("neopyter.jupyter")
     jupyter.notebook = notebook
+end
 
-    if notebook:is_exist() then
-        notebook:activate()
-    end
+function JupyterLab:_on_buf_unloaded(buf)
+    local file_path = self:_get_buf_local_path(buf)
+    local notebook = self.notebook_map[file_path]
+    notebook:detach()
+    self.notebook_map[file_path] = nil
 end
 
 ---simple echo
@@ -86,15 +144,14 @@ end
 ---@field type? `notebook`|`file`
 --
 ---create new notebook, and selected it
----@param ops? neopyter.NewUntitledOption
----@return unknown|nil
-function JupyterLab:new_untitled(ops)
-    ops = ops or { path = "", type = "notebook" }
-    return self.client:request("new_untitled", ops)
+function JupyterLab:createNew(ipynb_path, widget_name, kernel)
+    return self.client:request("createNew", ipynb_path, widget_name, kernel)
 end
 
-function JupyterLab:close()
-    return self.client:close()
+---get current notebook of jupyter lab
+function JupyterLab:current_ipynb()
+    return self.client:request("getCurrentNotebook", ops)
 end
 
+JupyterLab = async_wrap(JupyterLab, { "status" })
 return JupyterLab

@@ -84,6 +84,13 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       }
     };
     const docmanagerDispatcher = {
+      getCurrentNotebook: () => {
+        const notebookPanel = nbtracker.currentWidget;
+        if (notebookPanel) {
+          const context = docmanager.contextForWidget(notebookPanel);
+          return context?.localPath;
+        }
+      },
       isFileOpen: (path: string) => {
         return !!docmanager.findWidget(path);
       },
@@ -189,6 +196,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       save: async (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
         const context = docmanager.contextForWidget(notebookPanel);
+        context?.path;
         return await context?.save();
       },
       runSelectedCell: async (path: string) => {

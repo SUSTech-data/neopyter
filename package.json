@@ -30,7 +30,7 @@
     },
     "scripts": {
         "build": "pnpm build:lib && pnpm build:labextension:dev",
-        "build:prod": "pnpm clean && pnpm build:lib:prod && pnpm build:labextension",
+        "build:prod": "run-s clean build:lib:prod build:labextension",
         "build:labextension": "jupyter labextension build .",
         "build:labextension:dev": "jupyter labextension build --development True .",
         "build:lib": "tsc",

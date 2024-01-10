@@ -1,13 +1,13 @@
 local highlight = require("neopyter.highlight")
+local jupyter = require("neopyter.jupyter")
+local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
-local manager = require("neopyter.manager")
-
 
 ---@class neopyter.Option
 ---@field remote_address string
 ---@field file_pattern string[]
 ---@field auto_attach boolean
----@field rpc_client 
+---@field rpc_client
 ---| "'async'" # AsyncRpcClient, default
 ---| "'block'" # BlockRpcClient
 ---@field filename_mapper fun(ju_path:string):string
@@ -25,7 +25,7 @@ M.config = {
         return ipynb_path
     end,
 
-    --  Automatically attach to the Noepyter server when open file_pattern matched files
+    --  Automatically attach to the Neopyter server when open file_pattern matched files
     auto_attach = true,
     rpc_client = "async",
     jupyter = {
@@ -51,7 +51,23 @@ M.config = {
 ---@param config neopyter.Option
 function M.setup(config)
     M.config = vim.tbl_deep_extend("force", M.config, config or {})
-    manager.setup(M.config)
+
+    jupyter.jupyterlab = JupyterLab:new({
+        address = M.config.remote_address,
+    })
+
+    if M.config.auto_attach then
+        local augroup = vim.api.nvim_create_augroup("neopyter", { clear = true })
+        utils.nvim_create_autocmd({ "BufReadPost" }, {
+            group = augroup,
+            pattern = M.config.file_pattern,
+            callback = function()
+                if jupyter.jupyterlab:status() == "idle" then
+                    jupyter.jupyterlab:attach()
+                end
+            end,
+        })
+    end
     highlight.setup(M.config.highlight)
 end
 
