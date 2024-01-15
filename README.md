@@ -6,6 +6,7 @@
 ## Installation
 
 ### Requirements
+
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim >= 9.0
   - 👍`nvim-lua/plenary.nvim`
@@ -50,26 +51,28 @@ With 💤lazy.nvim:
 
 ### Available Vim Commands
 
-
 - Server
   - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
   - `:Neopyter disconnect`
   - `:Neopyter status` alias to `:checkhealth neopyter` currently
 - Sync
+
   - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
   - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
 
 - Run
+
   - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
   - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
   - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
   - `:Neopyter run all`, same as `Run`>`Run All Cells` menu in `Jupyter lab`
 
 - Kernel
+
   - `:Neopyter kernel restart`, same as `Kernel`>`Restart Kernel` menu in `Jupyter lab`
   - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
 
-- Jupyter 
+- Jupyter
   - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list) directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
 ### API
@@ -77,6 +80,7 @@ With 💤lazy.nvim:
 `Neopyter` provides rich lua APIs
 
 - Jupyter Lab
+
   - `Neopyter execute ...` <-> `require("neopyter.jupyter").jupyterlab:execute_command(...)`
   - All APIs see `:lua =require("neopyter.jupyter.jupyterlab").__injected_methods`
 
@@ -85,8 +89,6 @@ With 💤lazy.nvim:
   - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook:run_all_above()`
   - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook:run_all_below()`
   - All APIs see `:lua =require("neopyter.jupyter.notebook").__injected_methods`
-
-
 
 ## Features
 
@@ -115,7 +117,7 @@ With 💤lazy.nvim:
     - [x] Display `ip:port`
     - [ ] Display client info
 - Performance
-  - [x]  Rewrite `RpcClient`, support async rpc request
+  - [x] Rewrite `RpcClient`, support async rpc request
         `vim.rpcrequest` and `vim.rpcnotify`
 - Document
   - [ ] API Document

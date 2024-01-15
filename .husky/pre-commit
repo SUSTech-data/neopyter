@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+
+# lint
+pnpm lint
+ruff check neopyter
+
 # frontend test
 pnpm test
 
