@@ -23,8 +23,8 @@ To run the tests, you need to:
 1. Compile the extension:
 
 ```sh
-jlpm install
-jlpm build:prod
+pnpm install
+pnpm build:prod
 ```
 
 > Check the extension is installed in JupyterLab.
@@ -33,8 +33,8 @@ jlpm build:prod
 
 ```sh
 cd ./ui-tests
-jlpm install
-jlpm playwright install
+pnpm install
+pnpm playwright install
 cd ..
 ```
 
@@ -42,7 +42,7 @@ cd ..
 
 ```sh
 cd ./ui-tests
-jlpm playwright test
+pnpm playwright test
 ```
 
 Test results will be shown in the terminal. In case of any test failures, the test report
@@ -60,8 +60,8 @@ the reference snapshots stored in the repository. To do that, you need to:
 1. Compile the extension:
 
 ```sh
-jlpm install
-jlpm build:prod
+pnpm install
+pnpm build:prod
 ```
 
 > Check the extension is installed in JupyterLab.

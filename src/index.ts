@@ -31,7 +31,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     nbtracker: INotebookTracker,
     restorer: ILayoutRestorer
   ) => {
-    console.log('JupyterLab extension noejupy is activated!');
+    console.log('JupyterLab extension neopyter is activated!');
 
     const sidebar = new StatusSidePanel();
     sidebar.title.caption = 'Neopyter';

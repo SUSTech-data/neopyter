@@ -1,16 +1,19 @@
 {
     "name": "neopyter",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "A JupyterLab extension. Integrate JupyterLab and Neovim",
+    "workspaces": [
+        "ui-tests"
+    ],
     "keywords": [
         "jupyter",
         "jupyterlab",
         "jupyterlab-extension",
         "neovim"
     ],
-    "homepage": "https://github.com/AbaoFromCUG/neopyter.nvim",
+    "homepage": "https://github.com/SUSTech-data/neopyter",
     "bugs": {
-        "url": "https://github.com/AbaoFromCUG/neopyter.nvim/issues"
+        "url": "https://github.com/SUSTech-data/neopyter/issues"
     },
     "license": "BSD-3-Clause",
     "author": {
@@ -26,7 +29,7 @@
     "style": "style/index.css",
     "repository": {
         "type": "git",
-        "url": "https://github.com/AbaoFromCUG/neopyter.nvim.git"
+        "url": "https://github.com/SUSTech-data/neopyter"
     },
     "scripts": {
         "build": "pnpm build:lib && pnpm build:labextension:dev",
