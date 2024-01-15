@@ -1,7 +1,8 @@
 import { Kernel, ServerConnection } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
+import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import { ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
-import { Notebook, INotebookTracker, NotebookActions } from '@jupyterlab/notebook';
+import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import * as R from 'remeda';
 
@@ -13,7 +14,7 @@ import { WindowedList } from '@jupyterlab/ui-components';
 
 // Transfer Data
 type TCell = {
-  code_type: string;
+  cell_type: string;
   source: string;
 };
 
@@ -44,10 +45,14 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     const settings = ServerConnection.makeSettings();
     const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
     const getCurrentNotebook = () => {
-      return nbtracker.currentWidget?.content;
+      const widget = nbtracker.currentWidget;
+      if (widget) {
+        app.shell.activateById(widget.id);
+      }
+      return widget?.content;
     };
     const getNotebookModel = (path: string) => {
-      const notebookPanel = docmanager.findWidget(path);
+      const notebookPanel = docmanager.findWidget(path) as NotebookPanel;
       let notebook = notebookPanel?.content as Notebook | undefined;
       if (nbtracker.currentWidget?.isUntitled) {
         notebook = nbtracker.currentWidget.content;
@@ -79,8 +84,8 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const msg = `hello: ${message}`;
         return msg;
       },
-      executeCommand: async (command: string) => {
-        await app.commands.execute(command);
+      executeCommand: async (command: string, args?: ReadonlyPartialJSONObject) => {
+        await app.commands.execute(command, args);
       }
     };
     const docmanagerDispatcher = {
@@ -172,16 +177,25 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         notebook.scrollToItem(index, align, margin);
       },
       syncCells: (path: string, from: number, cells: TCell[]) => {
-        const { notebook, sharedModel } = getNotebookModel(path);
+        const { notebook, sharedModel: sharedNotebookModel } = getNotebookModel(path);
         cells.forEach((cell, idx) => {
           const index = from + idx;
-          const cellModel = sharedModel.getCell(index);
+          const cellModel = sharedNotebookModel.getCell(index);
           if (cellModel) {
-            cellModel.setSource(cell.source);
+            if (cell.cell_type === undefined || cellModel.cell_type === cell.cell_type) {
+              cellModel.setSource(cell.source);
+            } else {
+              sharedNotebookModel.deleteCell(idx);
+              sharedNotebookModel.insertCell(idx, {
+                cell_type: cell.cell_type,
+                source: cell.source,
+                metadata: cellModel.getMetadata()
+              });
+            }
             return;
           }
-          sharedModel.insertCell(index, {
-            cell_type: cell.code_type,
+          sharedNotebookModel.insertCell(index, {
+            cell_type: cell.cell_type,
             source: cell.source,
             metadata:
               notebook.notebookConfig.defaultCell === 'code'
@@ -207,6 +221,18 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       runAllBelow: async (path: string) => {
         return await app.commands.execute('notebook:run-all-below');
+      },
+      runAll: async (path: string) => {
+        return await app.commands.execute('notebook:run-all-cells');
+      },
+      restartKernel: async (path: string) => {
+        const { notebookPanel } = getNotebookModel(path);
+        return await notebookPanel.sessionContext.restartKernel();
+      },
+      restartRunAll: async (path: string) => {
+        const { notebookPanel } = getNotebookModel(path);
+        await notebookPanel.sessionContext.restartKernel();
+        return await app.commands.execute('notebook:run-all-cells');
       }
     };
     const cellDispatcher = {

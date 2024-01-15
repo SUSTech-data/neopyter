@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# frontend test
+pnpm test
+
+# jupyterlab server test
+pytest
+
+# lua plugin test
+make 

@@ -4,17 +4,27 @@ local async_wrap = require("neopyter.asyncwrap")
 local uv = a.uv
 local api = a.api
 
+---@class neopyter.Cell
+---@field start_line number include
+---@field lines string[]
+---@field end_line number exclude
+---@field source string
+---@field title string
+---@field no_separator? boolean
+---@field cell_type? string
+---@field cell_magic? string
+---@field metadata? table<string, any>
+
 ---@class neopyter.Notebook
 ---@field private client neopyter.RpcClient
 ---@field bufnr number
 ---@field local_path string relative path
 ---@field remote_path string? #remote ipynb path
----@field private cells_lines string[][]
+---@field private cells neopyter.Cell[]
 ---@field private active_cell_index number
 ---@field private augroup? number
 local Notebook = {
     bufnr = -1,
-    cellslines = {},
 }
 Notebook.__index = Notebook
 
@@ -43,8 +53,8 @@ function Notebook:attach()
         callback = function()
             local row, col = self:get_cursor_pos()
             local line_count = 0
-            for index, cell_lines in ipairs(self.cells_lines) do
-                line_count = line_count + #cell_lines
+            for index, cell in ipairs(self.cells) do
+                line_count = line_count + #cell.lines
                 if line_count >= row then
                     local active_index = index - 1
                     if active_index ~= self.active_cell_index then
@@ -157,20 +167,12 @@ end
 function Notebook:get_active_cell() end
 
 function Notebook:full_sync()
-    local cells = {}
-    for i, cell_lines in ipairs(self.cells_lines) do
-        if type(cell_lines[1]) == "string" and cell_lines[1]:match("# %%") then
-            cells[i] = {
-                source = table.concat(cell_lines, "\n", 2),
-                cell_type = "code",
-            }
-        else
-            cells[i] = {
-                source = table.concat(cell_lines, "\n"),
-                cell_type = "code",
-            }
-        end
-    end
+    local cells = vim.tbl_map(function(cell)
+        return {
+            source = cell.source,
+            cell_type = cell.cell_type,
+        }
+    end, self.cells)
     self:_request("setCellNum", #cells)
     self:_request("syncCells", 0, cells)
 end
@@ -193,16 +195,21 @@ function Notebook:run_all_below()
     return self:_request("runAllBelow")
 end
 
+function Notebook:run_all()
+    return self:_request("runAll")
+end
+
+function Notebook:restart_kernel()
+    return self:_request("restartKernel")
+end
+
+function Notebook:restart_run_all()
+    return self:_request("restartRunAll")
+end
+
 function Notebook:_parse()
     local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
-    local cellslines = {}
-    for i, line in ipairs(lines) do
-        if line:find("# %%") == 1 or #cellslines == 0 then
-            table.insert(cellslines, {})
-        end
-        table.insert(cellslines[#cellslines], line)
-    end
-    self.cells_lines = cellslines
+    self.cells = utils.parse_content(lines)
 end
 
 Notebook = async_wrap(Notebook, { "is_attached" })

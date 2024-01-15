@@ -139,6 +139,15 @@ function JupyterLab:echo(msg)
     return self.client:request("echo", msg)
 end
 
+---execute jupyter lab's commands
+---@param command string
+---@param args? table<string, any>
+---@return nil
+---[View documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
+function JupyterLab:execute_command(command, args)
+    return self.client:request("executeCommand", command, args)
+end
+
 ---@class neopyter.NewUntitledOption
 ---@field path? string
 ---@field type? `notebook`|`file`

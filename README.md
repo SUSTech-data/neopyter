@@ -49,6 +49,8 @@ With 💤lazy.nvim:
   - You'll see everything you type below that will be synchronised in the browser
 
 ### Available Vim Commands
+
+
 - Server
   - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
   - `:Neopyter disconnect`
@@ -61,15 +63,28 @@ With 💤lazy.nvim:
   - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
   - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
   - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
+  - `:Neopyter run all`, same as `Run`>`Run All Cells` menu in `Jupyter lab`
+
+- Kernel
+  - `:Neopyter kernel restart`, same as `Kernel`>`Restart Kernel` menu in `Jupyter lab`
+  - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
+
+- Jupyter 
+  - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list) directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
 ### API
 
 `Neopyter` provides rich lua APIs
 
-- Run Cell
+- Jupyter Lab
+  - `Neopyter execute ...` <-> `require("neopyter.jupyter").jupyterlab:execute_command(...)`
+  - All APIs see `:lua =require("neopyter.jupyter.jupyterlab").__injected_methods`
+
+- Notebook
   - `:Neopyter run current` <-> `require("neopyter.jupyter").notebook:run_selected_cell()`
   - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook:run_all_above()`
   - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook:run_all_below()`
+  - All APIs see `:lua =require("neopyter.jupyter.notebook").__injected_methods`
 
 
 
@@ -81,7 +96,9 @@ With 💤lazy.nvim:
   - [x] Scroll view automatically
   - [x] Activate cell automatically
   - [x] Save notebook automatically
-  - [ ] Kernel manage
+  - Kernel manage
+    - [x] Restart kernel
+    - [x] Restart kernel and run all
   - Run cell
     - [x] Run selected cell
     - [x] Run all above selected cell

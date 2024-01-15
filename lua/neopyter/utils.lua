@@ -2,63 +2,6 @@ local Path = require("plenary.path")
 local a = require("plenary.async")
 local M = {}
 
-function M.string_begins_with(str, start)
-    if str == nil then
-        return false
-    end
-    return start == "" or str:sub(1, #start) == start
-end
-
-function M.string_ends_with(str, ending)
-    if str == nil then
-        return false
-    end
-    return ending == "" or str:sub(-#ending) == ending
-end
-
-function M.wildcard_to_regex(pattern)
-    local reg = pattern:gsub("([^%w])", "%%%1"):gsub("%%%*", ".*")
-    if not M.string_begins_with(reg, ".*") then
-        reg = "^" .. reg
-    end
-    if not M.string_ends_with(reg, ".*") then
-        reg = reg .. "$"
-    end
-    return reg
-end
-
-function M.string_wildcard_match(str, pattern)
-    return str:match(M.wildcard_to_regex(pattern))
-end
-
-function M.list_wildcard_match(str, patterns)
-    for _, pattern in ipairs(patterns) do
-        if M.string_wildcard_match(str, pattern) ~= nil then
-            return true
-        end
-    end
-    return false
-end
-
-function M.remove_duplicates(list)
-    local hash = {}
-    local res = {}
-    for _, v in ipairs(list) do
-        if not hash[v] then
-            res[#res + 1] = v
-            hash[v] = true
-        end
-    end
-    return res
-end
-
-function M.table_concat(t1, t2)
-    for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
-    end
-    return t1
-end
-
 ---emit info notify via vim.notify
 ---@param msg string
 function M.notify_info(msg)
@@ -99,7 +42,7 @@ function M.notify_error(msg)
     end)
 end
 
----get realtive path
+---get relative path
 ---@param parent_path string
 ---@param file_path string
 ---@return string
@@ -127,6 +70,95 @@ function M.nvim_create_autocmd(event, opts)
         end
     end
     vim.api.nvim_create_autocmd(event, opts)
+end
+
+---parse lines
+---@param lines string[]
+---@param filetype? string default python
+---@return neopyter.Cell[]
+function M.parse_content(lines, filetype)
+    filetype = filetype or "python"
+    ---@type neopyter.Cell []
+    local cells = {}
+    for i, line in ipairs(lines) do
+        if vim.startswith(line, "# %%") then
+            local cell_magic, magic_param = line:match("^# %%%%(%w+)(.*)")
+            if cell_magic ~= nil then
+                table.insert(cells, {
+                    lines = { line },
+                    start_line = i,
+                    cell_type = "code",
+                    cell_magic = "%%" .. cell_magic .. magic_param,
+                })
+            else
+                local titleornil, cell_type = line:match("^# %%%%(.*)%[(%w+)%]")
+                if titleornil == nil then
+                    titleornil = line:match("^# %%%%(.*)$")
+                end
+                if titleornil ~= nil then
+                    titleornil = vim.trim(titleornil)
+                    if titleornil == "" then
+                        titleornil = nil
+                    end
+                end
+
+                if cell_type == "md" then
+                    cell_type = "markdown"
+                end
+
+                table.insert(cells, {
+                    lines = { line },
+                    start_line = i,
+                    cell_type = cell_type or "code",
+                    title = titleornil,
+                })
+            end
+        elseif #cells == 0 then
+            table.insert(cells, {
+                lines = { line },
+                start_line = i,
+                cell_type = "code",
+                no_separator = true,
+            })
+        else
+            table.insert(cells[#cells].lines, line)
+        end
+    end
+    local function concat_code(code_lines, i, j)
+        code_lines = vim.tbl_map(function(line)
+            local line_magic = line:match("# (%%%w+.*)")
+            if line_magic ~= nil then
+                return line_magic
+            end
+            return line
+        end, code_lines)
+        return table.concat(code_lines, "\n", i, j)
+    end
+
+    for i, cell in ipairs(cells) do
+        if cell then
+            cell.end_line = cell.start_line + #cell.lines
+        end
+
+        if cell.cell_magic ~= nil then
+            cell.source = cell.cell_magic .. "\n" .. table.concat(cell.lines, "\n", 2)
+        elseif cell.cell_type == "markdown" or cell.cell_type == "raw" or cell.cell_magic then
+            cell.source = table.concat(cell.lines, "\n", 2)
+            if filetype == "python" then
+                local comment_source = vim.trim(cell.source):match('^"""\n(.*)\n"""$')
+                if comment_source ~= nil then
+                    cell.source = comment_source
+                end
+                cell.source = cell.source:gsub('\\"\\"\\"', '"""')
+                -- cell.source = cell.source:gsub('\n\\#', '\n#')
+            end
+        elseif cell.no_separator == true then
+            cell.source = concat_code(cell.lines)
+        else
+            cell.source = concat_code(cell.lines, 2)
+        end
+    end
+    return cells
 end
 
 return M

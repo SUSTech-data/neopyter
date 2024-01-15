@@ -15,11 +15,12 @@ local function async_wrap(cls, ignored_methods)
         end
         return false
     end
-    logger.log(string.format("patch class %s start", vim.inspect(cls)))
+    logger.log(string.format("inject class %s start", vim.inspect(cls)))
+    local injected_methods = {}
     for key, value in pairs(cls) do
         if not key:match("^_%w.+$") and not is_ignored(key) and type(value) == "function" then
-
-            logger.log(string.format("patch method [%s]", key))
+            logger.log(string.format("inject method [%s]", key))
+            table.insert(injected_methods, key)
             cls[key] = function(...)
                 local thread = coroutine.running()
                 if thread ~= nil then
@@ -36,7 +37,8 @@ local function async_wrap(cls, ignored_methods)
             end
         end
     end
-    logger.log(string.format("patch class end", vim.inspect(cls)))
+    cls.__injected_methods = injected_methods
+    logger.log(string.format("inject class end", vim.inspect(cls)))
     return cls
 end
 return async_wrap

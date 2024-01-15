@@ -15,8 +15,18 @@ local cmds = {
             end
         end,
     },
+    kernel = {
+        complete = { "restart", "restartRunAll" },
+        execute = function(mode)
+            if mode == "restart" then
+                jupyter.notebook:restart_kernel()
+            elseif mode == "restartRunAll" then
+                jupyter.notebook:restart_run_all()
+            end
+        end,
+    },
     run = {
-        complete = { "current", "allAbove", "allBelow" },
+        complete = { "current", "allAbove", "allBelow", "all" },
         execute = function(mode)
             if mode == "current" then
                 jupyter.notebook:run_selected_cell()
@@ -24,8 +34,16 @@ local cmds = {
                 jupyter.notebook:run_all_above()
             elseif mode == "allBelow" then
                 jupyter.notebook:run_all_below()
+            elseif mode == "all" then
+                jupyter.notebook:run_all()
             end
         end,
+    },
+    execute = {
+        execute = function (command, args)
+            jupyter.jupyterlab:execute_command(command, vim.json.decode(args))
+        end
+
     },
     disconnect = {
         execute = function()
