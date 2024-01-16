@@ -16,7 +16,7 @@
 To install the jupyterlab extension, execute:
 
 ```bash
-pip install git+https://github.com/SUSTech-data/neopyter.git
+pip install neopyter
 ```
 
 To remove the extension, execute:
