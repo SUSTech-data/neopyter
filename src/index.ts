@@ -45,22 +45,23 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     const settings = ServerConnection.makeSettings();
     const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
     const getCurrentNotebook = () => {
-      const widget = nbtracker.currentWidget;
-      if (widget) {
-        app.shell.activateById(widget.id);
-      }
+      const widget = nbtracker.currentWidget as NotebookPanel;
+      app.shell.activateById(widget.id);
       return widget?.content;
     };
     const getNotebookModel = (path: string) => {
-      const notebookPanel = docmanager.findWidget(path) as NotebookPanel;
+      let notebookPanel = docmanager.findWidget(path) as NotebookPanel;
       let notebook = notebookPanel?.content as Notebook | undefined;
-      if (nbtracker.currentWidget?.isUntitled) {
-        notebook = nbtracker.currentWidget.content;
+      if (!notebook) {
+        if (nbtracker.currentWidget?.isUntitled) {
+          notebookPanel = nbtracker.currentWidget;
+          notebook = nbtracker.currentWidget.content;
+        }
       }
       const sharedModel = notebook?.model?.sharedModel;
 
       if (!notebookPanel || !sharedModel || !notebook) {
-        throw `Can't find ${path} or select untitled ipynb`;
+        throw `Can't find ${path} and current don't select untitled ipynb`;
       }
       return {
         notebookPanel,
@@ -117,6 +118,10 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       openOrReveal: (path: string) => {
         return !!docmanager.openOrReveal(path);
+      },
+      activateNotebook: (path: string) => {
+        const { notebookPanel } = getNotebookModel(path);
+        return notebookPanel.activate();
       },
       closeFile: async (path: string) => {
         return await docmanager.closeFile(path);

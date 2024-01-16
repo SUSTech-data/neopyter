@@ -8,11 +8,29 @@ function M.check()
     if status ~= "idle" then
         vim.health.report_start("Jupyter lab")
         for _, notebook in pairs(jupyter.jupyterlab.notebook_map) do
-            local mark = " "
+            local select_mark = " "
             if jupyter.notebook == notebook then
-                mark = "*"
+                select_mark = "*"
             end
-            vim.health.report_info(string.format("%s %s <-> %s", mark, notebook.local_path, notebook.remote_path))
+            if notebook:is_attached() then
+                vim.health.report_info(
+                    string.format(
+                        "%s %s ❤️s %s",
+                        select_mark,
+                        notebook.local_path,
+                        notebook.remote_path
+                    )
+                )
+            else
+                vim.health.report_info(
+                    string.format(
+                        "%s %s 💔",
+                        select_mark,
+                        notebook.local_path,
+                        notebook.remote_path
+                    )
+                )
+            end
         end
     end
 end

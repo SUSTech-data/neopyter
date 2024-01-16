@@ -47,6 +47,7 @@ end
 ---attach autocmd&notebook
 function Notebook:attach()
     local augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
+    assert(augroup, "can't create augroup")
     self.augroup = augroup
     utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
         buffer = self.bufnr,
@@ -137,8 +138,12 @@ function Notebook:open()
     return self:_request("openFile")
 end
 
-function Notebook:activate()
+function Notebook:open_or_reveal()
     return self:_request("openOrReveal")
+end
+
+function Notebook:activate()
+    return self:_request("activateNotebook")
 end
 
 function Notebook:activate_cell(idx)

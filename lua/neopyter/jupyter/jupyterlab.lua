@@ -45,11 +45,11 @@ function JupyterLab:attach(address)
     local config = require("neopyter").config
     self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
     assert(self.augroup ~= nil, "auogroupo failed")
-    utils.nvim_create_autocmd({ "BufReadPost" }, {
+    utils.nvim_create_autocmd({ "BufWinEnter" }, {
         group = self.augroup,
         pattern = config.file_pattern,
         callback = function(event)
-            self:_on_buf_loaded(event.buf)
+            self:_on_bufwinenter(event.buf)
         end,
     })
     utils.nvim_create_autocmd({ "BufUnload" }, {
@@ -60,10 +60,6 @@ function JupyterLab:attach(address)
         end,
     })
     self.client:connect(address)
-    api.nvim_exec_autocmds("BufReadPost", {
-        group = self.augroup,
-        pattern = config.file_pattern,
-    })
 end
 
 function JupyterLab:detach()
@@ -106,7 +102,7 @@ end
 
 ---if not exists, create with buf
 ---@param buf number
-function JupyterLab:_on_buf_loaded(buf)
+function JupyterLab:_on_bufwinenter(buf)
     local file_path = JupyterLab:_get_buf_local_path(buf)
     local notebook = self.notebook_map[file_path]
     if notebook == nil then
@@ -118,11 +114,16 @@ function JupyterLab:_on_buf_loaded(buf)
         self.notebook_map[file_path] = notebook
         if notebook:is_exist() then
             notebook:attach()
+            notebook:open_or_reveal()
             notebook:activate()
         end
     end
     local jupyter = require("neopyter.jupyter")
     jupyter.notebook = notebook
+    if notebook:is_attached() then
+        notebook:open_or_reveal()
+        notebook:activate()
+    end
 end
 
 function JupyterLab:_on_buf_unloaded(buf)
