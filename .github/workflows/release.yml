@@ -62,6 +62,10 @@ jobs:
           token: ${{ github.token }}
           tag: ${{ github.ref_name }}
 
+      - name: build release
+        run: |
+          hatch build -c
+
       - name: Commit CHANGELOG.md
         run: |
           git config user.name github-actions
@@ -69,14 +73,11 @@ jobs:
           git tag -d ${{ github.ref_name }}
           git push origin --delete ${{ github.ref_name }}
           git add CHANGELOG.md
+          git restore yarn.lock
           git commit -m "docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]"
           git tag -a ${{ github.ref_name }} -m ${{ github.ref_name }}
           git push
           git push --tags
-
-      - name: build release
-        run: |
-          hatch build -c
 
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
