@@ -1,6 +1,6 @@
 {
     "name": "neopyter",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "A JupyterLab extension. Integrate JupyterLab and Neovim",
     "workspaces": [
         "ui-tests"
