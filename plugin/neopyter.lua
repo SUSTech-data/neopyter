@@ -5,8 +5,8 @@ local a = require("plenary.async")
 local cmds = {
     connect = {
         execute = function(address)
-            local status = jupyter.jupyterlab:status()
-            if status ~= "idle" then
+            local status = jupyter.jupyterlab:is_connecting()
+            if status  then
                 utils.notify_warn("Jupyter lab is connecting, reset current and connect to " .. address)
                 jupyter.jupyterlab:detach()
                 jupyter.jupyterlab:attach(address)

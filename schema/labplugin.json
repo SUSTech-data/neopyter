@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Neopyter",
+  "description": "A JupyterLab extension. Integrate JupyterLab and Neovim",
+  "jupyter.lab.setting-icon": "ui-components:neopyter",
+  "jupyter.lab.setting-icon-label": "Neopyter",
+  "definitions": {
+    "ip": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "port": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 100,
+      "maximum": 65535
+    }
+  },
+  "properties": {
+    "ip": {
+      "title": "IP",
+      "description": "Listening ip\nsplit with `;` if include mutiples",
+      "$ref": "#/definitions/ip",
+      "default": "0.0.0.0"
+    },
+    "port": {
+      "title": "Port",
+      "description": "The port which tcp server is listening",
+      "$ref": "#/definitions/port",
+      "default": 9001
+    }
+  },
+  "additionalProperties": false,
+  "type": "object"
+}

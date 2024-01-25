@@ -1,7 +1,11 @@
 import socket
-from typing import Optional, Sequence
+from typing import Optional
 import asyncio
 from asyncio import StreamReader, StreamWriter, Server
+from jupyter_server.serverapp import ServerApp
+# from jupyterlab_server.app import JupyterLabAp
+
+
 from .msgpack_queue import clear_queue, labextension_queue, client_queue
 
 
@@ -22,7 +26,7 @@ async def find_empty_port(start_idx):
     return idx
 
 
-def get_all_id_addresses():
+def get_all_ip():
     hostname = socket.gethostname()
     ip_addresses = set()
     ip_addresses.add("127.0.0.1")
@@ -34,31 +38,23 @@ def get_all_id_addresses():
 class TcpServer(object):
     def __init__(self) -> None:
         self.server: Optional[Server] = None
-        self.host: Optional[Sequence[str]] = None
-        self.port: Optional[int | str] = None
+        self.builtinHost = get_all_ip()
+        self.host = []
+        self.port = 9001
 
     @property
     def is_running(self) -> bool:
         return self.server is not None
 
-    async def start(
-        self,
-        host: Optional[Sequence[str]] = None,
-        port: Optional[int | str] = None,
-    ):
+    async def start(self):
         # support update?
         if self.server:
+            print("Stop old server")
             await self.stop()
-
-        if not host:
-            host = list(get_all_id_addresses())
-        if not port:
-            port = await find_empty_port(9001)
-        self.host = host
-        self.port = port
-
+        host = set.union(self.builtinHost, self.host)
+        print("resolved host:", host)
         self.server = await asyncio.start_server(
-            lambda r, w: self.client_connected(r, w), host, port
+            lambda r, w: self.client_connected(r, w), list(host), self.port
         )
         addrs = ", ".join(str(sock.getsockname()) for sock in self.server.sockets)
         print(f"Serving on {addrs}")
@@ -78,7 +74,8 @@ class TcpServer(object):
 
     async def start_reader_loop(self, reader: StreamReader, writer: StreamWriter):
         print("Client reader loop start")
-        while not reader.at_eof():
+        server = self.server
+        while not reader.at_eof() and server.sockets:
             buf = await reader.read(512)
             if len(buf) == 0:
                 continue
@@ -90,7 +87,8 @@ class TcpServer(object):
 
     async def start_writer_loop(self, writer: StreamWriter):
         print("Client writer loop start")
-        while not writer.is_closing():
+        server = self.server
+        while not writer.is_closing() and server.sockets:
             while labextension_queue.qsize() > 0:
                 buf = await labextension_queue.get()
                 # print("get labextension_queue", buf)
@@ -103,15 +101,12 @@ class TcpServer(object):
         if self.server:
             self.server.close()
             await self.server.wait_closed()
-        self.host = None
-        self.port = None
+            self.server = None
 
 
 # global variable?
 tcpServer = TcpServer()
 
 
-def setup_tcp_server():
+def setup_tcp_server(app: ServerApp):
     global tcpServer
-    # TODO:read config
-    pass

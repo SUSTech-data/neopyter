@@ -4,6 +4,7 @@ import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import { ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import * as R from 'remeda';
 
 import { RpcServer, Dispatcher } from './rpcServer';
@@ -21,19 +22,20 @@ type TCell = {
 /**
  * Initialization data for the neopyter extension. */
 const neopyterPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'neopyter',
+  id: 'neopyter:labplugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [IDocumentManager, INotebookTracker, ILayoutRestorer],
+  requires: [IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry],
   activate: (
     app: JupyterFrontEnd,
     docmanager: IDocumentManager,
     nbtracker: INotebookTracker,
-    restorer: ILayoutRestorer
+    restorer: ILayoutRestorer,
+    settingRegistry: ISettingRegistry
   ) => {
     console.log('JupyterLab extension neopyter is activated!');
 
-    const sidebar = new StatusSidePanel();
+    const sidebar = new StatusSidePanel(settingRegistry);
     sidebar.title.caption = 'Neopyter';
     sidebar.title.icon = statusPageIcon;
     app.shell.add(sidebar, 'right');
@@ -61,7 +63,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       const sharedModel = notebook?.model?.sharedModel;
 
       if (!notebookPanel || !sharedModel || !notebook) {
-        throw `Can't find ${path} and current don't select untitled ipynb`;
+        throw `Don't open ${path} and current don't select untitled ipynb`;
       }
       return {
         notebookPanel,
@@ -121,6 +123,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       activateNotebook: (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
+        app.shell.activateById(notebookPanel.id);
         return notebookPanel.activate();
       },
       closeFile: async (path: string) => {
@@ -135,7 +138,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         notebook && NotebookActions.selectBelow(notebook);
       }
     };
-
     const notebookDispatcher = {
       getCellNum: (path: string) => {
         return getNotebookModel(path).sharedModel.cells.length;
@@ -181,36 +183,65 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const { notebook } = getNotebookModel(path);
         notebook.scrollToItem(index, align, margin);
       },
-      syncCells: (path: string, from: number, cells: TCell[]) => {
-        const { notebook, sharedModel: sharedNotebookModel } = getNotebookModel(path);
+      fullSync: (path: string, cells: TCell[]) => {
+        const { notebook, sharedModel } = getNotebookModel(path);
         cells.forEach((cell, idx) => {
-          const index = from + idx;
-          const cellModel = sharedNotebookModel.getCell(index);
+          const cellModel = sharedModel.getCell(idx);
           if (cellModel) {
             if (cell.cell_type === undefined || cellModel.cell_type === cell.cell_type) {
               cellModel.setSource(cell.source);
             } else {
-              sharedNotebookModel.deleteCell(idx);
-              sharedNotebookModel.insertCell(idx, {
+              sharedModel.deleteCell(idx);
+              sharedModel.insertCell(idx, {
                 cell_type: cell.cell_type,
                 source: cell.source,
                 metadata: cellModel.getMetadata()
               });
             }
-            return;
+          } else {
+            sharedModel.insertCell(idx, {
+              cell_type: cell.cell_type,
+              source: cell.source,
+              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
+            });
           }
-          sharedNotebookModel.insertCell(index, {
-            cell_type: cell.cell_type,
-            source: cell.source,
-            metadata:
-              notebook.notebookConfig.defaultCell === 'code'
-                ? {
-                    // This is an empty cell created by user, thus is trusted
-                    trusted: true
-                  }
-                : {}
-          });
         });
+        while (cells.length < sharedModel.cells.length) {
+          sharedModel.deleteCell(sharedModel.cells.length - 1);
+        }
+      },
+      partialSync: (path: string, from: number, to: number, cells: TCell[]) => {
+        // replace cells from(include)-to(include) to new cells
+        const { notebook, sharedModel } = getNotebookModel(path);
+        console.log(
+          `partialSync: current cell num:${sharedModel.cells.length}, from:${from}(include), to:${to}(include), update to cell num:${cells.length}`
+        );
+        cells.forEach((cell, i) => {
+          const idx = i + from;
+          const cellModel = sharedModel.getCell(idx);
+          if (idx <= to && cellModel) {
+            if (cell.cell_type === undefined || cellModel.cell_type === cell.cell_type) {
+              cellModel.setSource(cell.source);
+            } else {
+              sharedModel.deleteCell(idx);
+              sharedModel.insertCell(idx, {
+                cell_type: cell.cell_type,
+                source: cell.source,
+                metadata: cellModel.getMetadata()
+              });
+            }
+          } else {
+            sharedModel.insertCell(idx, {
+              cell_type: cell.cell_type,
+              source: cell.source,
+              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
+            });
+          }
+        });
+        while (to - from + 1 > cells.length) {
+          sharedModel.deleteCell(to);
+          to = to - 1;
+        }
       },
       save: async (path: string) => {
         const { notebookPanel } = getNotebookModel(path);

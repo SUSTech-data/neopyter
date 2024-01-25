@@ -1,5 +1,3 @@
-import jupyter_server
-
 from .handler import setup_handlers
 from .tcp_server import setup_tcp_server
 
@@ -30,10 +28,10 @@ def _jupyter_labextension_paths():
     return [{"src": "labextension", "dest": "neopyter"}]
 
 
-def _load_jupyter_server_extension(serverapp: jupyter_server.serverapp.ServerApp):
+def _load_jupyter_server_extension(serverapp):
     """
     This function is called when the extension is loaded.
     """
     # print("load jupyter server extension")
     setup_handlers(serverapp.web_app)
-    setup_tcp_server()
+    setup_tcp_server(serverapp)

@@ -36,13 +36,15 @@ end
 ---@param address? string
 ---@async
 function AsyncRpcClient:connect(address)
-    address = address or self.address
-    assert(address, "Rpc client address is empty")
+    self.address = address or self.address
+    assert(self.tcp_client == nil, "current connection exists, can't call connect, please disconnect first")
+    assert(self.address, "Rpc client address is empty")
     self.tcp_client = vim.loop.new_tcp()
-    local host, port = parse_address(address)
+    local host, port = parse_address(self.address)
     local err = a.uv.tcp_connect(self.tcp_client, host, port)
     if err ~= nil then
         utils.notify_error(string.format("Connect rpc server [%s] failed", self.address))
+        self.tcp_client = nil
     else
         self.tcp_client:read_start(function(e, data)
             if e ~= nil or data == nil then
@@ -58,7 +60,6 @@ function AsyncRpcClient:connect(address)
         end)
     end
 end
-
 
 ---disconnect connect
 function AsyncRpcClient:disconnect()
@@ -83,7 +84,7 @@ end
 ---@return unknown|nil
 function AsyncRpcClient:request(method, ...)
     if not self:is_connecting() then
-        utils.notify_error("RPC tcp client not be initialized, please check jupyter lab server or restart connection")
+        utils.notify_error(string.format("RPC tcp client is disconnected, can't request [%s]", method))
         return
     end
     local msgid = self:gen_id()

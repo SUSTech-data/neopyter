@@ -62,7 +62,7 @@ function M.setup(config)
             group = augroup,
             pattern = M.config.file_pattern,
             callback = function()
-                if jupyter.jupyterlab:status() == "idle" then
+                if not jupyter.jupyterlab:is_connecting() then
                     jupyter.jupyterlab:attach()
                 end
             end,

@@ -29,6 +29,7 @@ function RpcClient:disconnect()
 end
 
 ---is rpc client connecting
+---@return boolean
 function RpcClient:is_connecting()
     assert(false, "not implement")
 end

@@ -40,7 +40,6 @@ function Notebook:new(o)
     local obj = setmetatable(o, self) --[[@as neopyter.Notebook]]
     local config = require("neopyter").config
     obj.remote_path = config.filename_mapper(obj.local_path)
-    obj:_parse()
     return obj
 end
 
@@ -53,6 +52,7 @@ function Notebook:attach()
         buffer = self.bufnr,
         callback = function()
             local row, col = self:get_cursor_pos()
+            print("CursorMoved: ", row)
             local line_count = 0
             for index, cell in ipairs(self.cells) do
                 line_count = line_count + #cell.lines
@@ -60,6 +60,7 @@ function Notebook:attach()
                     local active_index = index - 1
                     if active_index ~= self.active_cell_index then
                         -- cache
+                        print("activate: ", active_index)
                         self.active_cell_index = active_index
                         self:activate_cell(active_index)
                         self:scroll_to_item(active_index, "smart")
@@ -92,22 +93,22 @@ function Notebook:attach()
 
     api.nvim_buf_attach(self.bufnr, false, {
         on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
-            a.run(function()
-                -- TODO:particle update
-                self:_parse()
-                self:full_sync()
-            end, function() end)
+            self:partial_sync(start_row, old_end_row, new_end_row)
         end,
     })
 
+    -- initial full sync
     self:full_sync()
 end
 
+--- detach autocmd
 function Notebook:detach()
     api.nvim_del_augroup_by_id(self.augroup)
     self.augroup = nil
 end
 
+--- check attach status
+---@return boolean
 function Notebook:is_attached()
     return self.augroup ~= nil
 end
@@ -126,6 +127,8 @@ function Notebook:is_exist()
     return self:_request("isFileExist")
 end
 
+--- whether corresponding `.ipynb` file opened in jupyter lab or not
+---@return boolean
 function Notebook:is_open()
     return self:_request("isFileOpen")
 end
@@ -172,14 +175,58 @@ end
 function Notebook:get_active_cell() end
 
 function Notebook:full_sync()
+    local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
+    self.cells = utils.parse_content(lines)
     local cells = vim.tbl_map(function(cell)
         return {
             source = cell.source,
             cell_type = cell.cell_type,
         }
     end, self.cells)
-    self:_request("setCellNum", #cells)
-    self:_request("syncCells", 0, cells)
+    self:_request("fullSync", cells)
+end
+
+function Notebook:partial_sync(start_row, old_end_row, new_end_row)
+    assert(self.cells ~= nil, "must exist cells")
+    local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
+    local new_cells = utils.parse_content(lines)
+
+    -- new cells length
+    local ncl = #new_cells
+    -- old cells length
+    local ocl = #self.cells
+
+    local i = 0
+    while i < ncl and i < ocl do
+        i = i + 1
+        local nc = new_cells[i]
+        local oc = self.cells[i]
+        if table.concat(nc.lines, "\n") ~= table.concat(oc.lines, "\n") then
+            break
+        end
+    end
+
+    local j = -1
+    while j < ncl - 1 and j < ocl - 1 do
+        j = j + 1
+        if (ncl - j) == i or (ocl - j) == i then
+            break
+        end
+        local nc = new_cells[ncl - j]
+        local oc = self.cells[ocl - j]
+        if table.concat(nc.lines, "\n") ~= table.concat(oc.lines, "\n") then
+            break
+        end
+    end
+    -- update local state first
+    self.cells = new_cells
+
+    -- the different cells(index from 1):
+    -- new_cells: from i to ncl - j
+    -- old_cells: from i to ocl - j
+    local partial_cells = { unpack(new_cells, i, ncl - j) }
+    print(ncl, ocl, i, ocl - j, #partial_cells)
+    self:_request("partialSync", i - 1, ocl - j - 1, partial_cells)
 end
 
 ---save ipynb, same as `Ctrl+S` on jupyter lab
@@ -210,11 +257,6 @@ end
 
 function Notebook:restart_run_all()
     return self:_request("restartRunAll")
-end
-
-function Notebook:_parse()
-    local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
-    self.cells = utils.parse_content(lines)
 end
 
 Notebook = async_wrap(Notebook, { "is_attached" })

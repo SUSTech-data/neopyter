@@ -9,7 +9,7 @@ local api = a.api
 ---@field auto_activate_file boolean
 
 ---@class neopyter.JupyterLab
----@field private client neopyter.RpcClient
+---@field client neopyter.RpcClient
 ---@field private augroup number
 ---@field notebook_map {[string]: neopyter.Notebook}
 local JupyterLab = {}
@@ -21,7 +21,7 @@ local JupyterLab = {}
 ---@param opts neopyter.NewJupyterLabOption
 ---@return neopyter.JupyterLab
 function JupyterLab:new(opts)
-    local o = opts or {} --[[@as neopyter.JupyterLab]]
+    local o = {} --[[@as neopyter.JupyterLab]]
     setmetatable(o, self)
     self.__index = self
 
@@ -33,7 +33,7 @@ function JupyterLab:new(opts)
         RpcClient = rpc.AsyncRpcClient
     end
     o.client = RpcClient:new({
-        address = o.address,
+        address = opts.address,
     })
     self.notebook_map = {}
     return o
@@ -42,9 +42,13 @@ end
 ---attach autocmd and server
 ---@param address? string address of neopyter server
 function JupyterLab:attach(address)
+    self.client:connect(address)
+    if not self.client:is_connecting() then
+        return false
+    end
     local config = require("neopyter").config
     self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
-    assert(self.augroup ~= nil, "auogroupo failed")
+    assert(self.augroup ~= nil, "autogroup failed")
     utils.nvim_create_autocmd({ "BufWinEnter" }, {
         group = self.augroup,
         pattern = config.file_pattern,
@@ -59,7 +63,10 @@ function JupyterLab:attach(address)
             self:_on_buf_unloaded(event.buf)
         end,
     })
-    self.client:connect(address)
+    api.nvim_exec_autocmds("BufWinEnter", {
+        group = self.augroup,
+        pattern = config.file_pattern,
+    })
 end
 
 function JupyterLab:detach()
@@ -73,22 +80,12 @@ function JupyterLab:detach()
     return self.client:disconnect()
 end
 
----@alias neopyter.JupyterLabStatus
----| '"idle"' # initialized status
----| '"attached"' # attached status, autocmd is created
----| '"attached_connecting"' # attached and connecting to server
-
 ---get status of jupyterlab
----@return neopyter.JupyterLabStatus
-function JupyterLab:status()
-    if self.augroup ~= nil then
-        if self.client:is_connecting() then
-            return "attached_connecting"
-        else
-            return "attached"
-        end
-    end
-    return "idle"
+---@return boolean
+function JupyterLab:is_connecting()
+    local status = self.client:is_connecting()
+    assert(status == (self.augroup ~= nil), "autogroup status shold keep same with client")
+    return status
 end
 
 function JupyterLab:_get_buf_local_path(buf)
@@ -163,5 +160,5 @@ function JupyterLab:current_ipynb()
     return self.client:request("getCurrentNotebook", ops)
 end
 
-JupyterLab = async_wrap(JupyterLab, { "status" })
+JupyterLab = async_wrap(JupyterLab, { "is_connecting" })
 return JupyterLab

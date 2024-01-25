@@ -1,7 +1,6 @@
-
 return {
-    log= function(msg)
+    log = function(msg)
         -- TODO:log to file
         -- print(msg)
-    end
+    end,
 }

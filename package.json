@@ -22,7 +22,8 @@
     },
     "files": [
         "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
-        "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+        "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+        "schema/*.json"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -60,6 +61,7 @@
         "prepare": "husky install"
     },
     "dependencies": {
+        "@msgpack/msgpack": "3.0.0-beta2",
         "@jupyterlab/application": "^4.0.4",
         "@jupyterlab/apputils": "^4.1.4",
         "@jupyterlab/logconsole": "^4.0.4",
@@ -74,14 +76,13 @@
         "@jupyterlab/coreutils": "^6.0.9",
         "@jupyterlab/docmanager": "^4.0.9",
         "@jupyterlab/services": "^7.0.9",
+        "@jupyterlab/settingregistry": "^4.0.11",
         "@jupyterlab/testutils": "^4.0.0",
         "@jupyterlab/ui-components": "^4.0.10",
         "@lumino/coreutils": "^2.1.2",
         "@lumino/disposable": "^2.1.2",
-        "@msgpack/msgpack": "3.0.0-beta2",
         "@types/jest": "^29.2.0",
         "@types/json-schema": "^7.0.11",
-        "@types/react": "^18.0.26",
         "@typescript-eslint/eslint-plugin": "^6.1.0",
         "@typescript-eslint/parser": "^6.1.0",
         "css-loader": "^6.7.1",
@@ -112,6 +113,7 @@
     },
     "jupyterlab": {
         "extension": true,
+        "schemaDir": "schema",
         "outputDir": "neopyter/labextension"
     },
     "prettier": {

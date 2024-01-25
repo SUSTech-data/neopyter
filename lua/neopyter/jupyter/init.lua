@@ -2,7 +2,6 @@
 -- For global instance
 --]]
 
-
 ---@class neopyter.JupyterModule
 ---@field jupyterlab neopyter.JupyterLab|nil
 ---@field notebook neopyter.Notebook|nil
