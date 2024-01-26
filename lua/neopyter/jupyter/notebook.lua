@@ -52,7 +52,6 @@ function Notebook:attach()
         buffer = self.bufnr,
         callback = function()
             local row, col = self:get_cursor_pos()
-            print("CursorMoved: ", row)
             local line_count = 0
             for index, cell in ipairs(self.cells) do
                 line_count = line_count + #cell.lines
@@ -60,7 +59,6 @@ function Notebook:attach()
                     local active_index = index - 1
                     if active_index ~= self.active_cell_index then
                         -- cache
-                        print("activate: ", active_index)
                         self.active_cell_index = active_index
                         self:activate_cell(active_index)
                         self:scroll_to_item(active_index, "smart")
@@ -225,7 +223,6 @@ function Notebook:partial_sync(start_row, old_end_row, new_end_row)
     -- new_cells: from i to ncl - j
     -- old_cells: from i to ocl - j
     local partial_cells = { unpack(new_cells, i, ncl - j) }
-    print(ncl, ocl, i, ocl - j, #partial_cells)
     self:_request("partialSync", i - 1, ocl - j - 1, partial_cells)
 end
 

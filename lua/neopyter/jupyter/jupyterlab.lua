@@ -126,6 +126,9 @@ end
 function JupyterLab:_on_buf_unloaded(buf)
     local file_path = self:_get_buf_local_path(buf)
     local notebook = self.notebook_map[file_path]
+    if notebook == nil then
+        return
+    end
     notebook:detach()
     self.notebook_map[file_path] = nil
 end

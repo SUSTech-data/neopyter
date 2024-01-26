@@ -6,16 +6,10 @@
   "jupyter.lab.setting-icon-label": "Neopyter",
   "definitions": {
     "ip": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "port": {
-      "type": [
-        "integer",
-        "null"
-      ],
+      "type": ["integer", "null"],
       "minimum": 100,
       "maximum": 65535
     }
