@@ -7,7 +7,6 @@ local BlockRpcClient = RpcClient:new({
     channel_id = 0,
 }) --[[@as neopyter.BlockRpcClient]]
 
-
 -- ---create RpcClient and connect
 -- ---@param o neopyter.NewRpcClientOption
 -- ---@return neopyter.BlockRpcClient
@@ -33,7 +32,6 @@ function BlockRpcClient:disconnect()
     vim.fn.chanclose(self.channel_id)
     self.channel_id = 0
 end
-
 
 ---check client is connecting
 ---@return boolean
