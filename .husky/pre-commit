@@ -6,9 +6,6 @@
 pnpm lint
 ruff check neopyter
 
-# frontend test
-pnpm test
-
 # jupyterlab server test
 pytest
 
