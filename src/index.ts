@@ -5,6 +5,8 @@ import { ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyte
 import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { ICompletionProviderManager, KernelCompleterProvider, CompletionProviderManager } from '@jupyterlab/completer';
+
 import * as R from 'remeda';
 
 import { RpcServer, Dispatcher } from './rpcServer';
@@ -25,15 +27,21 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
   id: 'neopyter:labplugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry],
+  requires: [IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry, ICompletionProviderManager],
   activate: (
     app: JupyterFrontEnd,
     docmanager: IDocumentManager,
     nbtracker: INotebookTracker,
     restorer: ILayoutRestorer,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    _completionProviderManager: ICompletionProviderManager
   ) => {
+    const completionProviderManager = _completionProviderManager as CompletionProviderManager;
+    const providers = completionProviderManager.getProviders();
     console.log('JupyterLab extension neopyter is activated!');
+    console.log('provider', completionProviderManager.getProviders());
+    const kernelCompleterProvider = providers.get('CompletionProvider:kernel') as KernelCompleterProvider;
+    // completionProviderManager.updateCompleter
 
     const sidebar = new StatusSidePanel(settingRegistry);
     sidebar.title.caption = 'Neopyter';
@@ -52,7 +60,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       return widget?.content;
     };
     const getNotebookModel = (path: string) => {
-      let notebookPanel = docmanager.findWidget(path) as NotebookPanel;
+      let notebookPanel = docmanager.findWidget(path) as unknown as NotebookPanel;
       let notebook = notebookPanel?.content as Notebook | undefined;
       if (!notebook) {
         if (nbtracker.currentWidget?.isUntitled) {
@@ -177,6 +185,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       activateCell: (path: string, index: number) => {
         const { notebook } = getNotebookModel(path);
+        // notebook.setAc
         notebook.activeCellIndex = index;
       },
       scrollToItem: (path: string, index: number, align?: WindowedList.ScrollToAlign, margin?: number) => {
@@ -269,6 +278,28 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const { notebookPanel } = getNotebookModel(path);
         await notebookPanel.sessionContext.restartKernel();
         return await app.commands.execute('notebook:run-all-cells');
+      },
+      setMode: (path: string, mode: 'command' | 'edit') => {
+        const { notebookPanel } = getNotebookModel(path);
+        notebookPanel.content.mode = mode;
+      },
+      // kernelComplete: async (path: string, index: number, row: number, col: number) => {
+      kernelComplete: async (path: string, source: string, offset: number) => {
+        const { notebookPanel } = getNotebookModel(path);
+
+        console.log('kernelComplete:', source, offset);
+        const completionItems = await kernelCompleterProvider.fetch(
+          {
+            text: source,
+            offset: offset
+          },
+          {
+            widget: notebookPanel,
+            session: notebookPanel.sessionContext.session
+          }
+        );
+        console.log(completionItems);
+        return completionItems.items;
       }
     };
     const cellDispatcher = {

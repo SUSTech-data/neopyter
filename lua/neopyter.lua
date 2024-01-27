@@ -13,6 +13,7 @@ local utils = require("neopyter.utils")
 ---@field filename_mapper fun(ju_path:string):string
 ---@field jupyter neopyter.JupyterOption
 ---@field highlight neopyter.HighlightOption
+---@field parse_option neopyter.ParseOption
 
 local M = {}
 
@@ -45,6 +46,9 @@ M.config = {
         -- Dim all cells except the current one
         shortsighted = false,
     },
+    parse_option = {
+        line_magic = true,
+    },
 }
 
 ---setup neopyter
@@ -69,6 +73,12 @@ function M.setup(config)
         })
     end
     highlight.setup(M.config.highlight)
+
+    local status, cmp = pcall(require, "cmp")
+    if status then
+        cmp.register_source("neopyter", require("neopyter.cmp"))
+        return
+    end
 end
 
 return M

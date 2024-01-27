@@ -6,7 +6,7 @@ local cmds = {
     connect = {
         execute = function(address)
             local status = jupyter.jupyterlab:is_connecting()
-            if status  then
+            if status then
                 utils.notify_warn("Jupyter lab is connecting, reset current and connect to " .. address)
                 jupyter.jupyterlab:detach()
                 jupyter.jupyterlab:attach(address)
@@ -40,10 +40,14 @@ local cmds = {
         end,
     },
     execute = {
-        execute = function (command, args)
-            jupyter.jupyterlab:execute_command(command, vim.json.decode(args))
-        end
-
+        execute = function(command, args)
+            if args ~= nil then
+                local status, data = pcall(vim.json.decode, args)
+                assert(status, data)
+                args = data
+            end
+            jupyter.jupyterlab:execute_command(command, args)
+        end,
     },
     disconnect = {
         execute = function()

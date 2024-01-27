@@ -45,41 +45,37 @@ end
 
 ---attach autocmd&notebook
 function Notebook:attach()
+    local config = require("neopyter").config
     local augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
     assert(augroup, "can't create augroup")
     self.augroup = augroup
     utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
         buffer = self.bufnr,
         callback = function()
-            local row, col = self:get_cursor_pos()
-            local line_count = 0
-            for index, cell in ipairs(self.cells) do
-                line_count = line_count + #cell.lines
-                if line_count >= row then
-                    local active_index = index - 1
-                    if active_index ~= self.active_cell_index then
-                        -- cache
-                        self.active_cell_index = active_index
-                        self:activate_cell(active_index)
-                        self:scroll_to_item(active_index, "smart")
-                    end
-                    break
-                end
+            local index = self:get_cursor_cell_pos()
+            if index ~= self.active_cell_index then
+                -- cache
+                self.active_cell_index = index
+                self:activate_cell(index - 1)
+                self:scroll_to_item(index - 1, "smart")
             end
         end,
         group = augroup,
     })
 
-    utils.nvim_create_autocmd({ "ModeChanged" }, {
-        buffer = self.bufnr,
-        callback = function()
-            local old_mode = vim.v.event.old_mode
-            local new_mode = vim.v.event.new_mode
-            local row, col = self:get_cursor_pos()
-            -- TODO:change notebook mode to normal/insert
-        end,
-        group = augroup,
-    })
+    -- utils.nvim_create_autocmd({ "ModeChanged" }, {
+    --     buffer = self.bufnr,
+    --     callback = function()
+    --         local old_mode = vim.v.event.old_mode
+    --         local new_mode = vim.v.event.new_mode
+    --         if new_mode == "i" and old_mode == "n" then
+    --             self:set_mode("edit")
+    --         elseif new_mode == "n" and old_mode == "i" then
+    --             self:set_mode("command")
+    --         end
+    --     end,
+    --     group = augroup,
+    -- })
 
     utils.nvim_create_autocmd({ "BufWritePre" }, {
         buffer = self.bufnr,
@@ -170,7 +166,22 @@ function Notebook:get_cursor_pos()
     return pos[1], pos[2]
 end
 
-function Notebook:get_active_cell() end
+---get current cell of cursor position, start from 1
+---@return number #index of cell
+---@return number #row of cursor in cell
+---@return number #col of cursor in cell
+function Notebook:get_cursor_cell_pos()
+    local row, col = self:get_cursor_pos()
+    local line_count = 0
+    for index, cell in ipairs(self.cells) do
+        local next_count = line_count + #cell.lines
+        if next_count >= row then
+            return index, row - line_count, col
+        end
+        line_count = next_count
+    end
+    return #self.cells, 0, 0
+end
 
 function Notebook:full_sync()
     local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
@@ -254,6 +265,21 @@ end
 
 function Notebook:restart_run_all()
     return self:_request("restartRunAll")
+end
+
+---@alias neopyter.NotebookMode
+---| 'command'
+---| 'edit'
+
+---set notebook mode
+---@param mode neopyter.NotebookMode
+function Notebook:set_mode(mode)
+    return self:_request("setMode", mode)
+end
+
+---
+function Notebook:kernel_complete(source, offset)
+    return self:_request("kernelComplete", source, offset)
 end
 
 Notebook = async_wrap(Notebook, { "is_attached" })

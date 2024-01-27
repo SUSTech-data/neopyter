@@ -2,6 +2,11 @@ local Path = require("plenary.path")
 local a = require("plenary.async")
 local M = {}
 
+---
+function M.first_upper(str)
+    return (str:gsub("^%l", string.upper))
+end
+
 ---emit info notify via vim.notify
 ---@param msg string
 function M.notify_info(msg)
@@ -72,11 +77,16 @@ function M.nvim_create_autocmd(event, opts)
     vim.api.nvim_create_autocmd(event, opts)
 end
 
+---@class neopyter.ParseOption
+---@field line_magic boolean|nil
+---@field content_annotated_cell_types string[]|nil
+
 ---parse lines
 ---@param lines string[]
 ---@param filetype? string default python
 ---@return neopyter.Cell[]
 function M.parse_content(lines, filetype)
+    local option = require("neopyter").config.parse_option
     filetype = filetype or "python"
     ---@type neopyter.Cell []
     local cells = {}
@@ -126,9 +136,11 @@ function M.parse_content(lines, filetype)
     end
     local function concat_code(code_lines, i, j)
         code_lines = vim.tbl_map(function(line)
-            local line_magic = line:match("# (%%%w+.*)")
-            if line_magic ~= nil then
-                return line_magic
+            if option.line_magic then
+                local line_magic = line:match("# (%%%w+.*)")
+                if line_magic ~= nil then
+                    return line_magic
+                end
             end
             return line
         end, code_lines)
@@ -142,7 +154,7 @@ function M.parse_content(lines, filetype)
 
         if cell.cell_magic ~= nil then
             cell.source = cell.cell_magic .. "\n" .. table.concat(cell.lines, "\n", 2)
-        elseif cell.cell_type == "markdown" or cell.cell_type == "raw" or cell.cell_magic then
+        elseif cell.cell_type == "markdown" or cell.cell_type == "raw" then
             cell.source = table.concat(cell.lines, "\n", 2)
             if filetype == "python" then
                 local comment_source = vim.trim(cell.source):match('^"""\n(.*)\n"""$')
@@ -150,7 +162,6 @@ function M.parse_content(lines, filetype)
                     cell.source = comment_source
                 end
                 cell.source = cell.source:gsub('\\"\\"\\"', '"""')
-                -- cell.source = cell.source:gsub('\n\\#', '\n#')
             end
         elseif cell.no_separator == true then
             cell.source = concat_code(cell.lines)
