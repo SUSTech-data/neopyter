@@ -24,6 +24,14 @@ function source:get_trigger_characters()
     return { "%%", ".", "/", "%" }
 end
 
+local jupyter_complete_types = {
+    ["dict key"] = "constant",
+    ["instance"] = "variable",
+    ["magic"] = "event",
+    ["path"] = "folder",
+    ["statement"] = "enum",
+}
+
 ---Invoke completion (required).
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
@@ -34,27 +42,15 @@ function source:complete(params, callback)
         local items = jupyter.notebook:kernel_complete(code, offset)
         items = vim.tbl_map(function(item)
             local type = item.type
+            -- local jupyter_complete_types = { "magic", "path" }
+            type = jupyter_complete_types[type] or type
             local kind = utils.first_upper(type)
-            local jupyter_complete_types = { "magic", "path" }
-            if vim.tbl_contains(jupyter_complete_types, type) then
-                return {
-                    label = item.label,
-                    -- Text
-                    kind = 1,
-                    insertText = item.insertText,
-                    cmp = {
-                        kind_hl_group = "CmpItemKind" .. kind,
-                        kind_text = kind,
-                    },
-                }
-            else
-                return {
-                    label = item.label,
-                    -- Text
-                    kind = cmp.lsp.CompletionItemKind[kind],
-                    insertText = item.insertText,
-                }
-            end
+            return {
+                label = item.label,
+                -- Text
+                kind = cmp.lsp.CompletionItemKind[kind],
+                insertText = item.insertText,
+            }
         end, items)
         callback(items)
     end, function() end)
