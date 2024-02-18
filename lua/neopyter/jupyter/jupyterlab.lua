@@ -114,6 +114,10 @@ function JupyterLab:_on_bufwinenter(buf)
             notebook:open_or_reveal()
             notebook:activate()
         end
+        local config = require("neopyter").config
+        if type(config.on_attach) == "function" then
+            config.on_attach(buf)
+        end
     end
     local jupyter = require("neopyter.jupyter")
     jupyter.notebook = notebook

@@ -11,6 +11,7 @@ local utils = require("neopyter.utils")
 ---| "'async'" # AsyncRpcClient, default
 ---| "'block'" # BlockRpcClient
 ---@field filename_mapper fun(ju_path:string):string
+---@field on_attach? fun(bufnr:number)
 ---@field jupyter neopyter.JupyterOption
 ---@field highlight neopyter.HighlightOption
 ---@field parse_option neopyter.ParseOption

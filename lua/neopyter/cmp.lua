@@ -4,6 +4,14 @@ local a = require("plenary.async")
 local cmp = require("cmp")
 local source = {}
 
+local jupyter_complete_spec_types = {
+    ["magic"] = "Magic",
+    ["path"] = "Path",
+    ["dict key"] = "Dictkey",
+    ["instance"] = "Instance",
+    ["statement"] = "Statement",
+}
+
 source.new = function()
     local self = setmetatable({}, { __index = source })
     return self
@@ -24,14 +32,6 @@ function source:get_trigger_characters()
     return { "%%", ".", "/", "%" }
 end
 
-local jupyter_complete_types = {
-    ["dict key"] = "constant",
-    ["instance"] = "variable",
-    ["magic"] = "event",
-    ["path"] = "folder",
-    ["statement"] = "enum",
-}
-
 ---Invoke completion (required).
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
@@ -42,15 +42,27 @@ function source:complete(params, callback)
         local items = jupyter.notebook:kernel_complete(code, offset)
         items = vim.tbl_map(function(item)
             local type = item.type
-            -- local jupyter_complete_types = { "magic", "path" }
-            type = jupyter_complete_types[type] or type
             local kind = utils.first_upper(type)
-            return {
-                label = item.label,
-                -- Text
-                kind = cmp.lsp.CompletionItemKind[kind],
-                insertText = item.insertText,
-            }
+
+            if jupyter_complete_spec_types[type] ~= nil then
+                return {
+                    label = item.label,
+                    -- Text
+                    kind = 1,
+                    insertText = item.insertText,
+                    cmp = {
+                        kind_hl_group = "CmpItemKind" .. jupyter_complete_spec_types[type],
+                        kind_text = kind,
+                    },
+                }
+            else
+                return {
+                    label = item.label,
+                    -- Text
+                    kind = cmp.lsp.CompletionItemKind[kind],
+                    insertText = item.insertText,
+                }
+            end
         end, items)
         callback(items)
     end, function() end)

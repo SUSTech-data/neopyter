@@ -51,9 +51,57 @@ With 💤lazy.nvim:
         -- your jupyter host + neopyter port
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
+        on_attach = function(bufnr)
+        end
     },
 }
 ```
+#### Integration
+**nvim-cmp**
+* `nvim-cmp`
+* `lspkind.nvim`
+
+```lua
+
+local lspkind = require("lspkind")
+local cmp = require("cmp")
+
+cmp.setup({
+
+    sources = cmp.config.sources({
+        -- addition source
+        { name = "neopyter" },
+    }),
+    formatting = {
+        format = lspkind.cmp_format({
+            mode = "symbol_text",
+            maxwidth = 50,
+            ellipsis_char = "...",
+            menu = {
+                neopyter = "[Neopyter]",
+            },
+            symbol_map = {
+                -- specific complete item kind icon
+                ["Magic"] = "🪄",
+                ["Path"] = "📁",
+                ["Dict key"] = "🔑",
+                ["Instance"]="󱃻",
+                ["Statement"]="󱇯",
+            },
+        }),
+    },
+)}
+
+-- menu item highlight
+vim.api.nvim_set_hl(0, "CmpItemKindMagic", { bg = "NONE", fg = "#D4D434" })
+vim.api.nvim_set_hl(0, "CmpItemKindPath", { link = "CmpItemKindFolder" })
+vim.api.nvim_set_hl(0, "CmpItemKindDictkey", { link = "CmpItemKindKeyword" })
+vim.api.nvim_set_hl(0, "CmpItemKindInstance", { link = "CmpItemKindVariable" })
+vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
+
+```
+More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
+
 
 ## Quick Start
 
