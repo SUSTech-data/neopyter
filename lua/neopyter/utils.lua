@@ -172,4 +172,16 @@ function M.parse_content(lines, filetype)
     return cells
 end
 
+function M.read_file(path)
+    local err, fd = a.uv.fs_open(path, "r", 438)
+    assert(not err, err)
+    local err1, stat = a.uv.fs_fstat(fd)
+    assert(not err1, err1)
+    local err2, data = a.uv.fs_read(fd, stat.size, 0)
+    assert(not err2, err2)
+    local err3 = a.uv.fs_close(fd)
+    assert(not err3, err3)
+    return data
+end
+
 return M

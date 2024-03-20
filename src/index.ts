@@ -1,7 +1,7 @@
 import { Kernel, ServerConnection } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
 import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
-import { ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { ILabShell, ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -27,9 +27,17 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
   id: 'neopyter:labplugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry, ICompletionProviderManager],
+  requires: [
+    ILabShell,
+    IDocumentManager,
+    INotebookTracker,
+    ILayoutRestorer,
+    ISettingRegistry,
+    ICompletionProviderManager
+  ],
   activate: (
     app: JupyterFrontEnd,
+    labShell: ILabShell,
     docmanager: IDocumentManager,
     nbtracker: INotebookTracker,
     restorer: ILayoutRestorer,
@@ -54,18 +62,24 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
 
     const settings = ServerConnection.makeSettings();
     const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
-    const getCurrentNotebook = () => {
-      const widget = nbtracker.currentWidget as NotebookPanel;
-      app.shell.activateById(widget.id);
-      return widget?.content;
-    };
-    const getNotebookModel = (path: string) => {
-      let notebookPanel = docmanager.findWidget(path) as unknown as NotebookPanel;
+
+    let currentNotebookPanel: NotebookPanel | null = nbtracker.currentWidget;
+    labShell.currentChanged.connect(() => {
+      if (labShell.currentWidget instanceof NotebookPanel) {
+        currentNotebookPanel = labShell.currentWidget;
+      }
+    });
+
+    const getNotebookModel = (path?: string) => {
+      let notebookPanel;
+      if (path) {
+        notebookPanel = docmanager.findWidget(path) as unknown as NotebookPanel;
+      }
       let notebook = notebookPanel?.content as Notebook | undefined;
       if (!notebook) {
-        if (nbtracker.currentWidget?.isUntitled) {
-          notebookPanel = nbtracker.currentWidget;
-          notebook = nbtracker.currentWidget.content;
+        if (currentNotebookPanel?.isUntitled) {
+          notebookPanel = currentNotebookPanel;
+          notebook = notebookPanel.content;
         }
       }
       const sharedModel = notebook?.model?.sharedModel;
@@ -91,6 +105,10 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     };
 
     const dispatcher: Dispatcher = {
+      async getVersion() {
+        const packageJson = await import('../package' + '.json');
+        return packageJson.version;
+      },
       echo: (message: string) => {
         const msg = `hello: ${message}`;
         return msg;
@@ -101,7 +119,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     };
     const docmanagerDispatcher = {
       getCurrentNotebook: () => {
-        const notebookPanel = nbtracker.currentWidget;
+        const notebookPanel = currentNotebookPanel;
         if (notebookPanel) {
           const context = docmanager.contextForWidget(notebookPanel);
           return context?.localPath;
@@ -131,18 +149,19 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       activateNotebook: (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
-        app.shell.activateById(notebookPanel.id);
-        return notebookPanel.activate();
+        labShell.activateById(notebookPanel.id);
+        notebookPanel.node.focus();
+        currentNotebookPanel = notebookPanel;
       },
       closeFile: async (path: string) => {
         return await docmanager.closeFile(path);
       },
       selectAbove: () => {
-        const notebook = getCurrentNotebook();
+        const { notebook } = getNotebookModel();
         notebook && NotebookActions.selectBelow(notebook);
       },
       selectBelow: () => {
-        const notebook = getCurrentNotebook();
+        const { notebook } = getNotebookModel();
         notebook && NotebookActions.selectBelow(notebook);
       }
     };

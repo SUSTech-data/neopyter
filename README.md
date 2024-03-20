@@ -56,10 +56,13 @@ With 💤lazy.nvim:
     },
 }
 ```
+
 #### Integration
+
 **nvim-cmp**
-* `nvim-cmp`
-* `lspkind.nvim`
+
+- `nvim-cmp`
+- `lspkind.nvim`
 
 ```lua
 
@@ -100,8 +103,8 @@ vim.api.nvim_set_hl(0, "CmpItemKindInstance", { link = "CmpItemKindVariable" })
 vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
 
 ```
-More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
 
+More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
 
 ## Quick Start
 

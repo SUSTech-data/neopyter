@@ -72,8 +72,15 @@ local cmds = {
             local old_remote_path = jupyter.notebook.remote_path
             jupyter.notebook.remote_path = file_or_current
             if jupyter.notebook:is_exist() then
-                jupyter.notebook:attach()
-                jupyter.notebook:open_or_reveal()
+                if not jupyter.notebook:is_attached() then
+                    jupyter.notebook:attach()
+                end
+
+                if jupyter.notebook:is_open() then
+                    jupyter.notebook:activate()
+                else
+                    jupyter.notebook:open_or_reveal()
+                end
                 jupyter.notebook:full_sync()
             else
                 utils.notify_error(string.format("The file [%s] not exist in Jupyter lab", file_or_current))

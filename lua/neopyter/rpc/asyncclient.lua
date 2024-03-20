@@ -48,8 +48,6 @@ function AsyncRpcClient:connect(address)
     else
         self.tcp_client:read_start(function(e, data)
             if e ~= nil or data == nil then
-                utils.notify_error(string.format("Rpc connection was broken: %s", vim.inspect(e)))
-                utils.notify_error(vim.inspect(e))
                 for _, callback in ipairs(self.request_pool) do
                     callback(false, e)
                 end
@@ -93,14 +91,24 @@ function AsyncRpcClient:request(method, ...)
     local status, res = a.wrap(function(callback)
         self.request_pool[msgid] = callback
         self.tcp_client:write(content)
-        logger.log(string.format("msgid [%s] request [%s] sended", msgid, method))
+        logger.log(string.format("msgid [%s] request [%s] send", msgid, method))
     end, 1)()
-    logger.log(string.format("msgid [%s] finished", msgid))
+    logger.log(string.format("msgid [%s] finished: %s", msgid, vim.inspect(res)))
 
     if status then
         return res
     else
-        utils.notify_error(string.format("RPC request [%s] failed, with error: %s", method, res))
+        if method == "getVersion" then
+            utils.notify_error(
+                string.format(
+                    "jupyterlab extension is outdated, it is recommended to update with `pip install -U neopyter`",
+                    method,
+                    res
+                )
+            )
+        else
+            utils.notify_error(string.format("RPC request [%s] failed, with error: %s", method, res))
+        end
     end
 end
 

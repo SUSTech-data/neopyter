@@ -3,7 +3,10 @@ local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
 local async_wrap = require("neopyter.asyncwrap")
 local a = require("plenary.async")
+local Path = require("plenary.path")
 local api = a.api
+
+local __filepath__ = debug.getinfo(1).source:sub(2)
 
 ---@class neopyter.JupyterOption
 ---@field auto_activate_file boolean
@@ -46,6 +49,18 @@ function JupyterLab:attach(address)
     if not self.client:is_connecting() then
         return false
     end
+    local jupyterlab_version = self:get_jupyterlab_extension_version()
+    local nvim_version = self:get_nvim_plugin_version()
+    if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
+        utils.notify_error(
+            string.format(
+                "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
+                jupyterlab_version,
+                nvim_version
+            )
+        )
+    end
+
     local config = require("neopyter").config
     self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
     assert(self.augroup ~= nil, "autogroup failed")
@@ -100,6 +115,7 @@ end
 ---if not exists, create with buf
 ---@param buf number
 function JupyterLab:_on_bufwinenter(buf)
+    local jupyter = require("neopyter.jupyter")
     local file_path = JupyterLab:_get_buf_local_path(buf)
     local notebook = self.notebook_map[file_path]
     if notebook == nil then
@@ -109,21 +125,24 @@ function JupyterLab:_on_bufwinenter(buf)
             local_path = file_path,
         })
         self.notebook_map[file_path] = notebook
+        jupyter.notebook = notebook
         if notebook:is_exist() then
-            notebook:attach()
             notebook:open_or_reveal()
-            notebook:activate()
+            notebook:attach()
         end
         local config = require("neopyter").config
         if type(config.on_attach) == "function" then
             config.on_attach(buf)
         end
-    end
-    local jupyter = require("neopyter.jupyter")
-    jupyter.notebook = notebook
-    if notebook:is_attached() then
-        notebook:open_or_reveal()
-        notebook:activate()
+    else
+        jupyter.notebook = notebook
+        if notebook:is_exist() then
+            if notebook:is_open() then
+                notebook:activate()
+            else
+                notebook:open_or_reveal()
+            end
+        end
     end
 end
 
@@ -135,6 +154,19 @@ function JupyterLab:_on_buf_unloaded(buf)
     end
     notebook:detach()
     self.notebook_map[file_path] = nil
+end
+
+---get remote version
+---@return string|nil
+function JupyterLab:get_jupyterlab_extension_version()
+    return self.client:request("getVersion")
+end
+
+function JupyterLab:get_nvim_plugin_version()
+    local path = Path:new(__filepath__):parent():parent():parent():parent():joinpath("package.json")
+    local content = utils.read_file(tostring(path))
+    local packageJson = vim.json.decode(content)
+    return packageJson["version"]
 end
 
 ---simple echo
@@ -168,4 +200,5 @@ function JupyterLab:current_ipynb()
 end
 
 JupyterLab = async_wrap(JupyterLab, { "is_connecting" })
+
 return JupyterLab
