@@ -15,7 +15,6 @@ local utils = require("neopyter.utils")
 ---@field jupyter neopyter.JupyterOption
 ---@field highlight neopyter.HighlightOption
 ---@field parse_option neopyter.ParseOption
-
 local M = {}
 
 ---@type neopyter.Option
@@ -73,6 +72,7 @@ function M.setup(config)
             end,
         })
     end
+
     highlight.setup(M.config.highlight)
 
     local status, cmp = pcall(require, "cmp")

@@ -1,11 +1,14 @@
-local plenary_dir = os.getenv("PLENARY_DIR") or "/tmp/plenary.nvim"
-local is_not_a_directory = vim.fn.isdirectory(plenary_dir) == 0
-if is_not_a_directory then
-    vim.fn.system({ "git", "clone", "https://github.com/nvim-lua/plenary.nvim", plenary_dir })
+local function add_dependence(url, name)
+    local temp_dir = "/tmp/" .. name
+    if vim.fn.isdirectory(temp_dir) == 0 then
+        vim.fn.system({ "git", "clone", url, temp_dir })
+    end
+    vim.opt.rtp:append(temp_dir)
 end
 
-vim.opt.rtp:append(".")
-vim.opt.rtp:append(plenary_dir)
+add_dependence("https://github.com/nvim-lua/plenary.nvim", "plenary.nvim")
+add_dependence("https://github.com/nvim-treesitter/nvim-treesitter", "nvim-treesitter")
 
+vim.opt.rtp:append(".")
 vim.cmd("runtime plugin/plenary.vim")
 require("plenary.busted")

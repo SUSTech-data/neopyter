@@ -282,6 +282,28 @@ function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
 
-Notebook = async_wrap(Notebook, { "is_attached" })
+function Notebook:goto_next_cell_header()
+    local nextCellIdx = self.active_cell_index + 1
+    if nextCellIdx > #self.cells then
+        nextCellIdx = 1
+    end
+    local cell = self.cells[nextCellIdx]
+    local winid = vim.fn.bufwinid(self.bufnr)
+    vim.api.nvim_win_set_cursor(winid, { cell.start_line, 0 })
+end
+
+function Notebook:goto_next_cell_content() end
+
+function Notebook:goto_prev_cell_header() end
+
+function Notebook:goto_prev_cell_content() end
+
+Notebook = async_wrap(Notebook, {
+    "is_attached",
+    "goto_next_cell_header",
+    "goto_next_cell_content",
+    "goto_prev_cell_header",
+    "goto_prev_cell_content",
+})
 
 return Notebook
