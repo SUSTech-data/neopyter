@@ -1,6 +1,7 @@
 local a = require("plenary.async")
 local utils = require("neopyter.utils")
 local async_wrap = require("neopyter.asyncwrap")
+local query = require("nvim-treesitter.query")
 local uv = a.uv
 local api = a.api
 
@@ -52,6 +53,9 @@ function Notebook:attach()
     utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
         buffer = self.bufnr,
         callback = function()
+            if not self:is_connecting() then
+                return
+            end
             local index = self:get_cursor_cell_pos()
             if index ~= self.active_cell_index then
                 -- cache
@@ -80,19 +84,33 @@ function Notebook:attach()
     utils.nvim_create_autocmd({ "BufWritePre" }, {
         buffer = self.bufnr,
         callback = function()
-            self:save()
+            if self:is_connecting() then
+                self:save()
+            end
         end,
         group = augroup,
     })
 
     api.nvim_buf_attach(self.bufnr, false, {
         on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
-            self:partial_sync(start_row, old_end_row, new_end_row)
+            a.run(function()
+                if not self:is_connecting() then
+                    self:update_cells()
+                    return
+                end
+                self:partial_sync(start_row, old_end_row, new_end_row)
+            end, function() end)
         end,
     })
 
-    -- initial full sync
-    self:full_sync()
+    self:update_cells()
+
+    if self:is_connecting() then
+        self:open_or_reveal()
+        self:activate()
+        -- initial full sync
+        self:full_sync()
+    end
 end
 
 --- detach autocmd
@@ -105,6 +123,20 @@ end
 ---@return boolean
 function Notebook:is_attached()
     return self.augroup ~= nil
+end
+
+function Notebook:is_connecting()
+    -- if self.client:is_connecting() then
+    --     local is_exist = self:is_exist()
+    --     return is_exist
+    -- end
+    -- return false
+    return self.client:is_connecting() and self:is_exist()
+end
+
+function Notebook:update_cells()
+    local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
+    self.cells = utils.parse_content(lines)
 end
 
 ---internal request
@@ -161,9 +193,16 @@ function Notebook:get_cell_num()
 end
 
 function Notebook:get_cursor_pos()
-    local winid = vim.fn.bufwinid(self.bufnr)
-    local pos = vim.api.nvim_win_get_cursor(winid)
+    local winid = utils.buf2winid(self.bufnr)
+
+    local pos = api.nvim_win_get_cursor(winid or 0)
     return pos[1], pos[2]
+end
+
+---@param pos integer[] (row, col) tuple representing the new position
+function Notebook:set_cursor_pos(pos)
+    local winid = utils.buf2winid(self.bufnr)
+    vim.api.nvim_win_set_cursor(winid, pos)
 end
 
 ---get current cell of cursor position, start from 1
@@ -184,8 +223,6 @@ function Notebook:get_cursor_cell_pos()
 end
 
 function Notebook:full_sync()
-    local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
-    self.cells = utils.parse_content(lines)
     local cells = vim.tbl_map(function(cell)
         return {
             source = cell.source,
@@ -282,27 +319,49 @@ function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
 
-function Notebook:goto_next_cell_header()
-    local nextCellIdx = self.active_cell_index + 1
-    if nextCellIdx > #self.cells then
-        nextCellIdx = 1
+function Notebook:goto_next_cellseparator()
+    local row, col = self:get_cursor_pos()
+    local matches = query.get_capture_matches(self.bufnr, "@cell", "textobjects")
+
+    --- @type TSNode[]
+    local nodes = vim.tbl_map(function(match)
+        local node = match[vim.tbl_keys(match)[1]].node
+        if node == nil then
+            print(vim.inspect(match))
+        end
+        return node
+    end, matches or {})
+
+    local currentIdx = nil
+    for i, node in ipairs(nodes) do
+        if node then
+            local startRow, startCol, endRow, endCol = node:range(false)
+            startRow = startRow + 1
+            endRow = endRow + 1
+            print(startRow, endRow, row)
+            if startRow <= row and row <= endRow then
+                currentIdx = i
+                break
+            end
+        end
     end
-    local cell = self.cells[nextCellIdx]
-    local winid = vim.fn.bufwinid(self.bufnr)
-    vim.api.nvim_win_set_cursor(winid, { cell.start_line, 0 })
+    -- TODO: manual jump
 end
 
 function Notebook:goto_next_cell_content() end
 
-function Notebook:goto_prev_cell_header() end
+function Notebook:goto_prev_cellseparator() end
 
 function Notebook:goto_prev_cell_content() end
 
 Notebook = async_wrap(Notebook, {
+    "update_cells",
     "is_attached",
-    "goto_next_cell_header",
+    -- "get_cursor_pos",
+    -- "get_cursor_cell_pos",
+    "goto_next_cellseparator",
     "goto_next_cell_content",
-    "goto_prev_cell_header",
+    "goto_prev_cellseparator",
     "goto_prev_cell_content",
 })
 

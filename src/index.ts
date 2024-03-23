@@ -133,8 +133,9 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           return !!(await docmanager.services.contents.get(path));
         } catch (e) {
           if ((e as { response: Response }).response.status !== 404) {
-            throw e;
+            // throw e;
           }
+          console.log(e);
           return false;
         }
       },
@@ -204,7 +205,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       activateCell: (path: string, index: number) => {
         const { notebook } = getNotebookModel(path);
-        // notebook.setAc
         notebook.activeCellIndex = index;
       },
       scrollToItem: (path: string, index: number, align?: WindowedList.ScrollToAlign, margin?: number) => {

@@ -6,7 +6,8 @@ local utils = require("neopyter.utils")
 ---@class neopyter.Option
 ---@field remote_address string
 ---@field file_pattern string[]
----@field auto_attach boolean
+---@field auto_attach boolean Automatically attach to the Neopyter server when open file_pattern matched files
+---@field auto_connect boolean # auto connect jupyter lab
 ---@field rpc_client
 ---| "'async'" # AsyncRpcClient, default
 ---| "'block'" # BlockRpcClient
@@ -26,8 +27,8 @@ M.config = {
         return ipynb_path
     end,
 
-    --  Automatically attach to the Neopyter server when open file_pattern matched files
     auto_attach = true,
+    auto_connect = true,
     rpc_client = "async",
     jupyter = {
         auto_activate_file = true,
@@ -44,7 +45,7 @@ M.config = {
     highlight = {
         enable = true,
         -- Dim all cells except the current one
-        shortsighted = false,
+        shortsighted = true,
     },
     parse_option = {
         line_magic = true,
@@ -66,7 +67,10 @@ function M.setup(config)
             group = augroup,
             pattern = M.config.file_pattern,
             callback = function()
-                if not jupyter.jupyterlab:is_connecting() then
+                if M.config.auto_connect and not jupyter.jupyterlab:is_connecting() then
+                    jupyter.jupyterlab:connect()
+                end
+                if not jupyter.jupyterlab:is_attached() then
                     jupyter.jupyterlab:attach()
                 end
             end,

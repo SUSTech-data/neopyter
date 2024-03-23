@@ -8,10 +8,10 @@ local cmds = {
             local status = jupyter.jupyterlab:is_connecting()
             if status then
                 utils.notify_warn("Jupyter lab is connecting, reset current and connect to " .. address)
-                jupyter.jupyterlab:detach()
-                jupyter.jupyterlab:attach(address)
+                jupyter.jupyterlab:disconnect()
+                jupyter.jupyterlab:connect(address)
             else
-                jupyter.jupyterlab:attach(address)
+                jupyter.jupyterlab:connect(address)
             end
         end,
     },

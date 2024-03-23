@@ -1,42 +1,42 @@
 ; extends
 
 
-((comment) @cell.header.code
-           (#lua-match? @cell.header.code "^# %%%%$"))
+((comment) @cellseparator.code
+           (#lua-match? @cellseparator.code "^# %%%%$"))
 
-((comment) @cell.header.code
-    (#match? @cell.header.code "^# [%]{2} ([[]\\w\+[]])\@!"))
+((comment) @cellseparator.code
+    (#match? @cellseparator.code "^# [%]{2} ([[]\\w\+[]])\@!"))
 
-((comment) @cell.header.markdown
+((comment) @cellseparator.markdown
     . (expression_statement
         (string 
-            (string_start) @cell.border.markdown
-            (string_content) @cell.content.markdown
-            (string_end) @cell.border.markdown
+            (string_start) @cellborder.markdown
+            (string_content) @cellcontent.markdown
+            (string_end) @cellborder.markdown
         )
-    )? @cell.body.markdown
-    (#match? @cell.header.markdown "^# [%]{2} [[]\<markdown>|\<md>[]].*$")
-    (#match? @cell.body.markdown "^[\"']{3}.*[\"']{3}$"))
+    )? @cellbody.markdown
+    (#match? @cellseparator.markdown "^# [%]{2} [[]\<markdown>|\<md>[]].*$")
+    (#match? @cellbody.markdown "^[\"']{3}.*[\"']{3}$"))
 
 
-((comment) @cell.header.raw
+((comment) @cellseparator.raw
     . (expression_statement
         (string
-            (string_start) @cell.border.raw
-            (string_content) @cell.content.raw
-            (string_end) @cell.border.raw
+            (string_start) @cellborder.raw
+            (string_content) @cellcontent.raw
+            (string_end) @cellborder.raw
         )
-    )? @cell.body.raw
-    (#match? @cell.header.raw "^# [%]{2} [[]\<raw>[]].*$")
-    (#match? @cell.body.raw "^[\"']{3}.*[\"']{3}$"))
+    )? @cellbody.raw
+    (#match? @cellseparator.raw "^# [%]{2} [[]\<raw>[]].*$")
+    (#match? @cellbody.raw "^[\"']{3}.*[\"']{3}$"))
 
-((comment) @cell.header.special
+((comment) @cellseparator.special
     . (expression_statement
         (string
-            (string_start) @cell.border.special
-            (string_content) @cell.content.special
-            (string_end) @cell.border.special
+            (string_start) @cellborder.special
+            (string_content) @cellcontent.special
+            (string_end) @cellborder.special
         )
-    )? @cell.body.special
-    (#match? @cell.header.special "^# [%]{2} [[](\<markdown>|\<md>|\<raw>)\@!\\w\+[]].*$")
-    (#match? @cell.body.special "^[\"']{3}.*[\"']{3}$"))
+    )? @cellbody.special
+    (#match? @cellseparator.special "^# [%]{2} [[](\<markdown>|\<md>|\<raw>)\@!\\w\+[]].*$")
+    (#match? @cellbody.special "^[\"']{3}.*[\"']{3}$"))

@@ -47,19 +47,27 @@ With 💤lazy.nvim:
 {
     "SUSTech-data/neopyter",
     opts = {
+        -- auto define autocmd
         auto_attach = true,
+        -- auto connect server
+        auto_connect = true,
         -- your jupyter host + neopyter port
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
         on_attach = function(bufnr)
-        end
+        end,
+
+        highlight = {
+            enable = true,
+            shortsighted = true,
+        }
     },
 }
 ```
 
 #### Integration
 
-**nvim-cmp**
+##### nvim-cmp
 
 - `nvim-cmp`
 - `lspkind.nvim`
@@ -95,7 +103,7 @@ cmp.setup({
     },
 )}
 
--- menu item highlight
+    -- menu item highlight
 vim.api.nvim_set_hl(0, "CmpItemKindMagic", { bg = "NONE", fg = "#D4D434" })
 vim.api.nvim_set_hl(0, "CmpItemKindPath", { link = "CmpItemKindFolder" })
 vim.api.nvim_set_hl(0, "CmpItemKindDictkey", { link = "CmpItemKindKeyword" })
@@ -105,6 +113,59 @@ vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
 ```
 
 More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
+
+##### nvim-treesitter-textobjects
+
+Supported captures in `textobjects` query group
+
+- @cell
+  - @cell.code
+  - @cell.magic
+  - @cell.markdown
+  - @cell.raw
+  - @cell.special
+- @cellseparator
+  - @cellseparator.code
+  - @cellseparator.magic
+  - @cellseparator.markdown
+  - @cellseparator.raw
+  - @cellseparator.special
+- @cellbody
+  - @cellbody.code
+  - @cellbody.magic
+  - @cellbody.markdown
+  - @cellbody.raw
+  - @cellbody.special
+- @cellcontent
+  - @cellcontent.code
+  - @cellcontent.magic
+  - @cellcontent.markdown
+  - @cellcontent.raw
+  - @cellcontent.special
+- @cellborder
+  - @cellborder.markdown
+  - @cellborder.raw
+  - @cellborder.special
+- @linemagic
+
+```lua
+require'nvim-treesitter.configs'.setup {
+    textobjects = {
+        move = {
+            enable = true,
+            goto_next_start = {
+                ["]j"] = "@cellseparator",
+                ["]c"] = "@cellcontent",
+            },
+            goto_previous_start = {
+                ["[j"] = "@cellseparator",
+                ["[c"] = "@cellcontent",
+            },
+        },
+    },
+}
+
+```
 
 ## Quick Start
 
@@ -167,6 +228,12 @@ More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/M
     - [x] Magic completion item
     - [x] Path completion item
     - [ ] Disable others?
+  - Tree-sitter
+    - [x] Highlight
+      - Separator+non-code
+      - Shortsighted
+    - [x] Textobjects
+    - [ ] Fold
   - Kernel manage
     - [x] Restart kernel
     - [x] Restart kernel and run all

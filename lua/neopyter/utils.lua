@@ -1,5 +1,6 @@
 local Path = require("plenary.path")
 local a = require("plenary.async")
+local api = a.api
 local M = {}
 
 ---
@@ -182,6 +183,15 @@ function M.read_file(path)
     local err3 = a.uv.fs_close(fd)
     assert(not err3, err3)
     return data
+end
+
+function M.buf2winid(bufnr)
+    for _, win in ipairs(api.nvim_list_wins()) do
+        if api.nvim_win_get_buf(win) == bufnr then
+            return win
+        end
+    end
+    return nil
 end
 
 return M

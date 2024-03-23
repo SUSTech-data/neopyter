@@ -42,25 +42,8 @@ function JupyterLab:new(opts)
     return o
 end
 
----attach autocmd and server
----@param address? string address of neopyter server
-function JupyterLab:attach(address)
-    self.client:connect(address)
-    if not self.client:is_connecting() then
-        return false
-    end
-    local jupyterlab_version = self:get_jupyterlab_extension_version()
-    local nvim_version = self:get_nvim_plugin_version()
-    if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
-        utils.notify_error(
-            string.format(
-                "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
-                jupyterlab_version,
-                nvim_version
-            )
-        )
-    end
-
+---attach autocmd
+function JupyterLab:attach()
     local config = require("neopyter").config
     self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
     assert(self.augroup ~= nil, "autogroup failed")
@@ -92,15 +75,39 @@ function JupyterLab:detach()
     end
     self.notebook_map = {}
     self.augroup = nil
-    return self.client:disconnect()
 end
 
 ---get status of jupyterlab
 ---@return boolean
+function JupyterLab:is_attached()
+    -- local status = self.client:is_connecting()
+    -- assert(status == (self.augroup ~= nil), "autogroup status shold keep same with client")
+    return self.augroup ~= nil
+end
+
+---connect server
+---@param address? string address of neopyter server
+function JupyterLab:connect(address)
+    self.client:connect(address)
+    local jupyterlab_version = self:get_jupyterlab_extension_version()
+    local nvim_version = self:get_nvim_plugin_version()
+    if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
+        utils.notify_error(
+            string.format(
+                "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
+                jupyterlab_version,
+                nvim_version
+            )
+        )
+    end
+end
+
+function JupyterLab:disconnect(address)
+    self.client:disconnect(address)
+end
+
 function JupyterLab:is_connecting()
-    local status = self.client:is_connecting()
-    assert(status == (self.augroup ~= nil), "autogroup status shold keep same with client")
-    return status
+    return self.client:is_connecting()
 end
 
 function JupyterLab:_get_buf_local_path(buf)
@@ -126,22 +133,18 @@ function JupyterLab:_on_bufwinenter(buf)
         })
         self.notebook_map[file_path] = notebook
         jupyter.notebook = notebook
-        if notebook:is_exist() then
-            notebook:open_or_reveal()
-            notebook:attach()
-        end
+        notebook:attach()
         local config = require("neopyter").config
         if type(config.on_attach) == "function" then
             config.on_attach(buf)
         end
-    else
-        jupyter.notebook = notebook
-        if notebook:is_exist() then
-            if notebook:is_open() then
-                notebook:activate()
-            else
-                notebook:open_or_reveal()
-            end
+    end
+
+    if self:is_connecting() and notebook:is_exist() then
+        if notebook:is_open() then
+            notebook:activate()
+        else
+            notebook:open_or_reveal()
         end
     end
 end
@@ -199,6 +202,11 @@ function JupyterLab:current_ipynb()
     return self.client:request("getCurrentNotebook", ops)
 end
 
-JupyterLab = async_wrap(JupyterLab, { "is_connecting" })
+JupyterLab = async_wrap(JupyterLab, {
+    "attach",
+    "is_attached",
+    "is_connecting",
+    "get_nvim_plugin_version",
+})
 
 return JupyterLab

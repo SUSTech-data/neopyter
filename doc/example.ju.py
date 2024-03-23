@@ -1,69 +1,92 @@
-print("hello")
+# This is example for neopyter notebook format
+# This will become first cell
+print("I am first cell")
+
 # %%
+print("previous line is standard cell separator")
 
-print("First cell")
-
-# %% 
-
-# %%timeit
-
-print("Second cell")
+# %% Cell with title
+print("previous line is standard cell separator, can include a title `Cell with title`")
 
 # %% [md]
 """
-# First title
-## Second color
-### Second color
+```lua
 
-* 1 level
-** 2 level
-*** 3 level
-```bash
-$ echo "code in code"
+print("you can mark cell tyep with `[lang]` syntax, notice the space")
+print("default cell type is [code]")
 ```
-
-**Bold**
-
 """
-# %% [markdown]
-"""
-# First title
-
-"""
-
-# %% [raw]
-"""
-raw cell content
-
-"""
-
+# %% ------------------------parse as code cell---------------------------------------
 # %%
+
+# %% 
 
 # %% title
 
+# next line is line magic in jupyter lab
+# %sleep 
 
 # %% [title
 
 # %% []
 
-class A():
-    def __init__(self) -> None:
-        pass
+# %% [ ]
 
-"""
-not markdown
 
+# %% [code] title
+
+# %% ------------------------parse as magic cell---------------------------------------
+
+# %%timeit
+
+# %%timeit
 """
+print("Hello")
+"""
+
+
+
+# %% ------------------------parse as markdown cell---------------------------------------
 
 # %% [md]
 """
-# 
+# this is first level
+## this is second level
+
+```bash
+$ echo $PATH
+```
 """
 
-# %% [markdown]
-# %% [sql]
+# %% [markdown] 
+
+# %% [md] title
+
+# %% [markdown] title
+
+# %% ------------------------parse as raw cell---------------------------------------
+
+# %% [raw] 
 """
-select * from table
+this is raw cell content
 """
 
+# %% [raw] title
+
+# %% ------------------------parse as special cell---------------------------------------
+
+
 # %% [sql]
+
+# %% [sql] title
+
+# %% [js]
+
+# %% [js] title
+
+# %% ------------------------parse as special cell---------------------------------------
+# %%
+
+# %%timeit
+
+

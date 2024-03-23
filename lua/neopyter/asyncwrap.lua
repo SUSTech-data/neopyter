@@ -30,8 +30,10 @@ local function async_wrap(cls, ignored_methods)
                     logger.log(string.format("Call api [%s] from main thread directly", key))
                     return a.run(function()
                         return value(unpack(params))
-                    end, function()
+                    end, function(result)
+                        print(string.format("Call api [%s] complete from main thread directly:%s", key, result))
                         logger.log(string.format("Call api [%s] complete from main thread directly", key))
+                        return "Bad"
                     end)
                 end
             end
