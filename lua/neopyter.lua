@@ -78,12 +78,6 @@ function M.setup(config)
     end
 
     highlight.setup(M.config.highlight)
-
-    local status, cmp = pcall(require, "cmp")
-    if status then
-        cmp.register_source("neopyter", require("neopyter.cmp"))
-        return
-    end
 end
 
 return M

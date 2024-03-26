@@ -143,9 +143,14 @@ Supported captures in `textobjects` query group
   - @cellcontent.raw
   - @cellcontent.special
 - @cellborder
-  - @cellborder.markdown
-  - @cellborder.raw
-  - @cellborder.special
+  - @cellborder.start
+    - @cellborder.start.markdown
+    - @cellborder.start.raw
+    - @cellborder.start.special
+  - @cellborder.end
+    - @cellborder.end.markdown
+    - @cellborder.end.raw
+    - @cellborder.end.special
 - @linemagic
 
 ```lua

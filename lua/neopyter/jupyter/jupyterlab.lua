@@ -89,16 +89,18 @@ end
 ---@param address? string address of neopyter server
 function JupyterLab:connect(address)
     self.client:connect(address)
-    local jupyterlab_version = self:get_jupyterlab_extension_version()
-    local nvim_version = self:get_nvim_plugin_version()
-    if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
-        utils.notify_error(
-            string.format(
-                "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
-                jupyterlab_version,
-                nvim_version
+    if self.client:is_connecting() then
+        local jupyterlab_version = self:get_jupyterlab_extension_version()
+        local nvim_version = self:get_nvim_plugin_version()
+        if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
+            utils.notify_error(
+                string.format(
+                    "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
+                    jupyterlab_version,
+                    nvim_version
+                )
             )
-        )
+        end
     end
 end
 

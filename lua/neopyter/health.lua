@@ -21,7 +21,6 @@ local function run_blocking(suspend_fn, ...)
     local resolved = false
     vim.schedule(function()
         a.run(suspend_fn, function()
-            print("complete")
             resolved = true
         end)
     end)
@@ -62,7 +61,6 @@ function M.check()
         else
             health.info(string.format("Neopyter status: inactive"))
         end
-        print("complete")
     end)
 end
 
