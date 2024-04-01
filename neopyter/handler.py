@@ -11,9 +11,18 @@ from .msgpack_queue import labextension_queue, client_queue
 from .tcp_server import tcpServer
 
 
+settings = {"mode": "proxy", "host": "127.0.0.1", "port": 9001}
+
+
 class ForwardWebsocketHandler(WebSocketHandler):
     def open(self, *args: str, **kwargs: str) -> Optional[Awaitable[None]]:
         print("Websocket opened for lab extension")
+        if settings["mode"] == "direct":
+            print("mode is direct, cann't connect jupyter server websocket")
+            self.write("mode is direct, cann't connect jupyter server websocket")
+            self.close()
+            return
+
         self.task = asyncio.create_task(self.start_loop())
 
         if not tcpServer.is_running:
@@ -43,14 +52,14 @@ class ForwardWebsocketHandler(WebSocketHandler):
 class TcpServerInfoHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
-        if not tcpServer.server:
+        if not tcpServer.is_running:
             return self.finish(
                 {"code": 1, "message": "tcp server not start, please check server port"}
             )
 
         addrs = []
         for sock in tcpServer.server.sockets:
-            ip,port = sock.getsockname()
+            ip, port = sock.getsockname()
             addrs.append(f"{ip}:{port}")
 
         return self.finish(
@@ -66,11 +75,34 @@ class UpdateSettingsHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
         settings = tornado.escape.json_decode(self.request.body)
+        mode = settings.get("mode", "proxy")
+
         host = (settings.get("ip", "") or "").strip().split(",")
         while "" in host:
             host.remove("")
 
         port = settings["port"]
+
+        print("-------------debug-------------------")
+        settings["mode"] = mode
+        settings["host"] = host
+        settings["port"] = port
+        print(mode, host, port, tcpServer.is_running)
+        if mode == "direct":
+            if tcpServer.is_running:
+                asyncio.create_task(tcpServer.stop())
+                return self.finish(
+                    {
+                        "code": 0,
+                        "message": "success, tcp server is running, shutdown it",
+                    }
+                )
+            return self.finish(
+                {
+                    "code": 0,
+                    "message": "success, tcp server is shutdown",
+                }
+            )
         if host == tcpServer.host and port == tcpServer.port:
             return self.finish(
                 {

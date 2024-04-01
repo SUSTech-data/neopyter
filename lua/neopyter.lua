@@ -3,6 +3,23 @@ local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
 
+---@toc
+
+local neopyter = {}
+
+---@text
+
+--- What is Neopyter ?
+---
+--- # Abstract~
+---
+--- The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jupyter lab.
+---
+---@tag neopyter
+---@toc_entry Neopyter's purpose
+
+---@tag neopyter-usage
+---@toc_entry Usages
 ---@class neopyter.Option
 ---@field remote_address string
 ---@field file_pattern string[]
@@ -11,15 +28,16 @@ local utils = require("neopyter.utils")
 ---@field rpc_client
 ---| "'async'" # AsyncRpcClient, default
 ---| "'block'" # BlockRpcClient
+---| "'websocket_server'" # WSServerClient
 ---@field filename_mapper fun(ju_path:string):string
 ---@field on_attach? fun(bufnr:number)
 ---@field jupyter neopyter.JupyterOption
 ---@field highlight neopyter.HighlightOption
 ---@field parse_option neopyter.ParseOption
-local M = {}
 
+---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 ---@type neopyter.Option
-M.config = {
+neopyter.config = {
     remote_address = "127.0.0.1:9001",
     file_pattern = { "*.ju.*" },
     filename_mapper = function(ju_path)
@@ -52,22 +70,21 @@ M.config = {
     },
 }
 
----setup neopyter
 ---@param config neopyter.Option
-function M.setup(config)
-    M.config = vim.tbl_deep_extend("force", M.config, config or {})
+function neopyter.setup(config)
+    neopyter.config = vim.tbl_deep_extend("force", neopyter.config, config or {})
 
     jupyter.jupyterlab = JupyterLab:new({
-        address = M.config.remote_address,
+        address = neopyter.config.remote_address,
     })
 
-    if M.config.auto_attach then
+    if neopyter.config.auto_attach then
         local augroup = vim.api.nvim_create_augroup("neopyter", { clear = true })
         utils.nvim_create_autocmd({ "BufReadPost" }, {
             group = augroup,
-            pattern = M.config.file_pattern,
+            pattern = neopyter.config.file_pattern,
             callback = function()
-                if M.config.auto_connect and not jupyter.jupyterlab:is_connecting() then
+                if neopyter.config.auto_connect and not jupyter.jupyterlab:is_connecting() then
                     jupyter.jupyterlab:connect()
                 end
                 if not jupyter.jupyterlab:is_attached() then
@@ -77,7 +94,9 @@ function M.setup(config)
         })
     end
 
-    highlight.setup(M.config.highlight)
+    highlight.setup(neopyter.config.highlight)
 end
 
-return M
+---@tag neopyter-api
+---@toc_entry API
+return neopyter

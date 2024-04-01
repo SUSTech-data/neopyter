@@ -8,6 +8,7 @@ end
 
 add_dependence("https://github.com/nvim-lua/plenary.nvim", "plenary.nvim")
 add_dependence("https://github.com/nvim-treesitter/nvim-treesitter", "nvim-treesitter")
+add_dependence("https://github.com/echasnovski/mini.nvim", "mini.nvim")
 
 vim.opt.rtp:append(".")
 vim.cmd("runtime plugin/plenary.vim")

@@ -194,4 +194,12 @@ function M.buf2winid(bufnr)
     return nil
 end
 
+---@param address string
+---@return string host
+---@return number port
+function M.parse_address(address)
+    local host, port = address:match("^(.-):(%d+)$")
+    return host, tonumber(port)--[[@as number]]
+end
+
 return M

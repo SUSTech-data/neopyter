@@ -5,25 +5,31 @@
   "jupyter.lab.setting-icon": "ui-components:neopyter",
   "jupyter.lab.setting-icon-label": "Neopyter",
   "definitions": {
+    "mode": {
+      "enum": ["proxy", "direct"]
+    },
     "ip": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "port": {
-      "type": ["integer", "null"],
-      "minimum": 100,
-      "maximum": 65535
+      "type": "number"
     }
   },
   "properties": {
+    "mode": {
+      "title": "Neopyter work mode",
+      "description": "Different work mode determine different methods of communication arcitecture. The `proxy` mode will communicate through jupyter server, while the `direct` mode will communicate directly with nvim",
+      "$ref": "#/definitions/mode",
+      "default": "proxy"
+    },
     "ip": {
       "title": "IP",
-      "description": "Listening ip\nsplit with `;` if include mutiples",
+      "description": "For `proxy` mode, this is the listening `IP:port` of the jupyter server's tcp server; for `direct` mode, this is `IP:port` of nvim's websocket server",
       "$ref": "#/definitions/ip",
       "default": "127.0.0.1"
     },
     "port": {
       "title": "Port",
-      "description": "The port which tcp server is listening",
       "$ref": "#/definitions/port",
       "default": 9001
     }

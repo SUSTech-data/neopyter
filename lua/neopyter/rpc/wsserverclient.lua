@@ -2,71 +2,81 @@ local utils = require("neopyter.utils")
 local RpcClient = require("neopyter.rpc.baseclient")
 local msgpack = require("neopyter.rpc.msgpack")
 local logger = require("neopyter.logger")
+local websocket = require("websocket")
 local a = require("plenary.async")
 
----@class neopyter.AsyncRpcClient:neopyter.RpcClient
----@field tcp_client? uv_tcp_t # nil means not connect
+---@class neopyter.WSServerClient:neopyter.RpcClient
+---@field server? websocket.Server # nil means not connect
+---@field single_connection? websocket.Connection
 ---@field private msg_count number
 ---@field private request_pool table<number, fun(...):any>
 ---@field private decoder neopyter.MsgpackDecoder
-local AsyncRpcClient = RpcClient:new({}) --[[@as neopyter.AsyncRpcClient]]
+local WSServerClient = RpcClient:new({}) --[[@as neopyter.WSServerClient]]
 
 ---RpcClient constructor
 ---@param opt neopyter.NewRpcClientOption
----@return neopyter.AsyncRpcClient
-function AsyncRpcClient:new(opt)
-    opt = opt or {}
-    local o = setmetatable(opt, self)
-    self.__index = self
-
+---@return neopyter.WSServerClient
+function WSServerClient:new(opt)
+    local o = setmetatable(opt or {}, { __index = self }) --[[@as neopyter.WSServerClient]]
     o.msg_count = 0
     o.request_pool = {}
     o.decoder = msgpack.Decoder:new()
-    return o --[[@type neopyter.AsyncRpcClient]]
+    return o
 end
 
 ---comment
 ---@param address? string
 ---@async
-function AsyncRpcClient:connect(address)
+function WSServerClient:connect(address)
+    local restart_server = address ~= nil and self.address ~= address
+
     self.address = address or self.address
-    assert(self.tcp_client == nil, "current connection exists, can't call connect, please disconnect first")
     assert(self.address, "Rpc client address is empty")
-    self.tcp_client = vim.loop.new_tcp()
-    local host, port = utils.parse_address(self.address)
-    local err = a.uv.tcp_connect(self.tcp_client, host, port)
-    if err ~= nil then
-        utils.notify_error(string.format("Connect rpc server [%s] failed", self.address))
-        self.tcp_client = nil
-    else
-        self.tcp_client:read_start(function(e, data)
-            if e ~= nil or data == nil then
-                for _, callback in ipairs(self.request_pool) do
-                    callback(false, e)
-                end
-                self:disconnect()
-            else
-                self:handle_response(data)
-            end
-        end)
+    if self.server then
+        if not restart_server then
+            return
+        end
+        self.server:close()
     end
+    local host, port = utils.parse_address(self.address)
+    self.server = websocket.Server:new({ host = host, port = port })
+    self.server:listen({
+        on_connect = function(connect)
+            if self.single_connection ~= nil then
+                logger.warn("server listening and client exists, but another client income")
+                self.single_connection:close()
+            end
+            self.single_connection = connect
+            self.single_connection:attach({
+                on_text = function(text)
+                    self:handle_response(vim.base64.decode(text))
+                end,
+                on_disconnect = function()
+                    self.single_connection = nil
+                end,
+            })
+        end,
+    })
 end
 
 ---disconnect connect
-function AsyncRpcClient:disconnect()
-    if self.tcp_client then
-        self.tcp_client:close()
-        self.tcp_client = nil
+function WSServerClient:disconnect()
+    if self.single_connection then
+        self.single_connection:close()
+        self.single_connection = nil
+        self.server:close()
+    else
+        logger("disconnect, but connection not exists")
     end
 end
 
 ---check client is connecting
 ---@return boolean
-function AsyncRpcClient:is_connecting()
-    return self.tcp_client ~= nil
+function WSServerClient:is_connecting()
+    return self.single_connection ~= nil
 end
 
-function AsyncRpcClient:gen_id()
+function WSServerClient:gen_id()
     self.msg_count = self.msg_count + 1
     return self.msg_count
 end
@@ -75,7 +85,7 @@ end
 ---@param method string
 ---@param ... unknown # name
 ---@return unknown|nil
-function AsyncRpcClient:request(method, ...)
+function WSServerClient:request(method, ...)
     if not self:is_connecting() then
         utils.notify_error(string.format("RPC tcp client is disconnected, can't request [%s]", method))
         return
@@ -85,8 +95,8 @@ function AsyncRpcClient:request(method, ...)
     assert(content, string.format("request [%s] error: encode failed", method))
     local status, res = a.wrap(function(callback)
         self.request_pool[msgid] = callback
-        self.tcp_client:write(content)
-        logger.log(string.format("msgid [%s] request [%s] send", msgid, method))
+        self.single_connection:send_text(vim.base64.encode(content))
+        -- logger.log(string.format("msgid [%s] request [%s] send, content [%s]", msgid, method, content))
     end, 1)()
     logger.log(string.format("msgid [%s] finished: %s", msgid, vim.inspect(res)))
 
@@ -110,7 +120,7 @@ end
 ---handle rpc response
 ---@param data string
 ---@package
-function AsyncRpcClient:handle_response(data)
+function WSServerClient:handle_response(data)
     self.decoder:feed(data)
     while true do
         local msg = self.decoder:next()
@@ -138,6 +148,6 @@ function AsyncRpcClient:handle_response(data)
     end
 end
 
-function AsyncRpcClient:notify(event, ...) end
+function WSServerClient:notify(event, ...) end
 
-return AsyncRpcClient
+return WSServerClient

@@ -14,6 +14,7 @@ import { WebsocketTransport } from './transport';
 import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
+import { IConfig } from './settings';
 
 // Transfer Data
 type TCell = {
@@ -59,9 +60,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     if (restorer) {
       restorer.add(sidebar, '@neopyter/graphsidebar');
     }
-
-    const settings = ServerConnection.makeSettings();
-    const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
 
     let currentNotebookPanel: NotebookPanel | null = nbtracker.currentWidget;
     labShell.currentChanged.connect(() => {
@@ -342,8 +340,22 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     Object.assign(dispatcher, docmanagerDispatcher);
     Object.assign(dispatcher, notebookDispatcher);
     Object.assign(dispatcher, cellDispatcher);
-    const server = new RpcServer(dispatcher);
-    server.start(WebsocketTransport, url);
+
+    const startConnection = async () => {
+      const server = new RpcServer(dispatcher);
+
+      const { mode, ip, port } = (await settingRegistry.load('neopyter:labplugin')).composite as unknown as IConfig;
+      let url;
+      if (mode === 'proxy') {
+        const settings = ServerConnection.makeSettings();
+        url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
+        server.start(WebsocketTransport, url, false);
+      } else {
+        url = `ws://${ip}:${port}`;
+        server.start(WebsocketTransport, url, true);
+      }
+    };
+    startConnection();
   }
 };
 

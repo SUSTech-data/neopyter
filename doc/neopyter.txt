@@ -1,0 +1,321 @@
+==============================================================================
+  Neopyter's purpose................................................|neopyter|
+  Usages......................................................|neopyter-usage|
+  API...........................................................|neopyter-api|
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+                                                                      *neopyter*
+What is Neopyter ?
+
+# Abstract~
+
+The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jupyter lab.
+
+
+------------------------------------------------------------------------------
+                                                                *neopyter-usage*
+neopyter.Option
+Fields ~
+{remote_address} `(string)`
+{file_pattern} `(string[])`
+{auto_attach} `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
+{auto_connect} `(boolean)` # auto connect jupyter lab
+{rpc_client}
+"'async'" # AsyncRpcClient, default
+"'block'" # BlockRpcClient
+"'websocket_server'" # WSServerClient
+{filename_mapper} `(fun(ju_path:string):string)`
+{on_attach} `(optional)` `(fun(bufnr:number))`
+{jupyter} neopyter.JupyterOption
+{highlight} neopyter.HighlightOption
+{parse_option} neopyter.ParseOption
+
+------------------------------------------------------------------------------
+                                                               *neopyter.config*
+                               `neopyter.config`
+>
+  neopyter.config = {
+      remote_address = "127.0.0.1:9001",
+      file_pattern = { "*.ju.*" },
+      filename_mapper = function(ju_path)
+          local ipynb_path = ju_path:gsub("%.ju%.%w+", ".ipynb")
+          return ipynb_path
+      end,
+
+      auto_attach = true,
+      auto_connect = true,
+      rpc_client = "async",
+      jupyter = {
+          auto_activate_file = true,
+          -- Always scroll to the current cell.
+          scroll = {
+              enable = true,
+              mode = "always", -- "always" or "invisible"
+              step = 0.5,
+          },
+      },
+
+      use_default_keybindings = true,
+
+      highlight = {
+          enable = true,
+          -- Dim all cells except the current one
+          shortsighted = true,
+      },
+      parse_option = {
+          line_magic = true,
+      },
+  }
+
+
+<
+Type ~
+neopyter.Option
+
+------------------------------------------------------------------------------
+                                                              *neopyter.setup()*
+                           `neopyter.setup`({config})
+Parameters ~
+{config} neopyter.Option
+
+------------------------------------------------------------------------------
+                                                                  *neopyter-api*
+
+
+==============================================================================
+------------------------------------------------------------------------------
+neopyter.JupyterOption
+Fields ~
+{auto_activate_file} `(boolean)`
+
+------------------------------------------------------------------------------
+                                                                    *JupyterLab*
+                                  `JupyterLab`
+neopyter.JupyterLab
+Fields ~
+{client} neopyter.RpcClient
+{private} augroup `(number)`
+{notebook_map} `({[string]:)` neopyter.Notebook}
+
+------------------------------------------------------------------------------
+neopyter.NewJupyterLabOption
+Fields ~
+{address} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+                                                              *JupyterLab:new()*
+                            `JupyterLab:new`({opts})
+RpcClient and connect
+Parameters ~
+{opts} neopyter.NewJupyterLabOption
+Return ~
+neopyter.JupyterLab
+
+------------------------------------------------------------------------------
+                                                           *JupyterLab:attach()*
+                             `JupyterLab:attach`()
+autocmd
+
+------------------------------------------------------------------------------
+                                                      *JupyterLab:is_attached()*
+                           `JupyterLab:is_attached`()
+status of jupyterlab
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                          *JupyterLab:connect()*
+                        `JupyterLab:connect`({address})
+server
+Parameters ~
+{address} `(optional)` `(string)` address of neopyter server
+
+------------------------------------------------------------------------------
+                                                  *JupyterLab:_on_bufwinenter()*
+                      `JupyterLab:_on_bufwinenter`({buf})
+not exists, create with buf
+Parameters ~
+{buf} `(number)`
+
+------------------------------------------------------------------------------
+                                 *JupyterLab:get_jupyterlab_extension_version()*
+                `JupyterLab:get_jupyterlab_extension_version`()
+remote version
+Return ~
+`(string|nil)`
+
+------------------------------------------------------------------------------
+                                                             *JupyterLab:echo()*
+                            `JupyterLab:echo`({msg})
+echo
+Parameters ~
+{msg} `(string)`
+Return ~
+`(string|nil)`
+
+------------------------------------------------------------------------------
+                                                  *JupyterLab:execute_command()*
+                `JupyterLab:execute_command`({command}, {args})
+jupyter lab's commands
+Parameters ~
+{command} `(string)`
+{args} `(optional)` `(table<string, any>)`
+Return ~
+`(nil)`
+documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
+
+------------------------------------------------------------------------------
+neopyter.NewUntitledOption
+Fields ~
+{path} `(optional)` `(string)`
+{type} `(optional)` `notebook`|`file`
+
+------------------------------------------------------------------------------
+                                                        *JupyterLab:createNew()*
+         `JupyterLab:createNew`({ipynb_path}, {widget_name}, {kernel})
+new notebook, and selected it
+
+------------------------------------------------------------------------------
+                                                    *JupyterLab:current_ipynb()*
+                          `JupyterLab:current_ipynb`()
+current notebook of jupyter lab
+
+
+==============================================================================
+------------------------------------------------------------------------------
+neopyter.Cell
+Fields ~
+{start_line} `(number)` include
+{lines} `(string[])`
+{end_line} `(number)` exclude
+{source} `(string)`
+{title} `(string)`
+{no_separator} `(optional)` `(boolean)`
+{cell_type} `(optional)` `(string)`
+{cell_magic} `(optional)` `(string)`
+{metadata} `(optional)` `(table<string, any>)`
+
+------------------------------------------------------------------------------
+                                                                      *Notebook*
+                                   `Notebook`
+neopyter.Notebook
+Fields ~
+{private} client neopyter.RpcClient
+{bufnr} `(number)`
+{local_path} `(string)` relative path
+{remote_path} `(string?)` #remote ipynb path
+{private} cells neopyter.Cell[]
+{private} active_cell_index `(number)`
+{private} augroup? `(number)`
+
+------------------------------------------------------------------------------
+neopyter.NewNotebokOption
+Fields ~
+{client} neopyter.RpcClient
+{bufnr} `(number)`
+{local_path} `(string)`
+
+------------------------------------------------------------------------------
+                                                                *Notebook:new()*
+                              `Notebook:new`({o})
+Constructor, please don't call directly, obtain from jupyterlab
+Parameters ~
+{o} neopyter.NewNotebokOption
+Return ~
+neopyter.Notebook
+
+------------------------------------------------------------------------------
+                                                             *Notebook:attach()*
+                              `Notebook:attach`()
+autocmd&notebook
+
+------------------------------------------------------------------------------
+                                                             *Notebook:detach()*
+                              `Notebook:detach`()
+detach autocmd
+
+------------------------------------------------------------------------------
+                                                        *Notebook:is_attached()*
+                            `Notebook:is_attached`()
+check attach status
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                           *Notebook:_request()*
+                      `Notebook:_request`({method}, {...})
+request
+Parameters ~
+{method} `(string)`
+{...} `(any)`
+Return ~
+`(any)`
+
+
+------------------------------------------------------------------------------
+                                                           *Notebook:is_exist()*
+                             `Notebook:is_exist`()
+exist corresponding notebook in remote server
+
+------------------------------------------------------------------------------
+                                                            *Notebook:is_open()*
+                              `Notebook:is_open`()
+whether corresponding `.ipynb` file opened in jupyter lab or not
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+                                                     *Notebook:scroll_to_item()*
+              `Notebook:scroll_to_item`({idx}, {align}, {margin})
+to item
+Parameters ~
+{idx} `(number)`
+{align} `(optional)` 'auto'|'smart'|'center'|'start'|'end'
+{margin} `(optional)` `(number)`
+Return ~
+`(unknown|nil)`
+
+------------------------------------------------------------------------------
+                                                     *Notebook:set_cursor_pos()*
+                        `Notebook:set_cursor_pos`({pos})
+Parameters ~
+{pos} `(integer[])` (row, col) tuple representing the new position
+
+------------------------------------------------------------------------------
+                                                *Notebook:get_cursor_cell_pos()*
+                        `Notebook:get_cursor_cell_pos`()
+current cell of cursor position, start from 1
+Return ~
+`(number)` #index of cell
+Return ~
+`(number)` #row of cursor in cell
+Return ~
+`(number)` #col of cursor in cell
+
+------------------------------------------------------------------------------
+                                                               *Notebook:save()*
+                               `Notebook:save`()
+ipynb, same as `Ctrl+S` on jupyter lab
+Return ~
+`(boolean)`
+
+------------------------------------------------------------------------------
+'command'
+'edit'
+
+------------------------------------------------------------------------------
+                                                           *Notebook:set_mode()*
+                          `Notebook:set_mode`({mode})
+notebook mode
+Parameters ~
+{mode} 
+
+------------------------------------------------------------------------------
+                                                    *Notebook:kernel_complete()*
+                 `Notebook:kernel_complete`({source}, {offset})
+
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

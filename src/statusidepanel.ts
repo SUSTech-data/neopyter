@@ -2,11 +2,7 @@ import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
 import { SidePanel } from '@jupyterlab/ui-components';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-
-interface IConfig {
-  port?: number;
-  ip?: string;
-}
+import { IConfig } from './settings';
 
 export class StatusSidePanel extends SidePanel {
   constructor(private settingRegistry: ISettingRegistry) {
@@ -41,9 +37,8 @@ export class StatusSidePanel extends SidePanel {
   }
 
   async watchSettings() {
-    let config: IConfig = {};
     const updateSettings = async (settings: ISettingRegistry.ISettings) => {
-      config = settings.composite as IConfig;
+      const config = settings.composite as unknown as IConfig;
       console.log('updateSettings', config);
       const connectSettings = ServerConnection.makeSettings();
       const baseUrl = connectSettings.baseUrl;
@@ -57,7 +52,7 @@ export class StatusSidePanel extends SidePanel {
         connectSettings
       );
       console.log(await response.json());
-      this.updatePanel();
+      // this.updatePanel();
     };
     // Fetch the initial state of the settings.
     const settings = await this.settingRegistry.load('neopyter:labplugin');

@@ -20,7 +20,7 @@ describe('neopyter', () => {
             resolve(message);
           }
         });
-        server.start(WebsocketTransport, url);
+        server.start(WebsocketTransport, url, false);
         server.transport!.onRequest({
           type: MessageType.Request,
           msgid: 0,

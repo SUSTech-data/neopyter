@@ -1,4 +1,3 @@
-local rpc = require("neopyter.rpc")
 local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
 local async_wrap = require("neopyter.asyncwrap")
@@ -24,16 +23,18 @@ local JupyterLab = {}
 ---@param opts neopyter.NewJupyterLabOption
 ---@return neopyter.JupyterLab
 function JupyterLab:new(opts)
-    local o = {} --[[@as neopyter.JupyterLab]]
+    local o = {}
     setmetatable(o, self)
     self.__index = self
 
     local config = require("neopyter").config
     local RpcClient
     if config.rpc_client == "block" then
-        RpcClient = rpc.BlockRpcClient
+        RpcClient = require("neopyter.rpc.blockclient")
+    elseif config.rpc_client == "websocket_server" then
+        RpcClient = require("neopyter.rpc.wsserverclient")
     else
-        RpcClient = rpc.AsyncRpcClient
+        RpcClient = require("neopyter.rpc.asyncclient")
     end
     o.client = RpcClient:new({
         address = opts.address,
@@ -138,7 +139,9 @@ function JupyterLab:_on_bufwinenter(buf)
         notebook:attach()
         local config = require("neopyter").config
         if type(config.on_attach) == "function" then
-            config.on_attach(buf)
+            vim.schedule(function()
+                config.on_attach(buf)
+            end)
         end
     end
 

@@ -24,6 +24,7 @@ from `Neovim` via `autocmd`. In the end, `Neopyter` can control `Juppyter lab`. 
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim >= 9.0
   - 👍`nvim-lua/plenary.nvim`
+  - 🤏`AbaoFromCUG/websocket.nvim` (optional for `rpc_client="websocket_server"`)
 
 ### JupyterLab Extension
 
@@ -51,6 +52,7 @@ With 💤lazy.nvim:
         auto_attach = true,
         -- auto connect server
         auto_connect = true,
+        rpc_client = "async",
         -- your jupyter host + neopyter port
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },

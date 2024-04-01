@@ -14,42 +14,50 @@ function bytesToBase64(bytes: Uint8Array) {
 }
 
 export class WebsocketTransport extends BaseTransport {
-  private websocket: WebSocket;
-  private readableStream: ReadableStream;
+  private websocket?: WebSocket;
+  private readableStream?: ReadableStream;
   constructor(
     server: RpcServer,
-    private url: string
+    private url: string,
+    private autoRetry: boolean
   ) {
     super(server);
-    this.websocket = new WebSocket(this.url);
-    this.websocket.binaryType = 'arraybuffer';
-    this.readableStream = new ReadableStream({
-      start: controller => {
-        // console.log('start');
-        this.websocket.addEventListener('open', event => {
-          this.onOpen(event);
-        });
-        this.websocket.addEventListener('message', event => {
-          const buf = base64ToBytes(event.data);
-          controller.enqueue(buf);
-        });
+    this.start();
+  }
+  async start() {
+    try {
+      this.websocket = new WebSocket(this.url);
+      this.websocket.binaryType = 'arraybuffer';
+      this.readableStream = new ReadableStream({
+        start: controller => {
+          // console.log('start');
+          this.websocket!.addEventListener('open', event => {
+            this.onOpen(event);
+          });
+          this.websocket!.addEventListener('message', event => {
+            const buf = base64ToBytes(event.data);
+            controller.enqueue(buf);
+          });
 
-        this.websocket.addEventListener('error', event => {
-          this.onError(event);
-          throw event;
-        });
-        this.websocket.addEventListener('close', event => {
-          this.onClose(event);
-          controller.close();
-        });
-      }
-    });
-    setTimeout(async () => {
+          this.websocket!.addEventListener('error', event => {
+            this.onError(event);
+            throw event;
+          });
+          this.websocket!.addEventListener('close', event => {
+            this.onClose(event);
+            controller.close();
+          });
+        }
+      });
       for await (const message of deserializeStream(this.readableStream)) {
         // console.log(message);
         this.onRead(message);
       }
-    }, 0);
+    } catch (e) {
+      // throw e;
+      console.error(e);
+      this.checkRetry();
+    }
   }
 
   async onRead(message: Message) {
@@ -66,16 +74,28 @@ export class WebsocketTransport extends BaseTransport {
   }
 
   sendData(data: Uint8Array): void {
-    this.websocket.send(bytesToBase64(data));
+    this.websocket!.send(bytesToBase64(data));
   }
 
   protected onOpen(_event: Event) {
-    console.log(`Connection to neopyter jupyter server by websocket ${this.websocket.url}`);
+    console.log(`Connection to neopyter jupyter server by websocket ${this.websocket!.url}`);
   }
   protected onError(event: Event) {
     console.error('Websocket error', event);
   }
   protected onClose(_event: Event) {
-    console.log(`DisConnection to neopyter jupyter server by websocket ${this.websocket.url}`);
+    console.log(`Disconnect to neopyter jupyter server by websocket ${this.websocket!.url}`);
+    this.websocket = undefined;
+    this.readableStream = undefined;
+    this.checkRetry();
+  }
+
+  protected checkRetry() {
+    if (this.autoRetry) {
+      console.log('will reconnect websocket server after 1s');
+      setTimeout(() => {
+        this.start();
+      }, 1000);
+    }
   }
 }

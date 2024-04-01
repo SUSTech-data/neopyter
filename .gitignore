@@ -126,3 +126,5 @@ dmypy.json
 
 # jest
 junit.xml
+
+doc/tags
