@@ -15,7 +15,23 @@ import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
 import { IConfig } from './settings';
-import { DockPanel, Widget } from '@lumino/widgets';
+import { DockPanel } from '@lumino/widgets';
+
+function triggerFocus(element: HTMLElement) {
+  const eventType = 'onfocusin' in element ? 'focusin' : 'focus';
+  const bubbles = 'onfocusin' in element;
+  let event;
+
+  if ('createEvent' in document) {
+    event = document.createEvent('Event');
+    event.initEvent(eventType, bubbles, true);
+  } else if ('Event' in window) {
+    event = new Event(eventType, { bubbles: bubbles, cancelable: true });
+  }
+
+  element.focus();
+  element.dispatchEvent(event as Event);
+}
 
 // Transfer Data
 type TCell = {
@@ -142,29 +158,35 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         return !!docmanager.openOrReveal(path);
       },
       activateNotebook: (path: string) => {
+        // some hack code
         const { notebookPanel } = getNotebookModel(path);
         labShell.activateById(notebookPanel.id);
         notebookPanel.activate();
-        const emitEvent = (widget: Widget) => {
-          const event = new MouseEvent('click', {
+        const emitEvent = (node: HTMLElement) => {
+          const event = new FocusEvent('focus', {
             bubbles: true,
             cancelable: true,
             view: window
           });
-          widget.node.click();
-          widget.node.dispatchEvent(event);
+          node.click();
+          node.dispatchEvent(event);
+          node.focus();
+          triggerFocus(node);
         };
-        emitEvent(labShell);
         // @ts-expect-error hack private property
         const dockPanel: DockPanel = labShell._dockPanel;
-        // for (const tabBar of dockPanel.tabBars) {
-        //   tabBar.titles.findIndex(title => {
-        //     console.log(title.owner);
-        //     return false;
-        //   });
-        // }
 
-        emitEvent(notebookPanel);
+        for (const tabBar of dockPanel.tabBars()) {
+          const tabIndex = tabBar.titles.findIndex(title => {
+            return title.owner === notebookPanel;
+          });
+          if (tabIndex >= 0) {
+            const tab = tabBar.contentNode.children[tabIndex] as HTMLElement;
+            emitEvent(tab);
+            break;
+          }
+        }
+        emitEvent(notebookPanel.node);
       },
       closeFile: async (path: string) => {
         return await docmanager.closeFile(path);
