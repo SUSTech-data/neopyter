@@ -20,7 +20,8 @@ end
 local function run_blocking(suspend_fn, ...)
     local resolved = false
     vim.schedule(function()
-        a.run(suspend_fn, function()
+        a.run(suspend_fn, function(ee)
+            print(ee)
             resolved = true
         end)
     end)
@@ -34,10 +35,13 @@ function M.check()
     run_blocking(function()
         local status = jupyter.jupyterlab:is_attached()
         if status then
-            health.info("Neopyter status: active")
+            local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
+            health.info(string.format("Neopyter@%s status: active", nvim_plugin_ver))
             local is_connecting = jupyter.jupyterlab.client:is_connecting()
             if is_connecting then
                 health.info("Rpc server status: active")
+                local jupyterlab_extension_ver = jupyter.jupyterlab:get_jupyterlab_extension_version()
+                health.info(string.format("Jupyter lab extension version: %s", jupyterlab_extension_ver))
             else
                 health.info("Rpc server status: inactive")
             end
@@ -48,9 +52,7 @@ function M.check()
                     select_mark = "*"
                 end
                 local msg = ""
-                print(notebook.local_path)
                 local nbconnect = notebook:is_connecting()
-                print(notebook.remote_path)
                 if nbconnect then
                     msg = string.format("%s %s 💫 %s", select_mark, notebook.local_path, notebook.remote_path)
                 else

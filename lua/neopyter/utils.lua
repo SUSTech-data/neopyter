@@ -75,7 +75,7 @@ function M.nvim_create_autocmd(event, opts)
             end, function() end)
         end
     end
-    vim.api.nvim_create_autocmd(event, opts)
+    a.api.nvim_create_autocmd(event, opts)
 end
 
 ---@class neopyter.ParseOption

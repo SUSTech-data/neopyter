@@ -99,7 +99,7 @@ function Notebook:attach()
                     return
                 end
                 self:partial_sync(start_row, old_end_row, new_end_row)
-            end, function() end)
+            end)
         end,
     })
 

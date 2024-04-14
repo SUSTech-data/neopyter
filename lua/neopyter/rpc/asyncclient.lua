@@ -95,11 +95,7 @@ function AsyncRpcClient:request(method, ...)
     else
         if method == "getVersion" then
             utils.notify_error(
-                string.format(
-                    "jupyterlab extension is outdated, it is recommended to update with `pip install -U neopyter`",
-                    method,
-                    res
-                )
+                string.format("jupyterlab extension is outdated, it is recommended to update with `pip install -U neopyter`", method, res)
             )
         else
             utils.notify_error(string.format("RPC request [%s] failed, with error: %s", method, res))
@@ -123,10 +119,7 @@ function AsyncRpcClient:handle_response(data)
             local callback = self.request_pool[msgid]
             self.request_pool[msgid] = nil
             logger.log(string.format("msgid [%s] response acceptd", msgid))
-            assert(
-                callback,
-                string.format("msg %s can't find callback: request_pool=%s", msgid, vim.inspect(self.request_pool))
-            )
+            assert(callback, string.format("msg %s can't find callback: request_pool=%s", msgid, vim.inspect(self.request_pool)))
             if error == vim.NIL then
                 callback(true, result)
             else

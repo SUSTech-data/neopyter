@@ -209,7 +209,7 @@ describe("parse notebook", function()
                     source = "# this is markdown cell with markdown too",
                     start_line = 1,
                     end_line = 5,
-                    title= "cell's title",
+                    title = "cell's title",
                     cell_type = "markdown",
                 },
             }, cells)

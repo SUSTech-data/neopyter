@@ -15,6 +15,7 @@ import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
 import { IConfig } from './settings';
+import { DockPanel, Widget } from '@lumino/widgets';
 
 // Transfer Data
 type TCell = {
@@ -61,13 +62,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       restorer.add(sidebar, '@neopyter/graphsidebar');
     }
 
-    let currentNotebookPanel: NotebookPanel | null = nbtracker.currentWidget;
-    labShell.currentChanged.connect(() => {
-      if (labShell.currentWidget instanceof NotebookPanel) {
-        currentNotebookPanel = labShell.currentWidget;
-      }
-    });
-
     const getNotebookModel = (path?: string) => {
       let notebookPanel;
       if (path) {
@@ -75,6 +69,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       }
       let notebook = notebookPanel?.content as Notebook | undefined;
       if (!notebook) {
+        const currentNotebookPanel = labShell.currentWidget as NotebookPanel;
         if (currentNotebookPanel?.isUntitled) {
           notebookPanel = currentNotebookPanel;
           notebook = notebookPanel.content;
@@ -117,7 +112,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     };
     const docmanagerDispatcher = {
       getCurrentNotebook: () => {
-        const notebookPanel = currentNotebookPanel;
+        const notebookPanel = labShell.currentWidget as NotebookPanel;
         if (notebookPanel) {
           const context = docmanager.contextForWidget(notebookPanel);
           return context?.localPath;
@@ -149,8 +144,27 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       activateNotebook: (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
         labShell.activateById(notebookPanel.id);
-        notebookPanel.node.focus();
-        currentNotebookPanel = notebookPanel;
+        notebookPanel.activate();
+        const emitEvent = (widget: Widget) => {
+          const event = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          });
+          widget.node.click();
+          widget.node.dispatchEvent(event);
+        };
+        emitEvent(labShell);
+        // @ts-expect-error hack private property
+        const dockPanel: DockPanel = labShell._dockPanel;
+        // for (const tabBar of dockPanel.tabBars) {
+        //   tabBar.titles.findIndex(title => {
+        //     console.log(title.owner);
+        //     return false;
+        //   });
+        // }
+
+        emitEvent(notebookPanel);
       },
       closeFile: async (path: string) => {
         return await docmanager.closeFile(path);

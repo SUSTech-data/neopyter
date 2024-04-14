@@ -10,7 +10,6 @@ local a = require("plenary.async")
 ---@field single_connection? websocket.Connection
 ---@field private msg_count number
 ---@field private request_pool table<number, fun(...):any>
----@field private decoder neopyter.MsgpackDecoder
 local WSServerClient = RpcClient:new({}) --[[@as neopyter.WSServerClient]]
 
 ---RpcClient constructor
@@ -20,7 +19,6 @@ function WSServerClient:new(opt)
     local o = setmetatable(opt or {}, { __index = self }) --[[@as neopyter.WSServerClient]]
     o.msg_count = 0
     o.request_pool = {}
-    o.decoder = msgpack.Decoder:new()
     return o
 end
 
@@ -29,6 +27,10 @@ end
 ---@async
 function WSServerClient:connect(address)
     local restart_server = address ~= nil and self.address ~= address
+    for _, fun in pairs(self.request_pool) do
+        fun(false, "cancel")
+    end
+    self.request_pool = {}
 
     self.address = address or self.address
     assert(self.address, "Rpc client address is empty")
@@ -56,6 +58,9 @@ function WSServerClient:connect(address)
                 end,
             })
         end,
+        on_disconnect = function()
+            self:disconnect()
+        end,
     })
 end
 
@@ -65,6 +70,11 @@ function WSServerClient:disconnect()
         self.single_connection:close()
         self.single_connection = nil
         self.server:close()
+
+        for _, fun in pairs(self.request_pool) do
+            fun(false, "cancel")
+        end
+        self.request_pool = {}
     else
         logger("disconnect, but connection not exists")
     end
@@ -86,8 +96,11 @@ end
 ---@param ... unknown # name
 ---@return unknown|nil
 function WSServerClient:request(method, ...)
-    if not self:is_connecting() then
-        utils.notify_error(string.format("RPC tcp client is disconnected, can't request [%s]", method))
+    if self.server == nil then
+        utils.notify_error(string.format("RPC websocket server is stop, can't request [%s]", method))
+        return
+    elseif self.single_connection == nil then
+        utils.notify_error(string.format("RPC websocket server is listening, but without client, can't request [%s]", method))
         return
     end
     local msgid = self:gen_id()
@@ -105,11 +118,7 @@ function WSServerClient:request(method, ...)
     else
         if method == "getVersion" then
             utils.notify_error(
-                string.format(
-                    "jupyterlab extension is outdated, it is recommended to update with `pip install -U neopyter`",
-                    method,
-                    res
-                )
+                string.format("jupyterlab extension is outdated, it is recommended to update with `pip install -U neopyter`", method, res)
             )
         else
             utils.notify_error(string.format("RPC request [%s] failed, with error: %s", method, res))
@@ -121,33 +130,44 @@ end
 ---@param data string
 ---@package
 function WSServerClient:handle_response(data)
-    self.decoder:feed(data)
-    while true do
-        local msg = self.decoder:next()
-        if msg == nil then
-            break
-        end
-        -- logger.log(vim.inspect(msg))
-        if #msg == 4 and msg[1] == 1 then
-            local msgid, error, result = msg[2], msg[3], msg[4]
-            local callback = self.request_pool[msgid]
-            self.request_pool[msgid] = nil
-            logger.log(string.format("msgid [%s] response acceptd", msgid))
-            assert(
-                callback,
-                string.format("msg %s can't find callback: request_pool=%s", msgid, vim.inspect(self.request_pool))
+    local status, msg = pcall(vim.mpack.decode, data)
+    assert(status, vim.inspect(msg) .. data)
+    if status == false then
+        logger.warn("parse mpack error, reset request pool")
+        self:reset_request()
+        return
+    end
+    if #msg == 4 and msg[1] == 1 then
+        local msgid, error, result = msg[2], msg[3], msg[4]
+        local callback = self.request_pool[msgid]
+        self.request_pool[msgid] = nil
+        logger.log(string.format("msgid [%s] response acceptd", msgid))
+        assert(
+            callback,
+            string.format(
+                "msg %s can't find callback: request_pool=%s, msg=%s",
+                msgid,
+                vim.inspect(vim.tbl_keys(self.request_pool)),
+                vim.inspect(msg)
             )
-            if error == vim.NIL then
-                callback(true, result)
-            else
-                callback(false, error)
-            end
+        )
+        if error == vim.NIL then
+            callback(true, result)
         else
-            assert(false, "msgpack rpc response spec error, msg=" .. data)
+            callback(false, error)
         end
+    else
+        assert(false, "msgpack rpc response spec error, msg=" .. data)
     end
 end
 
 function WSServerClient:notify(event, ...) end
+
+function WSServerClient:reset_request()
+    for _, fun in pairs(self.request_pool) do
+        fun(false, "reset")
+    end
+    self.request_pool = {}
+end
 
 return WSServerClient

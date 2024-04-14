@@ -54,9 +54,9 @@ export class WebsocketTransport extends BaseTransport {
         this.onRead(message);
       }
     } catch (e) {
-      // throw e;
       console.error(e);
       this.checkRetry();
+      throw e;
     }
   }
 
@@ -85,16 +85,21 @@ export class WebsocketTransport extends BaseTransport {
   }
   protected onClose(_event: Event) {
     console.log(`Disconnect to neopyter jupyter server by websocket ${this.websocket!.url}`);
+    this.websocket!.close();
     this.websocket = undefined;
     this.readableStream = undefined;
     this.checkRetry();
   }
 
   protected checkRetry() {
-    if (this.autoRetry) {
-      console.log('will reconnect websocket server after 1s');
+    if (this.autoRetry && this.websocket === undefined) {
+      console.log('reconnect websocket server after 1s');
       setTimeout(() => {
-        this.start();
+        if (this.autoRetry && this.websocket === undefined) {
+          this.start();
+        } else {
+          console.error('checkRetry repeat');
+        }
       }, 1000);
     }
   }

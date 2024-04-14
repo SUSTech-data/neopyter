@@ -95,11 +95,7 @@ function JupyterLab:connect(address)
         local nvim_version = self:get_nvim_plugin_version()
         if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
             utils.notify_error(
-                string.format(
-                    "The version of jupyterlab extension(%s) and neovim plugin(%s) do not match",
-                    jupyterlab_version,
-                    nvim_version
-                )
+                string.format("The version of jupyterlab extension(%s) and neovim plugin(%s) do not match", jupyterlab_version, nvim_version)
             )
         end
     end
@@ -211,7 +207,6 @@ JupyterLab = async_wrap(JupyterLab, {
     "attach",
     "is_attached",
     "is_connecting",
-    "get_nvim_plugin_version",
 })
 
 return JupyterLab

@@ -11,28 +11,48 @@ export class StatusSidePanel extends SidePanel {
     this.watchSettings();
   }
   async updatePanel() {
-    const settings = ServerConnection.makeSettings();
-    const url = URLExt.join(settings.baseUrl, 'neopyter', 'get_server_info');
-    const response = await fetch(url);
-
+    const settings = (await this.settingRegistry.load('neopyter:labplugin')).composite as unknown as IConfig;
     this.content.node.textContent = '';
-    if (!response.ok) {
-      const p = document.createElement('p');
-      this.content.node.appendChild(p);
-      p.textContent = 'Access API failed';
-      return;
+    {
+      const h2 = document.createElement('h2');
+      this.content.node.appendChild(h2);
+      h2.textContent = `Work mode: ${settings.mode}`;
     }
-    const { code, message, data } = await response.json();
-    if (code !== 0) {
-      const p = document.createElement('p');
-      this.content.node.appendChild(p);
-      p.textContent = message;
-      return;
-    }
-    for (const addr of data.addrs) {
-      const p = document.createElement('p');
-      this.content.node.appendChild(p);
-      p.textContent = addr;
+    if (settings.mode === 'proxy') {
+      const serverSettings = ServerConnection.makeSettings();
+      const url = URLExt.join(serverSettings.baseUrl, 'neopyter', 'get_server_info');
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const p = document.createElement('p');
+        this.content.node.appendChild(p);
+        p.textContent = 'Access API failed';
+        return;
+      }
+      const { code, message, data } = await response.json();
+      if (code !== 0) {
+        const p = document.createElement('p');
+        this.content.node.appendChild(p);
+        p.textContent = message;
+        return;
+      }
+      for (const addr of data.addrs) {
+        const p = document.createElement('p');
+        this.content.node.appendChild(p);
+        p.textContent = addr;
+      }
+    } else {
+      {
+        const p = document.createElement('p');
+        this.content.node.appendChild(p);
+        p.textContent = `IP: ${settings.ip}`;
+      }
+
+      {
+        const p = document.createElement('p');
+        this.content.node.appendChild(p);
+        p.textContent = `port: ${settings.port}`;
+      }
     }
   }
 
@@ -52,7 +72,7 @@ export class StatusSidePanel extends SidePanel {
         connectSettings
       );
       console.log(await response.json());
-      // this.updatePanel();
+      this.updatePanel();
     };
     // Fetch the initial state of the settings.
     const settings = await this.settingRegistry.load('neopyter:labplugin');

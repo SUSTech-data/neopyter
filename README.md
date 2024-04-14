@@ -53,7 +53,6 @@ With 💤lazy.nvim:
         -- auto connect server
         auto_connect = true,
         rpc_client = "async",
-        -- your jupyter host + neopyter port
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
         on_attach = function(bufnr)
