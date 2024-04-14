@@ -16,16 +16,33 @@ function M.setup(opts)
     if opts.enable then
         local config = require("neopyter").config
         local augroup = vim.api.nvim_create_augroup("neopyter-highlighter", {})
+        local updated = false
         if opts.shortsighted then
             vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
                 pattern = config.file_pattern,
-                callback = M.update_dynamic_highlight,
+                callback = function()
+                    updated = false
+                    vim.defer_fn(function()
+                        if updated == false then
+                            updated = true
+                            M.update_dynamic_highlight()
+                        end
+                    end, 10)
+                end,
                 group = augroup,
             })
         else
             vim.api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
                 pattern = config.file_pattern,
-                callback = M.update_static_highlight,
+                callback = function()
+                    updated = false
+                    vim.defer_fn(function()
+                        if updated == false then
+                            updated = true
+                            M.update_static_highlight()
+                        end
+                    end, 10)
+                end,
                 group = augroup,
             })
         end
