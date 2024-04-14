@@ -35,7 +35,7 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim nightly
   - 👍`nvim-lua/plenary.nvim`
-  - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="proxy"`)
+  - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
 ## Installation
 
