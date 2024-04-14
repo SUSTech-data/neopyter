@@ -29,9 +29,14 @@ function JupyterLab:new(opts)
 
     local config = require("neopyter").config
     local RpcClient
-    if config.rpc_client == "block" then
-        RpcClient = require("neopyter.rpc.blockclient")
-    elseif config.rpc_client == "websocket_server" then
+    if config["rpc_client"] ~= nil then
+        vim.notify(
+            "`rpc_client` is deprecated, please reference to https://github.com/SUSTech-data/neopyter/issues/4",
+            vim.log.levels.ERROR,
+            { title = "Neopyter" }
+        )
+    end
+    if config.mode == "direct" then
         RpcClient = require("neopyter.rpc.wsserverclient")
     else
         RpcClient = require("neopyter.rpc.asyncclient")

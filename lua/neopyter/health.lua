@@ -21,7 +21,6 @@ local function run_blocking(suspend_fn, ...)
     local resolved = false
     vim.schedule(function()
         a.run(suspend_fn, function(ee)
-            print(ee)
             resolved = true
         end)
     end)

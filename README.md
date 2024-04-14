@@ -5,11 +5,24 @@
 
 ## How does it work?
 
-![](./doc/communication.png)
+This project includes two parts: a [`JupyterLab extension`](https://jupyterlab.readthedocs.io/en/stable/user/extensions.html) and a Neovim plugin
 
-The `Jupyter lab`'s frontend plugin provides RPC service which expose functions of `Jupyter lab`, Jupyterlab server
-forward these RPC service by TCP Server. `Neovim`s plugin connect to TCP Server and call RPC service when receive events
-from `Neovim` via `autocmd`. In the end, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement more ability like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim), but better performance.
+- The `JupyterLab extension` exposes functions of `Jupyter lab`, and provides a remote procedure call(RPC) service
+- The `Neovim plugin` calls the RPC service when it receives events from `Neovim` via `autocmd`
+
+|                           proxy                            |                            direct                            |
+| :--------------------------------------------------------: | :----------------------------------------------------------: |
+| <img alt="proxy mode" src="./doc/communication_proxy.png"> | <img alt="direct mode" src="./doc/communication_direct.png"> |
+
+This project provides two working modes for different network environments. If the browser where your jupyiter lab is
+located cannot directly access nvim, you must use `proxy` mode; If you need to collaborate and use the same Jupyter with
+others, you must use direct mode
+
+- `proxy` mode: Jupyterlab server
+  proxies the RPC service as a TCP server which `Neovim`s plugin connects to
+- `direct` mode: Neovim plugin accesses these RPC service directly
+
+Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abilities like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim).
 
 ## Screenshots
 
@@ -17,14 +30,14 @@ from `Neovim` via `autocmd`. In the end, `Neopyter` can control `Juppyter lab`. 
 | :-----------------------------------------------: | :-----------------------------------------------: | :-----------------------------------------------: |
 | <img alt="Completion" src="./doc/completion.png"> | <img alt="Cell Magic" src="./doc/cell_magic.png"> | <img alt="Line Magic" src="./doc/line_magic.png"> |
 
-## Installation
-
-### Requirements
+## Requirements
 
 - 📔JupyterLab >= 4.0.0
-- ✌️ Neovim >= 9.0
+- ✌️ Neovim nightly
   - 👍`nvim-lua/plenary.nvim`
-  - 🤏`AbaoFromCUG/websocket.nvim` (optional for `rpc_client="websocket_server"`)
+  - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="proxy"`)
+
+## Installation
 
 ### JupyterLab Extension
 
@@ -34,11 +47,12 @@ To install the jupyterlab extension, execute:
 pip install neopyter
 ```
 
-To remove the extension, execute:
+Configure `JupyterLab` in menu `Settings`>`Settings Editor`>`Neopyter`
 
-```bash
-pip uninstall neopyter
-```
+- `mode`: refer to the previous introduction about mode
+- `IP`: if `mode=proxy`, set to the IP of the host where jupyter is located. If `proxy=direct`, set to the IP of the
+  host where neovim is located
+- `port`: idle port
 
 ### Neovim plugin
 
@@ -50,9 +64,10 @@ With 💤lazy.nvim:
     opts = {
         -- auto define autocmd
         auto_attach = true,
-        -- auto connect server
+        -- auto connect rpc service
         auto_connect = true,
-        rpc_client = "async",
+        mode="direct",
+        -- same with JupyterLab settings
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
         on_attach = function(bufnr)
@@ -177,7 +192,6 @@ require'nvim-treesitter.configs'.setup {
 
 - Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
 - Open a `*.ju.py` file in neovim
-- [Optional] if `auto_attach` is `false`, you can connect jupyterlab manually via `:Neopyter connect 127.0.0.1:9001`
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
 
@@ -269,73 +283,3 @@ require'nvim-treesitter.configs'.setup {
 ## Acknowledges
 
 - [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim): Selenium-automated Jupyter Notebook that is synchronised with NeoVim in real-time.
-
-## Contributing
-
-### JupyterLab Extension
-
-#### Development install
-
-Note: You will need `NodeJS` to build the extension package. Recommend use `pnpm`
-
-```bash
-# Clone the repo to your local environment
-# Change directory to the current project directory
-# Install package in development mode
-pip install -e "."
-# Link your development version of the extension with JupyterLab
-jupyter labextension develop . --overwrite
-# Rebuild extension Typescript source after making changes
-pnpm build
-```
-
-You can watch the source directory and run JupyterLab at the same time in different terminals to watch for changes in the extension's source and automatically rebuild the extension.
-
-```bash
-# Watch the source directory in one terminal, automatically rebuilding when needed
-pnpm watch
-# Run JupyterLab in another terminal
-jupyter lab
-```
-
-With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
-
-By default, the `pnpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. To also generate source maps for the JupyterLab core extensions, you can run the following command:
-
-```bash
-jupyter lab build --minimize=False
-```
-
-#### Development uninstall
-
-```bash
-pip uninstall neopyter
-```
-
-In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
-command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `neopyter` within that folder.
-
-#### Testing the extension
-
-##### Frontend tests
-
-This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
-
-To execute them, execute:
-
-```sh
-pnpm install
-pnpm test
-```
-
-##### Integration tests
-
-This extension uses [Playwright](https://playwright.dev/docs/intro) for the integration tests (aka user level tests).
-More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to handle testing the extension in JupyterLab.
-
-More information are provided within the [ui-tests](./ui-tests/README.md) README.
-
-#### Packaging the extension
-
-See [RELEASE](RELEASE.md)

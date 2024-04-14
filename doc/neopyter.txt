@@ -16,16 +16,14 @@ The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jup
 
 ------------------------------------------------------------------------------
                                                                 *neopyter-usage*
-neopyter.Option
+Class ~
+{neopyter.Option}
 Fields ~
 {remote_address} `(string)`
 {file_pattern} `(string[])`
 {auto_attach} `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
 {auto_connect} `(boolean)` # auto connect jupyter lab
-{rpc_client}
-"'async'" # AsyncRpcClient, default
-"'block'" # BlockRpcClient
-"'websocket_server'" # WSServerClient
+{mode} "direct"|"proxy"
 {filename_mapper} `(fun(ju_path:string):string)`
 {on_attach} `(optional)` `(fun(bufnr:number))`
 {jupyter} neopyter.JupyterOption
@@ -46,7 +44,7 @@ Fields ~
 
       auto_attach = true,
       auto_connect = true,
-      rpc_client = "async",
+      mode = "proxy",
       jupyter = {
           auto_activate_file = true,
           -- Always scroll to the current cell.
@@ -69,7 +67,6 @@ Fields ~
       },
   }
 
-
 <
 Type ~
 neopyter.Option
@@ -86,21 +83,24 @@ Parameters ~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-neopyter.JupyterOption
+Class ~
+{neopyter.JupyterOption}
 Fields ~
 {auto_activate_file} `(boolean)`
 
 ------------------------------------------------------------------------------
                                                                     *JupyterLab*
                                   `JupyterLab`
-neopyter.JupyterLab
+Class ~
+{neopyter.JupyterLab}
 Fields ~
 {client} neopyter.RpcClient
 {private} augroup `(number)`
 {notebook_map} `({[string]:)` neopyter.Notebook}
 
 ------------------------------------------------------------------------------
-neopyter.NewJupyterLabOption
+Class ~
+{neopyter.NewJupyterLabOption}
 Fields ~
 {address} `(optional)` `(string)`
 
@@ -167,7 +167,8 @@ Return ~
 documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
 
 ------------------------------------------------------------------------------
-neopyter.NewUntitledOption
+Class ~
+{neopyter.NewUntitledOption}
 Fields ~
 {path} `(optional)` `(string)`
 {type} `(optional)` `notebook`|`file`
@@ -185,7 +186,8 @@ current notebook of jupyter lab
 
 ==============================================================================
 ------------------------------------------------------------------------------
-neopyter.Cell
+Class ~
+{neopyter.Cell}
 Fields ~
 {start_line} `(number)` include
 {lines} `(string[])`
@@ -200,7 +202,8 @@ Fields ~
 ------------------------------------------------------------------------------
                                                                       *Notebook*
                                    `Notebook`
-neopyter.Notebook
+Class ~
+{neopyter.Notebook}
 Fields ~
 {private} client neopyter.RpcClient
 {bufnr} `(number)`
@@ -211,7 +214,8 @@ Fields ~
 {private} augroup? `(number)`
 
 ------------------------------------------------------------------------------
-neopyter.NewNotebokOption
+Class ~
+{neopyter.NewNotebokOption}
 Fields ~
 {client} neopyter.RpcClient
 {bufnr} `(number)`

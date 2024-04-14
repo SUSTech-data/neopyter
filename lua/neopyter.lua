@@ -25,10 +25,7 @@ local neopyter = {}
 ---@field file_pattern string[]
 ---@field auto_attach boolean Automatically attach to the Neopyter server when open file_pattern matched files
 ---@field auto_connect boolean # auto connect jupyter lab
----@field rpc_client
----| "'async'" # AsyncRpcClient, default
----| "'block'" # BlockRpcClient
----| "'websocket_server'" # WSServerClient
+---@field mode "direct"|"proxy"
 ---@field filename_mapper fun(ju_path:string):string
 ---@field on_attach? fun(bufnr:number)
 ---@field jupyter neopyter.JupyterOption
@@ -47,7 +44,7 @@ neopyter.config = {
 
     auto_attach = true,
     auto_connect = true,
-    rpc_client = "async",
+    mode = "proxy",
     jupyter = {
         auto_activate_file = true,
         -- Always scroll to the current cell.
