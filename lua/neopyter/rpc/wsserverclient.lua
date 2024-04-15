@@ -52,7 +52,7 @@ function WSServerClient:connect(address)
             self.single_connection = connect
             self.single_connection:attach({
                 on_text = function(text)
-                    self:handle_response(vim.base64.decode(text))
+                    self:handle_response(text)
                 end,
                 on_disconnect = function()
                     self.single_connection = nil
@@ -134,10 +134,12 @@ end
 ---@param data string
 ---@package
 function WSServerClient:handle_response(data)
-    local status, msg = pcall(vim.mpack.decode, data)
-    assert(status, vim.inspect(msg) .. data)
-    if status == false then
+    local mpack = vim.base64.decode(data)
+    local status, msg = pcall(vim.mpack.decode, mpack)
+    if not status then
         logger.warn("parse mpack error, reset request pool")
+        -- assert(status, string.format("%s: recevied data.length=%s, mpack.length=%s, msg=[%s]", vim.inspect(msg), #data, #mpack, mpack))
+        utils.notify_error(msg)
         self:reset_request()
         return
     end
@@ -161,7 +163,7 @@ function WSServerClient:handle_response(data)
             callback(false, error)
         end
     else
-        assert(false, "msgpack rpc response spec error, msg=" .. data)
+        assert(false, "msgpack rpc response spec error, msg=" .. mpack)
     end
 end
 
