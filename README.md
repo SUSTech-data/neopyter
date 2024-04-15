@@ -46,8 +46,8 @@ To install the jupyterlab extension, execute:
 ```bash
 pip install neopyter
 ```
-
-Configure `JupyterLab` in menu `Settings`>`Settings Editor`>`Neopyter`
+Configure `JupyterLab` in side panel
+![side panel](./doc/sidepanel.png)
 
 - `mode`: refer to the previous introduction about mode
 - `IP`: if `mode=proxy`, set to the IP of the host where jupyter is located. If `proxy=direct`, set to the IP of the
