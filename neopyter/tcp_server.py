@@ -49,7 +49,7 @@ class TcpServer(object):
     async def start(self):
         # support update?
         if self.server:
-            print("Stop old server")
+            print("stop old server")
             await self.stop()
         host = set.union(self.builtinHost, self.host)
         print("resolved host:", host)

@@ -42,11 +42,12 @@ function WSServerClient:connect(address)
     end
     local host, port = utils.parse_address(self.address)
     self.server = websocket.Server:new({ host = host, port = port })
-    self.server:listen({
+    local success, error = pcall(self.server.listen, self.server, {
         on_connect = function(connect)
             if self.single_connection ~= nil then
-                logger.warn("server listening and client exists, but another client income")
-                self.single_connection:close()
+                logger.warn("server listening and client exists, but another client incoming")
+                utils.notify_warn("There are multiple lab extension connections at same time, please check if multiple tagbs are open")
+                connect:close()
             end
             self.single_connection = connect
             self.single_connection:attach({
@@ -62,6 +63,9 @@ function WSServerClient:connect(address)
             self:disconnect()
         end,
     })
+    if not success then
+        utils.notify_warn(error)
+    end
 end
 
 ---disconnect connect

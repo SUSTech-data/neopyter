@@ -11,7 +11,7 @@ from .msgpack_queue import labextension_queue, client_queue
 from .tcp_server import tcpServer
 
 
-settings = {"mode": "proxy", "host": "127.0.0.1", "port": 9001}
+settings = {"mode": "direct", "host": "127.0.0.1", "port": 9001}
 
 
 class ForwardWebsocketHandler(WebSocketHandler):
@@ -81,7 +81,7 @@ class UpdateSettingsHandler(APIHandler):
         while "" in host:
             host.remove("")
 
-        port = settings["port"]
+        port = settings.get("port", 9001)
 
         print("-------------debug-------------------")
         settings["mode"] = mode
@@ -91,33 +91,38 @@ class UpdateSettingsHandler(APIHandler):
         if mode == "direct":
             if tcpServer.is_running:
                 asyncio.create_task(tcpServer.stop())
+                print("success, tcp server is running, shutdown it")
                 return self.finish(
                     {
                         "code": 0,
                         "message": "success, tcp server is running, shutdown it",
                     }
                 )
+            print("success, tcp server is shutdown")
             return self.finish(
                 {
                     "code": 0,
                     "message": "success, tcp server is shutdown",
                 }
             )
-        if host == tcpServer.host and port == tcpServer.port:
+
+        if host == tcpServer.host and port == tcpServer.port and tcpServer.is_running:
+            print("no update, don't restart server")
             return self.finish(
                 {
                     "code": 0,
-                    "message": "success, don't restart server",
+                    "message": "no update, don't restart server",
                 }
             )
 
         tcpServer.host = host
         tcpServer.port = port
         asyncio.create_task(tcpServer.start())
+        print("start tcpserver")
         return self.finish(
             {
                 "code": 0,
-                "message": "success",
+                "message": "start/restart tcpserver",
             }
         )
 

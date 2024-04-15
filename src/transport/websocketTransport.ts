@@ -84,7 +84,7 @@ export class WebsocketTransport extends BaseTransport {
     console.error('Websocket error', event);
   }
   protected onClose(_event: Event) {
-    console.log(`Disconnect to neopyter jupyter server by websocket ${this.websocket!.url}`);
+    console.log(`Disconnect to neopyter jupyter server by websocket ${this.websocket!.url}`, event);
     this.websocket!.close();
     this.websocket = undefined;
     this.readableStream = undefined;

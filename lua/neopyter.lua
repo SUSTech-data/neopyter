@@ -44,7 +44,7 @@ neopyter.config = {
 
     auto_attach = true,
     auto_connect = true,
-    mode = "proxy",
+    mode = "direct",
     jupyter = {
         auto_activate_file = true,
         -- Always scroll to the current cell.

@@ -6,6 +6,7 @@
   "jupyter.lab.setting-icon-label": "Neopyter",
   "definitions": {
     "mode": {
+      "type": "string",
       "enum": ["proxy", "direct"]
     },
     "ip": {
@@ -17,23 +18,42 @@
   },
   "properties": {
     "mode": {
-      "title": "Neopyter work mode",
-      "description": "Different work mode determine different methods of communication arcitecture. The `proxy` mode will communicate through jupyter server, while the `direct` mode will communicate directly with nvim",
+      "title": "Neopyter mode",
+      "description": "Different work mode determine different methods of communication. The `proxy` mode will communicate through jupyter server, while the `direct` mode will communicate directly with nvim",
       "$ref": "#/definitions/mode",
       "default": "direct"
-    },
-    "ip": {
-      "title": "IP",
-      "description": "For `proxy` mode, this is the IP of the host where jupyter server is located; For `direct` mode, this is the IP of the host where nvim is located ",
-      "$ref": "#/definitions/ip",
-      "default": "127.0.0.1"
-    },
-    "port": {
-      "title": "Port",
-      "$ref": "#/definitions/port",
-      "default": 9001
     }
   },
-  "additionalProperties": false,
+  "dependencies": {
+    "mode": {
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "enum": ["direct"]
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "enum": ["proxy"]
+            },
+            "ip": {
+              "title": "IP",
+              "description": "For `proxy` mode, this is the IP of the host where jupyter server is located",
+              "$ref": "#/definitions/ip",
+              "default": "127.0.0.1"
+            },
+            "port": {
+              "title": "Port",
+              "$ref": "#/definitions/port",
+              "default": 9001
+            }
+          }
+        }
+      ]
+    }
+  },
   "type": "object"
 }

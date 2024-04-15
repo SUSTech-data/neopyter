@@ -14,8 +14,8 @@ import { WebsocketTransport } from './transport';
 import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
-import { IConfig } from './settings';
 import { DockPanel } from '@lumino/widgets';
+import { settingStore } from './store';
 
 function triggerFocus(element: HTMLElement) {
   const eventType = 'onfocusin' in element ? 'focusin' : 'focus';
@@ -62,12 +62,12 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry,
     _completionProviderManager: ICompletionProviderManager
   ) => {
+    settingStore.setSettingRegistry(settingRegistry);
     const completionProviderManager = _completionProviderManager as CompletionProviderManager;
     const providers = completionProviderManager.getProviders();
     console.log('JupyterLab extension neopyter is activated!');
     console.log('provider', completionProviderManager.getProviders());
     const kernelCompleterProvider = providers.get('CompletionProvider:kernel') as KernelCompleterProvider;
-    // completionProviderManager.updateCompleter
 
     const sidebar = new StatusSidePanel(settingRegistry);
     sidebar.title.caption = 'Neopyter';
@@ -379,15 +379,17 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
 
     const startConnection = async () => {
       const server = new RpcServer(dispatcher);
-
-      const { mode, ip, port } = (await settingRegistry.load('neopyter:labplugin')).composite as unknown as IConfig;
-      let url;
+      const mode = await settingStore.getMode();
+      console.log(`mode:${mode}`);
       if (mode === 'proxy') {
         const settings = ServerConnection.makeSettings();
-        url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
+        const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
         server.start(WebsocketTransport, url, false);
       } else {
-        url = `ws://${ip}:${port}`;
+        const ip = await settingStore.getIp();
+        const port = await settingStore.getPort();
+        const url = `ws://${ip}:${port}`;
+        console.log(url);
         server.start(WebsocketTransport, url, true);
       }
     };
