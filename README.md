@@ -46,6 +46,7 @@ To install the jupyterlab extension, execute:
 ```bash
 pip install neopyter
 ```
+
 Configure `JupyterLab` in side panel
 ![side panel](./doc/sidepanel.png)
 
