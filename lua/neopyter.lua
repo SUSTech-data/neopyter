@@ -2,6 +2,7 @@ local highlight = require("neopyter.highlight")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
+local a = require("plenary.async")
 
 ---@toc
 
@@ -67,6 +68,20 @@ neopyter.config = {
     },
 }
 
+-- Creating a simple setInterval wrapper
+local function setInterval(interval, callback)
+    local timer = vim.uv.new_timer()
+    timer:start(interval, interval, function()
+        a.run(callback, function() end)
+    end)
+    return timer
+end
+
+local function clearInterval(timer)
+    timer:stop()
+    timer:close()
+end
+
 ---@param config neopyter.Option
 function neopyter.setup(config)
     neopyter.config = vim.tbl_deep_extend("force", neopyter.config, config or {})
@@ -81,12 +96,18 @@ function neopyter.setup(config)
             group = augroup,
             pattern = neopyter.config.file_pattern,
             callback = function()
-                if neopyter.config.auto_connect and not jupyter.jupyterlab:is_connecting() then
-                    jupyter.jupyterlab:connect()
-                end
-                if not jupyter.jupyterlab:is_attached() then
-                    jupyter.jupyterlab:attach()
-                end
+                vim.api.nvim_del_augroup_by_id(augroup)
+                local timer
+                timer = setInterval(1000, function()
+                    if neopyter.config.auto_connect then
+                        if jupyter.jupyterlab:is_connecting() then
+                            jupyter.jupyterlab:attach()
+                            clearInterval(timer)
+                        else
+                            jupyter.jupyterlab:connect()
+                        end
+                    end
+                end)
             end,
         })
     end

@@ -24,6 +24,7 @@ local api = a.api
 ---@field private cells neopyter.Cell[]
 ---@field private active_cell_index number
 ---@field private augroup? number
+---@field private _is_connecting? boolean
 local Notebook = {
     bufnr = -1,
 }
@@ -46,62 +47,48 @@ end
 
 ---attach autocmd&notebook
 function Notebook:attach()
-    local config = require("neopyter").config
-    local augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
-    assert(augroup, "can't create augroup")
-    self.augroup = augroup
-    utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-        buffer = self.bufnr,
-        callback = function()
-            if not self:is_connecting() then
-                return
-            end
-            local index = self:get_cursor_cell_pos()
-            if index ~= self.active_cell_index then
-                -- cache
-                self.active_cell_index = index
-                self:activate_cell(index - 1)
-                self:scroll_to_item(index - 1, "smart")
-            end
-        end,
-        group = augroup,
-    })
-
-    -- utils.nvim_create_autocmd({ "ModeChanged" }, {
-    --     buffer = self.bufnr,
-    --     callback = function()
-    --         local old_mode = vim.v.event.old_mode
-    --         local new_mode = vim.v.event.new_mode
-    --         if new_mode == "i" and old_mode == "n" then
-    --             self:set_mode("edit")
-    --         elseif new_mode == "n" and old_mode == "i" then
-    --             self:set_mode("command")
-    --         end
-    --     end,
-    --     group = augroup,
-    -- })
-
-    utils.nvim_create_autocmd({ "BufWritePre" }, {
-        buffer = self.bufnr,
-        callback = function()
-            if self:is_connecting() then
-                self:save()
-            end
-        end,
-        group = augroup,
-    })
-
-    api.nvim_buf_attach(self.bufnr, false, {
-        on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
-            a.run(function()
+    if self.augroup == nil then
+        self.augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
+        utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            buffer = self.bufnr,
+            callback = function()
                 if not self:is_connecting() then
-                    self:update_cells()
                     return
                 end
-                self:partial_sync(start_row, old_end_row, new_end_row)
-            end)
-        end,
-    })
+                local index = self:get_cursor_cell_pos()
+                if index ~= self.active_cell_index then
+                    -- cache
+                    self.active_cell_index = index
+                    self:activate_cell(index - 1)
+                    self:scroll_to_item(index - 1, "smart")
+                end
+            end,
+            group = self.augroup,
+        })
+
+        utils.nvim_create_autocmd({ "BufWritePre" }, {
+            buffer = self.bufnr,
+            callback = function()
+                if self:is_connecting() then
+                    self:save()
+                end
+            end,
+            group = self.augroup,
+        })
+        api.nvim_buf_attach(self.bufnr, false, {
+            on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
+                a.run(function()
+                    if not self:is_connecting() then
+                        self:update_cells()
+                        return
+                    end
+                    self:partial_sync(start_row, old_end_row, new_end_row)
+                end, function() end)
+            end,
+        })
+    end
+
+    self._is_connecting = self.client:is_connecting() and self:is_exist()
 
     self:update_cells()
 
@@ -116,6 +103,7 @@ end
 --- detach autocmd
 function Notebook:detach()
     api.nvim_del_augroup_by_id(self.augroup)
+    -- detach buf
     self.augroup = nil
 end
 
@@ -126,12 +114,7 @@ function Notebook:is_attached()
 end
 
 function Notebook:is_connecting()
-    -- if self.client:is_connecting() then
-    --     local is_exist = self:is_exist()
-    --     return is_exist
-    -- end
-    -- return false
-    return self.client:is_connecting() and self:is_exist()
+    return self.client:is_connecting() and self._is_connecting
 end
 
 function Notebook:update_cells()
@@ -357,6 +340,7 @@ function Notebook:goto_prev_cell_content() end
 Notebook = async_wrap(Notebook, {
     "update_cells",
     "is_attached",
+    "is_connecting",
     -- "get_cursor_pos",
     -- "get_cursor_cell_pos",
     "goto_next_cellseparator",

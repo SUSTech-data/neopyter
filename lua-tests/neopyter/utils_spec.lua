@@ -90,7 +90,7 @@ describe("parse notebook", function()
         end)
     end)
     describe("magic", function()
-        it("cell magic", function()
+        it("cell", function()
             local cells = utils.parse_content({
                 "# %%timeit",
                 "print('hello')",
@@ -106,7 +106,7 @@ describe("parse notebook", function()
                 },
             }, cells)
         end)
-        it("cell magic with params", function()
+        it("magic cell with params", function()
             local cells = utils.parse_content({
                 "# %%timeit -arg=12",
                 "print('hello')",
@@ -118,6 +118,25 @@ describe("parse notebook", function()
                     start_line = 1,
                     end_line = 3,
                     cell_magic = "%%timeit -arg=12",
+                    cell_type = "code",
+                },
+            }, cells)
+        end)
+
+        it("magic cell with quotes", function()
+            local cells = utils.parse_content({
+                "# %%sh",
+                '"""',
+                "ls",
+                '"""',
+            })
+            assert.are.same({
+                {
+                    lines = { "# %%sh", '"""', "ls", '"""' },
+                    source = "%%sh\nls",
+                    start_line = 1,
+                    end_line = 5,
+                    cell_magic = "%%sh",
                     cell_type = "code",
                 },
             }, cells)

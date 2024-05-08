@@ -79,6 +79,7 @@ function JupyterLab:detach()
             notebook:detach()
         end
     end
+    self.client:disconnect()
     self.notebook_map = {}
     self.augroup = nil
 end
@@ -146,7 +147,7 @@ function JupyterLab:_on_bufwinenter(buf)
         end
     end
 
-    if self:is_connecting() and notebook:is_exist() then
+    if notebook:is_exist() then
         if notebook:is_open() then
             notebook:activate()
         else

@@ -20,7 +20,7 @@ end
 ---Return whether this source is available in the current context or not (optional).
 ---@return boolean
 function source:is_available()
-    return jupyter.notebook ~= nil and jupyter.notebook:is_attached() and jupyter.jupyterlab.client:is_connecting()
+    return jupyter.notebook ~= nil and jupyter.notebook:is_connecting()
 end
 
 function source:get_debug_name()

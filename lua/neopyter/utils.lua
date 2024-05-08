@@ -154,7 +154,12 @@ function M.parse_content(lines, filetype)
         end
 
         if cell.cell_magic ~= nil then
-            cell.source = cell.cell_magic .. "\n" .. table.concat(cell.lines, "\n", 2)
+            local source = table.concat(cell.lines, "\n", 2)
+            local comment_source = vim.trim(source):match('^"""\n(.*)\n"""$')
+            if comment_source ~= nil then
+                source = comment_source
+            end
+            cell.source = cell.cell_magic .. "\n" .. source
         elseif cell.cell_type == "markdown" or cell.cell_type == "raw" then
             cell.source = table.concat(cell.lines, "\n", 2)
             if filetype == "python" then
