@@ -45,6 +45,7 @@ function M.check()
                 health.info("Rpc server status: inactive")
             end
             health.start("Jupyter lab")
+            health.info(string.format("  %-30s %-10s %-10s %s", "file", "attach", "connect", "remote_path"))
             for _, notebook in pairs(jupyter.jupyterlab.notebook_map) do
                 local select_mark = " "
                 if jupyter.notebook == notebook then
@@ -52,11 +53,20 @@ function M.check()
                 end
                 local msg = ""
                 local nbconnect = notebook:is_connecting()
+
                 if nbconnect then
-                    msg = string.format("%s %s 💫 %s", select_mark, notebook.local_path, notebook.remote_path)
+                    msg = string.format(
+                        "%s %-30s %-10s %-10s %s",
+                        select_mark,
+                        notebook.local_path,
+                        notebook:is_attached(),
+                        nbconnect,
+                        notebook.remote_path
+                    )
                 else
-                    msg = string.format("%s %s 💥", select_mark, notebook.local_path, notebook.remote_path)
+                    msg = string.format("%s %-30s %-10s false", select_mark, notebook.local_path, notebook:is_attached(), nbconnect)
                 end
+
                 health.info(msg)
             end
         else

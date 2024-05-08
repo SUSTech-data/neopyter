@@ -45,14 +45,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
   id: 'neopyter:labplugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [
-    ILabShell,
-    IDocumentManager,
-    INotebookTracker,
-    ILayoutRestorer,
-    ISettingRegistry,
-    ICompletionProviderManager
-  ],
+  requires: [ILabShell, IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry, ICompletionProviderManager],
   activate: (
     app: JupyterFrontEnd,
     labShell: ILabShell,

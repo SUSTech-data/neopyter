@@ -95,6 +95,7 @@ end
 ---connect server
 ---@param address? string address of neopyter server
 function JupyterLab:connect(address)
+    local config = require("neopyter").config
     self.client:connect(address)
     if self.client:is_connecting() then
         local jupyterlab_version = self:get_jupyterlab_extension_version()
@@ -105,10 +106,15 @@ function JupyterLab:connect(address)
             )
         end
     end
+
+    api.nvim_exec_autocmds("BufWinEnter", {
+        group = self.augroup,
+        pattern = config.file_pattern,
+    })
 end
 
-function JupyterLab:disconnect(address)
-    self.client:disconnect(address)
+function JupyterLab:disconnect()
+    self.client:disconnect()
 end
 
 function JupyterLab:is_connecting()
@@ -146,8 +152,9 @@ function JupyterLab:_on_bufwinenter(buf)
             end)
         end
     end
+    jupyter.notebook = notebook
 
-    if notebook:is_exist() then
+    if self:is_connecting() and notebook:is_exist() then
         if notebook:is_open() then
             notebook:activate()
         else
@@ -206,7 +213,7 @@ end
 
 ---get current notebook of jupyter lab
 function JupyterLab:current_ipynb()
-    return self.client:request("getCurrentNotebook", ops)
+    return self.client:request("getCurrentNotebook")
 end
 
 JupyterLab = async_wrap(JupyterLab, {

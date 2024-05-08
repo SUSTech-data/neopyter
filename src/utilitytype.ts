@@ -1,9 +1,7 @@
 import { StoreApi, UseBoundStore } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
-export type Concat<T extends string[]> = T extends [infer F extends string, ...infer R extends string[]]
-  ? `${F}${Concat<R>}`
-  : '';
+export type Concat<T extends string[]> = T extends [infer F extends string, ...infer R extends string[]] ? `${F}${Concat<R>}` : '';
 
 export type PrefixCapitalize<P extends string, K extends string> = Concat<[P, Capitalize<K>]>;
 
@@ -12,9 +10,7 @@ type HookMap = { [index: string]: unknown };
 type FilterState<S> = S extends { getState: () => infer T } ? keyof Omit<T, `_${string}`> : never;
 
 // const name = state.use.name()
-type WithScopeUse<S> = S extends { getState: () => infer T }
-  ? S & { use: { [K in FilterState<S>]: () => T[K] } }
-  : never;
+type WithScopeUse<S> = S extends { getState: () => infer T } ? S & { use: { [K in FilterState<S>]: () => T[K] } } : never;
 export const createScopeUse = <S extends UseBoundStore<StoreApi<object>>>(_store: S) => {
   const store = _store as WithScopeUse<typeof _store>;
   const use = {} as HookMap;
@@ -32,9 +28,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // const name = state.useName()
 type PrefixUse<K extends string> = PrefixCapitalize<'use', K>;
-type WithUse<S> = S extends { getState: () => infer T }
-  ? S & { [K in FilterState<S> as PrefixUse<K>]: () => T[K] }
-  : never;
+type WithUse<S> = S extends { getState: () => infer T } ? S & { [K in FilterState<S> as PrefixUse<K>]: () => T[K] } : never;
 
 export const createUse = <S extends UseBoundStore<StoreApi<object>>>(_store: S) => {
   const store = _store as WithUse<S>;

@@ -20,7 +20,7 @@ end
 ---Return whether this source is available in the current context or not (optional).
 ---@return boolean
 function source:is_available()
-    return jupyter.notebook ~= nil and jupyter.notebook:is_connecting()
+    return jupyter.notebook ~= nil
 end
 
 function source:get_debug_name()
@@ -37,6 +37,10 @@ end
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 function source:complete(params, callback)
     a.run(function()
+        if not jupyter.notebook:is_connecting() then
+            callback({})
+        end
+
         local code = params.context.cursor_before_line
         local offset = math.min(params.offset, #code)
         local items = jupyter.notebook:kernel_complete(code, offset)

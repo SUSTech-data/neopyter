@@ -25,8 +25,7 @@ const settingState = create<ISettingState>()(
     }),
     {
       name: 'neopyter-setting',
-      partialize: state =>
-        Object.fromEntries(Object.entries(state).filter(([key]) => !['settingRegistry'].includes(key)))
+      partialize: state => Object.fromEntries(Object.entries(state).filter(([key]) => !['settingRegistry'].includes(key)))
     }
   )
 );

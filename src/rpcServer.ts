@@ -8,10 +8,7 @@ export class RpcServer {
   transport?: BaseTransport;
   constructor(private dispatcher: Dispatcher) {}
 
-  start<T extends BaseTransport, PT extends unknown[]>(
-    transportCtr: new (server: RpcServer, ...args: PT) => T,
-    ...params: PT
-  ) {
+  start<T extends BaseTransport, PT extends unknown[]>(transportCtr: new (server: RpcServer, ...args: PT) => T, ...params: PT) {
     this.transport = new transportCtr(this, ...params);
   }
 

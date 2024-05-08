@@ -73,7 +73,6 @@ local cmds = {
             jupyter.notebook.remote_path = file_or_current
             if jupyter.notebook:is_exist() then
                 jupyter.notebook:attach()
-
                 if jupyter.notebook:is_open() then
                     jupyter.notebook:activate()
                 else

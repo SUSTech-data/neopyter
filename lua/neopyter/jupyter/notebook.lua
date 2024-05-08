@@ -24,7 +24,6 @@ local api = a.api
 ---@field private cells neopyter.Cell[]
 ---@field private active_cell_index number
 ---@field private augroup? number
----@field private _is_connecting? boolean
 local Notebook = {
     bufnr = -1,
 }
@@ -52,7 +51,7 @@ function Notebook:attach()
         utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
             buffer = self.bufnr,
             callback = function()
-                if not self:is_connecting() then
+                if not self:safe_sync() then
                     return
                 end
                 local index = self:get_cursor_cell_pos()
@@ -69,7 +68,7 @@ function Notebook:attach()
         utils.nvim_create_autocmd({ "BufWritePre" }, {
             buffer = self.bufnr,
             callback = function()
-                if self:is_connecting() then
+                if self:safe_sync() then
                     self:save()
                 end
             end,
@@ -78,7 +77,7 @@ function Notebook:attach()
         api.nvim_buf_attach(self.bufnr, false, {
             on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
                 a.run(function()
-                    if not self:is_connecting() then
+                    if not self:safe_sync() then
                         self:update_cells()
                         return
                     end
@@ -87,8 +86,6 @@ function Notebook:attach()
             end,
         })
     end
-
-    self._is_connecting = self.client:is_connecting() and self:is_exist()
 
     self:update_cells()
 
@@ -114,7 +111,15 @@ function Notebook:is_attached()
 end
 
 function Notebook:is_connecting()
-    return self.client:is_connecting() and self._is_connecting
+    return self.client:is_connecting() and self:is_exist()
+end
+
+function Notebook:safe_sync()
+    if self:is_connecting() then
+        self:open_or_reveal()
+        return true
+    end
+    return false
 end
 
 function Notebook:update_cells()
@@ -340,9 +345,6 @@ function Notebook:goto_prev_cell_content() end
 Notebook = async_wrap(Notebook, {
     "update_cells",
     "is_attached",
-    "is_connecting",
-    -- "get_cursor_pos",
-    -- "get_cursor_cell_pos",
     "goto_next_cellseparator",
     "goto_next_cell_content",
     "goto_prev_cellseparator",

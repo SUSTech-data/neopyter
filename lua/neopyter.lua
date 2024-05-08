@@ -97,17 +97,17 @@ function neopyter.setup(config)
             pattern = neopyter.config.file_pattern,
             callback = function()
                 vim.api.nvim_del_augroup_by_id(augroup)
-                local timer
-                timer = setInterval(1000, function()
-                    if neopyter.config.auto_connect then
-                        if jupyter.jupyterlab:is_connecting() then
-                            jupyter.jupyterlab:attach()
-                            clearInterval(timer)
-                        else
-                            jupyter.jupyterlab:connect()
-                        end
-                    end
-                end)
+                jupyter.jupyterlab:attach()
+                if neopyter.config.auto_connect then
+                    jupyter.jupyterlab:connect()
+                    -- local timer
+                    -- timer = setInterval(1000, function()
+                    --     if jupyter.jupyterlab:is_connecting() then
+                    --         clearInterval(timer)
+                    --     else
+                    --     end
+                    -- end)
+                end
             end,
         })
     end

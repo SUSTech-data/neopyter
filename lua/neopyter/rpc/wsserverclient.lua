@@ -45,8 +45,7 @@ function WSServerClient:connect(address)
     local success, error = pcall(self.server.listen, self.server, {
         on_connect = function(connect)
             if self.single_connection ~= nil then
-                logger.warn("server listening and client exists, but another client incoming")
-                utils.notify_warn("There are multiple lab extension connections at same time, please check if multiple tagbs are open")
+                utils.notify_warn("There are multiple lab extension connections at same time, please check if multiple tagbs are opened")
                 connect:close()
             end
             self.single_connection = connect
@@ -64,6 +63,7 @@ function WSServerClient:connect(address)
         end,
     })
     if not success then
+        ---@cast error -nil
         utils.notify_warn(error)
     end
 end
