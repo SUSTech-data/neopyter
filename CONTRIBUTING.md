@@ -10,7 +10,6 @@ pip install hatch hatch-nodejs-version pytest pytest_jupyter ruff
 
 ### Development install
 
-
 Note: You will need `NodeJS` to build the extension package. Recommend use `pnpm`
 
 ```bash
@@ -34,10 +33,10 @@ pnpm watch
 jupyter lab
 ```
 
-With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. 
+With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab.
 Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
 
-By default, the `pnpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. 
+By default, the `pnpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools.
 To also generate source maps for the JupyterLab core extensions, you can run the following command:
 
 ```bash
@@ -70,7 +69,7 @@ pnpm test
 #### Integration tests
 
 This extension uses [Playwright](https://playwright.dev/docs/intro) for the integration tests (aka user level tests).
-More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to 
+More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to
 handle testing the extension in JupyterLab.
 
 More information are provided within the [ui-tests](./ui-tests/README.md) README.

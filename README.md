@@ -3,8 +3,22 @@
 The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jupyter Lab.
 
 <!--toc:start-->
-
-- [Neopyter](#neopyter) - [How does it work?](#how-does-it-work) - [Screenshots](#screenshots) - [Requirements](#requirements) - [Installation](#installation) - [JupyterLab Extension](#jupyterlab-extension) - [Neovim plugin](#neovim-plugin) - [Integration](#integration) - [neoconf.nvim](#neoconfnvim) - [nvim-cmp](#nvim-cmp) - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects) - [Quick Start](#quick-start) - [Available Vim Commands](#available-vim-commands) - [API](#api) - [Features](#features) - [Acknowledges](#acknowledges)
+- [Neopyter](#neopyter)
+  - [How does it work?](#how-does-it-work)
+  - [Screenshots](#screenshots)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+    - [JupyterLab Extension](#jupyterlab-extension)
+    - [Neovim plugin](#neovim-plugin)
+      - [Integration](#integration)
+      - [neoconf.nvim](#neoconfnvim)
+        - [nvim-cmp](#nvim-cmp)
+        - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects)
+  - [Quick Start](#quick-start)
+    - [Available Vim Commands](#available-vim-commands)
+    - [API](#api)
+  - [Features](#features)
+  - [Acknowledges](#acknowledges)
 <!--toc:end-->
 
 ## How does it work?

@@ -50,7 +50,7 @@
         "lint": "pnpm stylelint && pnpm prettier && pnpm eslint",
         "lint:check": "pnpm stylelint:check && pnpm prettier:check && pnpm eslint:check",
         "prettier": "pnpm prettier:base --write --list-different",
-        "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
+        "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json}\"",
         "prettier:check": "pnpm prettier:base --check",
         "stylelint": "pnpm stylelint:check --fix",
         "stylelint:check": "stylelint --cache \"style/**/*.css\"",
