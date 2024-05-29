@@ -57,6 +57,10 @@ function AsyncRpcClient:disconnect()
     if self.tcp_client then
         self.tcp_client:close()
         self.tcp_client = nil
+        for _, fun in pairs(self.request_pool) do
+            fun(false, "cancel")
+        end
+        self.request_pool = {}
     end
 end
 
@@ -113,7 +117,7 @@ function AsyncRpcClient:handle_response(data)
         if msg == nil then
             break
         end
-        -- logger.log(vim.inspect(msg))
+        logger.log(vim.inspect(msg))
         if #msg == 4 and msg[1] == 1 then
             local msgid, error, result = msg[2], msg[3], msg[4]
             local callback = self.request_pool[msgid]

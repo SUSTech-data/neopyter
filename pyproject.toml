@@ -23,8 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
-dependencies = [
-]
+dependencies = ["jupyterlab>=4.0.0,<5"]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
 [project.optional-dependencies]
@@ -83,7 +82,7 @@ version_cmd = "hatch version"
 before-build-npm = [
     "python -m pip install 'jupyterlab>=4.0.0,<5'",
     "jlpm",
-    "pnpm build:prod"
+    "pnpm build:prod",
 ]
 before-build-python = ["pnpm clean:all"]
 

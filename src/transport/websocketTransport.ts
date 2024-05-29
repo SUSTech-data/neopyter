@@ -69,7 +69,7 @@ export class WebsocketTransport extends BaseTransport {
         await this.onNotify(message);
         break;
       default:
-        throw new RPCError(`Unknown message: ${message}`);
+        throw new RPCError(`unknown message: ${message}`);
     }
   }
 
@@ -78,13 +78,13 @@ export class WebsocketTransport extends BaseTransport {
   }
 
   protected onOpen(_event: Event) {
-    console.log(`Connection to neopyter jupyter server by websocket ${this.websocket!.url}`);
+    console.log(`connection websocket ${this.websocket!.url}`);
   }
   protected onError(event: Event) {
-    console.error('Websocket error', event);
+    console.error('websocket error', event);
   }
-  protected onClose(_event: Event) {
-    console.log(`Disconnect to neopyter jupyter server by websocket ${this.websocket!.url}`, event);
+  protected onClose(event: Event) {
+    console.log(`disconnect websocket: ${this.websocket!.url}`, event);
     this.websocket!.close();
     this.websocket = undefined;
     this.readableStream = undefined;

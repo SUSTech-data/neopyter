@@ -1,7 +1,11 @@
-# JupyterLab + Neovim
+# Neopyter
 
-- A JupyterLab extension.
-- A Neovim plugin
+The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jupyter Lab.
+
+<!--toc:start-->
+
+- [Neopyter](#neopyter) - [How does it work?](#how-does-it-work) - [Screenshots](#screenshots) - [Requirements](#requirements) - [Installation](#installation) - [JupyterLab Extension](#jupyterlab-extension) - [Neovim plugin](#neovim-plugin) - [Integration](#integration) - [neoconf.nvim](#neoconfnvim) - [nvim-cmp](#nvim-cmp) - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects) - [Quick Start](#quick-start) - [Available Vim Commands](#available-vim-commands) - [API](#api) - [Features](#features) - [Acknowledges](#acknowledges)
+<!--toc:end-->
 
 ## How does it work?
 
@@ -10,25 +14,85 @@ This project includes two parts: a [`JupyterLab extension`](https://jupyterlab.r
 - The `JupyterLab extension` exposes functions of `Jupyter lab`, and provides a remote procedure call(RPC) service
 - The `Neovim plugin` calls the RPC service when it receives events from `Neovim` via `autocmd`
 
-|                           proxy                            |                            direct                            |
-| :--------------------------------------------------------: | :----------------------------------------------------------: |
-| <img alt="proxy mode" src="./doc/communication_proxy.png"> | <img alt="direct mode" src="./doc/communication_direct.png"> |
-
-This project provides two working modes for different network environments. If the browser where your jupyiter lab is
+This project provides two work modes for different network environments. If the browser where your jupyter lab is
 located cannot directly access nvim, you must use `proxy` mode; If you need to collaborate and use the same Jupyter with
 others, you must use direct mode
 
-- `proxy` mode: Jupyterlab server
-  proxies the RPC service as a TCP server which `Neovim`s plugin connects to
-- `direct` mode: Neovim plugin accesses these RPC service directly
+<table>
+    <tr>
+        <th></th>
+        <th>direct</th>
+        <th>proxy</th>
+    </tr>
+    <tr>
+        <th>Architecture</th>
+        <th style="text-align:center">
+            <img alt="direct mode" src="./doc/communication_direct.png">
+        </th>
+        <th>
+            <img alt="proxy mode" src="./doc/communication_proxy.png">
+        </th>
+    </tr>
+    <tr>
+        <th>Advantage</th>
+        <th style="text-align:left;font-weight:lighter">
+            <ul>
+                <li>Lower communication costs</li>
+                <li>Shareable JupyterLab instance</li>
+            </ul>
+        </th>
+        <th style="text-align:left;font-weight:lighter">
+            <ul>
+                <li>Lower Neovim load</li>
+            </ul>
+        </th>
+    </tr>
+    <tr>
+        <th>Disadvantage</th>
+        <th style="text-align:left;font-weight:lighter">
+            <ul>
+                <li>Higher Neovim load</li>
+            </ul>
+        </th>
+        <th style="text-align:left;font-weight:lighter">
+            <ul>
+                <li>Exclusive JupyterLab instance</li>
+            </ul>
+        </th>
+    </tr>
+</table>
+
+- `direct` mode: (default, recommended) In this mode, neovim is server and neovim plugin(neopyter) is listening to `remote_address`,
+  the browser where jupyter lab is located will connect to neovim
+
+- `proxy` mode: In this mode, Jupyter lab server(server side, the host you run `jupyter lab` to start JupyterLab) is server
+  and jupyter lab server extension(neopyter) is listening to `${IP}:{Port}`, the neovim plugin(neopyter) will connect to `${IP}:{Port}`
 
 Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abilities like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim).
 
 ## Screenshots
 
-|                    Completion                     |                    Cell Magic                     |                    Line Magic                     |
-| :-----------------------------------------------: | :-----------------------------------------------: | :-----------------------------------------------: |
-| <img alt="Completion" src="./doc/completion.png"> | <img alt="Cell Magic" src="./doc/cell_magic.png"> | <img alt="Line Magic" src="./doc/line_magic.png"> |
+<table>
+    <tr>
+        <th></th>
+        <th>Completion</th>
+        <th>Cell Magic</th>
+        <th>Line Magic</th>
+    </tr>
+    <tr>
+        <th>
+        </th>
+        <th>
+            <img alt="Completion" width="100%" src="./doc/completion.png">
+        </th>
+        <th>
+            <img alt="Cell Magic" src="./doc/cell_magic.png">
+        </th>
+        <th>
+            <img alt="Line Magic" src="./doc/line_magic.png">
+        </th>
+    </tr>
+</table>
 
 ## Requirements
 
@@ -48,12 +112,12 @@ pip install neopyter
 ```
 
 Configure `JupyterLab` in side panel
-![side panel](./doc/sidepanel.png)
+<img alt="Neopyter side panel" width="50%" src="./doc/sidepanel.png"/>
 
-- `mode`: refer to the previous introduction about mode
-- `IP`: if `mode=proxy`, set to the IP of the host where jupyter is located. If `proxy=direct`, set to the IP of the
+- `mode`: Refer to the previous introduction about mode
+- `IP`: If `mode=proxy`, set to the IP of the host where jupyter server is located. If `proxy=direct`, set to the IP of the
   host where neovim is located
-- `port`: idle port
+- `Port`: Idle port of the `IP`'s' host
 
 ### Neovim plugin
 
@@ -62,27 +126,39 @@ With 💤lazy.nvim:
 ```lua
 {
     "SUSTech-data/neopyter",
+    ---@type neopyter.Option
     opts = {
-        -- auto define autocmd
-        auto_attach = true,
-        -- auto connect rpc service
-        auto_connect = true,
         mode="direct",
-        -- same with JupyterLab settings
+        -- same with Jupyter Lab extension's settings
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
         on_attach = function(bufnr)
+            -- do some buffer keymap
         end,
-
         highlight = {
             enable = true,
-            shortsighted = true,
+            shortsighted = false,
         }
     },
 }
 ```
 
 #### Integration
+
+#### neoconf.nvim
+
+If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopyter` will automatically register/read `neoconf` settings
+
+[`.neoconf.json`](./.neoconf.json)
+
+```json
+{
+  "neopyter": {
+    "mode": "proxy",
+    "remote_address": "128.0.0.1:9001"
+  }
+}
+```
 
 ##### nvim-cmp
 
@@ -95,7 +171,6 @@ local lspkind = require("lspkind")
 local cmp = require("cmp")
 
 cmp.setup({
-
     sources = cmp.config.sources({
         -- addition source
         { name = "neopyter" },
@@ -220,7 +295,9 @@ require'nvim-treesitter.configs'.setup {
   - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
 
 - Jupyter
-  - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list) directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
+  - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s
+    [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
+    directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
 ### API
 

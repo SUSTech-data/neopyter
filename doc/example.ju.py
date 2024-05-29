@@ -19,12 +19,12 @@ print("default cell type is [code]")
 # %% ------------------------parse as code cell---------------------------------------
 # %%
 
-# %% 
+# %%
 
 # %% title
 
 # next line is line magic in jupyter lab
-# %sleep 
+# %sleep
 
 # %% [title
 
@@ -45,7 +45,6 @@ print("Hello")
 """
 
 
-
 # %% ------------------------parse as markdown cell---------------------------------------
 
 # %% [md]
@@ -58,7 +57,7 @@ $ echo $PATH
 ```
 """
 
-# %% [markdown] 
+# %% [markdown]
 
 # %% [md] title
 
@@ -66,7 +65,7 @@ $ echo $PATH
 
 # %% ------------------------parse as raw cell---------------------------------------
 
-# %% [raw] 
+# %% [raw]
 """
 this is raw cell content
 """
@@ -88,5 +87,3 @@ this is raw cell content
 # %%
 
 # %%timeit
-
-

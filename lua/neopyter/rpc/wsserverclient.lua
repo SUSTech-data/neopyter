@@ -163,6 +163,7 @@ function WSServerClient:handle_response(data)
             callback(false, error)
         end
     else
+        print("error!!")
         assert(false, "msgpack rpc response spec error, msg=" .. mpack)
     end
 end

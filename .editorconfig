@@ -10,7 +10,7 @@ max_line_length = 150
 [Makefile]
 indent_style = tab
 
-[*.{json,json5,js,cjs,ts,vue,css}]
+[*.{json,json5,js,cjs,ts,tsx,vue,css}]
 indent_size = 2
 
 [*.scm]

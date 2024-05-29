@@ -25,26 +25,34 @@ local function run_blocking(suspend_fn, ...)
         end)
     end)
 
-    vim.wait(0x7FFFFFFF, function()
+    local success, code = vim.wait(10000, function()
         return resolved
-    end, 1000)
+    end, 100)
+    if not success then
+        vim.inspect(jupyter.jupyterlab.client:disconnect())
+        vim.health.error(string.format("return code:%s", code))
+        vim.health.error("Call async function without return in a long time!!")
+    end
 end
 
 function M.check()
     run_blocking(function()
+        health.start("neopyter: config")
+        health.info(vim.inspect(neopyter.config))
         local status = jupyter.jupyterlab:is_attached()
+        health.start("neopyter: version")
+        local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
         if status then
-            local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
-            health.info(string.format("Neopyter@%s status: active", nvim_plugin_ver))
+            health.info(string.format("neovim plugin(neopyter@%s) status: active", nvim_plugin_ver))
             local is_connecting = jupyter.jupyterlab.client:is_connecting()
             if is_connecting then
-                health.info("Rpc server status: active")
                 local jupyterlab_extension_ver = jupyter.jupyterlab:get_jupyterlab_extension_version()
-                health.info(string.format("Jupyter lab extension version: %s", jupyterlab_extension_ver))
+                health.info(string.format("jupyter lab extension(neopyter@%s): active", jupyterlab_extension_ver))
             else
-                health.info("Rpc server status: inactive")
+                health.info(string.format("jupyter lab extension: don't connect", jupyterlab_extension_ver))
             end
-            health.start("Jupyter lab")
+            health.start("neopyter: status")
+            health.info("attach=ready, connect=syncing\n")
             health.info(string.format("  %-30s %-10s %-10s %s", "file", "attach", "connect", "remote_path"))
             for _, notebook in pairs(jupyter.jupyterlab.notebook_map) do
                 local select_mark = " "
@@ -70,7 +78,7 @@ function M.check()
                 health.info(msg)
             end
         else
-            health.info(string.format("Neopyter status: inactive"))
+            health.info(string.format("neovim plugin(neopyter@%s) status: inactive", nvim_plugin_ver))
         end
     end)
 end

@@ -129,3 +129,4 @@ junit.xml
 
 doc/tags
 yarn.lock
+*.ipynb

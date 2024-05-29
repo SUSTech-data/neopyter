@@ -3,5 +3,8 @@
     "library": {
       "plugins": ["plenary.nvim", "websocket.nvim"]
     }
+  },
+  "neopyter": {
+    "mode": "direct"
   }
 }

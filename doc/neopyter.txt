@@ -19,16 +19,16 @@ The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jup
 Class ~
 {neopyter.Option}
 Fields ~
-{remote_address} `(string)`
-{file_pattern} `(string[])`
-{auto_attach} `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
-{auto_connect} `(boolean)` # auto connect jupyter lab
-{mode} "direct"|"proxy"
-{filename_mapper} `(fun(ju_path:string):string)`
+{remote_address} `(optional)` `(string)`
+{file_pattern} `(optional)` `(string[])`
+{auto_attach} `(optional)` `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
+{auto_connect} `(optional)` `(boolean)` # auto connect jupyter lab
+{mode} `(optional)` "direct"|"proxy"
+{filename_mapper} `(optional)` `(fun(ju_path:string):string)`
 {on_attach} `(optional)` `(fun(bufnr:number))`
-{jupyter} neopyter.JupyterOption
-{highlight} neopyter.HighlightOption
-{parse_option} neopyter.ParseOption
+{jupyter} `(optional)` neopyter.JupyterOption
+{highlight} `(optional)` neopyter.HighlightOption
+{parse_option} `(optional)` neopyter.ParseOption
 
 ------------------------------------------------------------------------------
                                                                *neopyter.config*
@@ -44,14 +44,13 @@ Fields ~
 
       auto_attach = true,
       auto_connect = true,
-      mode = "proxy",
+      mode = "direct",
       jupyter = {
           auto_activate_file = true,
           -- Always scroll to the current cell.
           scroll = {
               enable = true,
-              mode = "always", -- "always" or "invisible"
-              step = 0.5,
+              align = "center",
           },
       },
 
@@ -86,7 +85,8 @@ Parameters ~
 Class ~
 {neopyter.JupyterOption}
 Fields ~
-{auto_activate_file} `(boolean)`
+{auto_activate_file} `(optional)` `(boolean)`
+{scroll} `(optional)` {enable?: `(boolean,)` align?: neopyter.ScrollToAlign}
 
 ------------------------------------------------------------------------------
                                                                     *JupyterLab*
@@ -276,7 +276,7 @@ Return ~
 to item
 Parameters ~
 {idx} `(number)`
-{align} `(optional)` 'auto'|'smart'|'center'|'start'|'end'
+{align} `(optional)` 'center' | 'top-center' | 'start' | 'end'| 'auto' | 'smart'
 {margin} `(optional)` `(number)`
 Return ~
 `(unknown|nil)`
@@ -297,6 +297,10 @@ Return ~
 `(number)` #row of cursor in cell
 Return ~
 `(number)` #col of cursor in cell
+
+------------------------------------------------------------------------------
+                                                       *Notebook:partial_sync()*
+       `Notebook:partial_sync`({start_row}, {old_end_row}, {new_end_row})
 
 ------------------------------------------------------------------------------
                                                                *Notebook:save()*

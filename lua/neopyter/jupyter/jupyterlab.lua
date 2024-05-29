@@ -8,7 +8,8 @@ local api = a.api
 local __filepath__ = debug.getinfo(1).source:sub(2)
 
 ---@class neopyter.JupyterOption
----@field auto_activate_file boolean
+---@field auto_activate_file? boolean
+---@field scroll? {enable?: boolean, align?: neopyter.ScrollToAlign}
 
 ---@class neopyter.JupyterLab
 ---@field client neopyter.RpcClient

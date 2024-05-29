@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/v0.34.0/schema/markdownlint-config-schema.json",
+    "default": true,
+    "MD003": {
+        "style": "atx_closed"
+    },
+    "no-hard-tabs": false,
+    "whitespace": false,
+    "MD007": {
+        "indent": 4
+    },
+    "line-length": {
+        "line_length": 150
+    },
+    "heading-style": {
+        "style": "atx"
+    },
+    "no-inline-html": false
+}

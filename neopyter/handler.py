@@ -11,13 +11,14 @@ from .msgpack_queue import labextension_queue, client_queue
 from .tcp_server import tcpServer
 
 
-settings = {"mode": "direct", "host": "127.0.0.1", "port": 9001}
+settings = None
+# {"mode": "proxy", "host": "127.0.0.1", "port": 9001}
 
 
 class ForwardWebsocketHandler(WebSocketHandler):
     def open(self, *args: str, **kwargs: str) -> Optional[Awaitable[None]]:
         print("Websocket opened for lab extension")
-        if settings["mode"] == "direct":
+        if settings and settings["mode"] == "direct":
             print("mode is direct, cann't connect jupyter server websocket")
             self.write("mode is direct, cann't connect jupyter server websocket")
             self.close()
@@ -74,6 +75,7 @@ class TcpServerInfoHandler(APIHandler):
 class UpdateSettingsHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
+        global settings
         settings = tornado.escape.json_decode(self.request.body)
         mode = settings.get("mode", "proxy")
 

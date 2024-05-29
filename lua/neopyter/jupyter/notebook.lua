@@ -1,9 +1,9 @@
 local a = require("plenary.async")
 local utils = require("neopyter.utils")
 local async_wrap = require("neopyter.asyncwrap")
-local query = require("nvim-treesitter.query")
-local uv = a.uv
 local api = a.api
+
+---@alias neopyter.ScrollToAlign 'center' | 'top-center' | 'start' | 'end'| 'auto' | 'smart'
 
 ---@class neopyter.Cell
 ---@field start_line number include
@@ -46,24 +46,27 @@ end
 
 ---attach autocmd&notebook
 function Notebook:attach()
+    local config = require("neopyter").config
     if self.augroup == nil then
         self.augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
-        utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-            buffer = self.bufnr,
-            callback = function()
-                if not self:safe_sync() then
-                    return
-                end
-                local index = self:get_cursor_cell_pos()
-                if index ~= self.active_cell_index then
-                    -- cache
-                    self.active_cell_index = index
-                    self:activate_cell(index - 1)
-                    self:scroll_to_item(index - 1, "smart")
-                end
-            end,
-            group = self.augroup,
-        })
+        if config.jupyter.scroll.enable then
+            utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+                buffer = self.bufnr,
+                callback = function()
+                    if not self:safe_sync() then
+                        return
+                    end
+                    local index = self:get_cursor_cell_pos()
+                    if index ~= self.active_cell_index then
+                        -- cache
+                        self.active_cell_index = index
+                        self:activate_cell(index - 1)
+                        self:scroll_to_item(index - 1, config.jupyter.scroll.align)
+                    end
+                end,
+                group = self.augroup,
+            })
+        end
 
         utils.nvim_create_autocmd({ "BufWritePre" }, {
             buffer = self.bufnr,
@@ -169,7 +172,7 @@ end
 
 ---scroll to item
 ---@param idx number
----@param align? 'auto'|'smart'|'center'|'start'|'end'
+---@param align? neopyter.ScrollToAlign
 ---@param margin? number
 ---@return unknown|nil
 function Notebook:scroll_to_item(idx, align, margin)
@@ -190,6 +193,7 @@ end
 ---@param pos integer[] (row, col) tuple representing the new position
 function Notebook:set_cursor_pos(pos)
     local winid = utils.buf2winid(self.bufnr)
+    ---@cast winid -nil
     vim.api.nvim_win_set_cursor(winid, pos)
 end
 
@@ -220,7 +224,10 @@ function Notebook:full_sync()
     self:_request("fullSync", cells)
 end
 
+---@diagnostic disable-next-line: unused-local
 function Notebook:partial_sync(start_row, old_end_row, new_end_row)
+    ---TODO:real partial sync via treesitter query
+    --- need support custom directive via vim.treesitter.query.add_directive({all=true})
     assert(self.cells ~= nil, "must exist cells")
     local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
     local new_cells = utils.parse_content(lines)
@@ -307,48 +314,9 @@ function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
 
-function Notebook:goto_next_cellseparator()
-    local row, col = self:get_cursor_pos()
-    local matches = query.get_capture_matches(self.bufnr, "@cell", "textobjects")
-
-    --- @type TSNode[]
-    local nodes = vim.tbl_map(function(match)
-        local node = match[vim.tbl_keys(match)[1]].node
-        if node == nil then
-            print(vim.inspect(match))
-        end
-        return node
-    end, matches or {})
-
-    local currentIdx = nil
-    for i, node in ipairs(nodes) do
-        if node then
-            local startRow, startCol, endRow, endCol = node:range(false)
-            startRow = startRow + 1
-            endRow = endRow + 1
-            print(startRow, endRow, row)
-            if startRow <= row and row <= endRow then
-                currentIdx = i
-                break
-            end
-        end
-    end
-    -- TODO: manual jump
-end
-
-function Notebook:goto_next_cell_content() end
-
-function Notebook:goto_prev_cellseparator() end
-
-function Notebook:goto_prev_cell_content() end
-
 Notebook = async_wrap(Notebook, {
     "update_cells",
     "is_attached",
-    "goto_next_cellseparator",
-    "goto_next_cell_content",
-    "goto_prev_cellseparator",
-    "goto_prev_cell_content",
 })
 
 return Notebook

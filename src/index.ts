@@ -59,7 +59,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     const completionProviderManager = _completionProviderManager as CompletionProviderManager;
     const providers = completionProviderManager.getProviders();
     console.log('JupyterLab extension neopyter is activated!');
-    console.log('provider', completionProviderManager.getProviders());
     const kernelCompleterProvider = providers.get('CompletionProvider:kernel') as KernelCompleterProvider;
 
     const sidebar = new StatusSidePanel(settingRegistry);
@@ -373,16 +372,17 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     const startConnection = async () => {
       const server = new RpcServer(dispatcher);
       const mode = await settingStore.getMode();
-      console.log(`mode:${mode}`);
+      console.log(`current mode:${mode}`);
       if (mode === 'proxy') {
         const settings = ServerConnection.makeSettings();
         const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
+        console.log(`connect to:${url}`);
         server.start(WebsocketTransport, url, false);
       } else {
         const ip = await settingStore.getIp();
         const port = await settingStore.getPort();
         const url = `ws://${ip}:${port}`;
-        console.log(url);
+        console.log(`connect to:${url}`);
         server.start(WebsocketTransport, url, true);
       }
     };

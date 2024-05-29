@@ -70,7 +70,7 @@ class TcpServer(object):
             asyncio.create_task(self.start_reader_loop(reader, writer)),
             asyncio.create_task(self.start_writer_loop(writer)),
         )
-        print("Client disconnected")
+        print("client disconnected")
 
     async def start_reader_loop(self, reader: StreamReader, writer: StreamWriter):
         print("Client reader loop start")
@@ -83,7 +83,7 @@ class TcpServer(object):
             await client_queue.put(buf)
         writer.close()
         await writer.wait_closed()
-        print("Client reader loop end")
+        print("client reader loop end")
 
     async def start_writer_loop(self, writer: StreamWriter):
         print("Client writer loop start")
@@ -94,7 +94,7 @@ class TcpServer(object):
                 # print("get labextension_queue", buf)
                 writer.write(buf)
             await asyncio.sleep(0.3)
-        print("Client writer loop end")
+        print("client writer loop end")
 
     async def stop(self):
         # maybe repeat check, whatever
