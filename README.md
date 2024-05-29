@@ -10,13 +10,13 @@ The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jup
   - [Installation](#installation)
     - [JupyterLab Extension](#jupyterlab-extension)
     - [Neovim plugin](#neovim-plugin)
-      - [Integration](#integration)
-      - [neoconf.nvim](#neoconfnvim)
-        - [nvim-cmp](#nvim-cmp)
-        - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects)
   - [Quick Start](#quick-start)
-    - [Available Vim Commands](#available-vim-commands)
-    - [API](#api)
+  - [Available Vim Commands](#available-vim-commands)
+  - [Integration](#integration)
+    - [neoconf.nvim](#neoconfnvim)
+    - [nvim-cmp](#nvim-cmp)
+    - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects)
+  - [API](#api)
   - [Features](#features)
   - [Acknowledges](#acknowledges)
 <!--toc:end-->
@@ -157,9 +157,40 @@ With 💤lazy.nvim:
 }
 ```
 
-#### Integration
+## Quick Start
 
-#### neoconf.nvim
+- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
+- Open a `*.ju.py` file in neovim
+- Now you can type `# %%` in Neovim to create a code cell.
+  - You'll see everything you type below that will be synchronised in the browser
+
+## Available Vim Commands
+
+- Status
+  - `:Neopyter status` alias to `:checkhealth neopyter` currently
+- Server
+  - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
+  - `:Neopyter disconnect`
+- Sync
+  - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
+  - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
+- Run
+  - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
+  - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
+  - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
+  - `:Neopyter run all`, same as `Run`>`Run All Cells` menu in `Jupyter lab`
+- Kernel
+  - `:Neopyter kernel restart`, same as `Kernel`>`Restart Kernel` menu in `Jupyter lab`
+  - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
+- Jupyter
+  - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s
+    [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
+    directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
+
+
+## Integration
+
+### neoconf.nvim
 
 If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopyter` will automatically register/read `neoconf` settings
 
@@ -174,7 +205,7 @@ If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopy
 }
 ```
 
-##### nvim-cmp
+### nvim-cmp
 
 - `nvim-cmp`
 - `lspkind.nvim`
@@ -220,7 +251,7 @@ vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
 
 More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
 
-##### nvim-treesitter-textobjects
+### nvim-treesitter-textobjects
 
 Supported captures in `textobjects` query group
 
@@ -278,42 +309,7 @@ require'nvim-treesitter.configs'.setup {
 
 ```
 
-## Quick Start
-
-- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
-- Open a `*.ju.py` file in neovim
-- Now you can type `# %%` in Neovim to create a code cell.
-  - You'll see everything you type below that will be synchronised in the browser
-
-### Available Vim Commands
-
-- Server
-  - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
-  - `:Neopyter disconnect`
-  - `:Neopyter status` alias to `:checkhealth neopyter` currently
-- Sync
-
-  - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
-  - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
-
-- Run
-
-  - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
-  - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
-  - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
-  - `:Neopyter run all`, same as `Run`>`Run All Cells` menu in `Jupyter lab`
-
-- Kernel
-
-  - `:Neopyter kernel restart`, same as `Kernel`>`Restart Kernel` menu in `Jupyter lab`
-  - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
-
-- Jupyter
-  - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s
-    [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
-    directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
-
-### API
+## API
 
 `Neopyter` provides rich lua APIs
 
