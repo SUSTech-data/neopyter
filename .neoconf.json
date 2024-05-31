@@ -1,7 +1,7 @@
 {
   "neodev": {
     "library": {
-      "plugins": ["plenary.nvim", "websocket.nvim"]
+      "plugins": ["plenary.nvim", "websocket.nvim", "nvim-cmp"]
     }
   },
   "neopyter": {

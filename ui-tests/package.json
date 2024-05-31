@@ -11,5 +11,8 @@
   "devDependencies": {
     "@jupyterlab/galata": "^5.0.0",
     "@playwright/test": "^1.32.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1"
   }
 }

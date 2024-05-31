@@ -36,9 +36,15 @@ end
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 function source:complete(params, callback)
+    local notebook_buf = vim.tbl_get(jupyter, "notebook", "bufnr")
+    if params.context.bufnr ~= notebook_buf then
+        callback()
+    end
+
     a.run(function()
         if not jupyter.notebook:is_connecting() then
             callback({})
+            return
         end
 
         local code = params.context.cursor_before_line

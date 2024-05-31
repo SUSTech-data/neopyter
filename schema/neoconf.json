@@ -25,7 +25,7 @@
       "title": "Remote address",
       "description": "For `direct` mode, the address neovim listen to; for `proxy` mode, the address neovim connect to",
       "$ref": "#/definitions/remote_address",
-      "default": "128.0.0.1:9001"
+      "default": "127.0.0.1:9001"
     }
   },
   "type": "object"

@@ -48,9 +48,17 @@ function M.check()
             if is_connecting then
                 local jupyterlab_extension_ver = jupyter.jupyterlab:get_jupyterlab_extension_version()
                 health.info(string.format("jupyter lab extension(neopyter@%s): active", jupyterlab_extension_ver))
+                if nvim_plugin_ver ~= jupyterlab_extension_ver then
+                    health.warn(
+                        string.format(
+                            "The version of JupyterLab extension(%s) is older then neovim plugin(%s), please update via `pip install -U neopyter`"
+                        )
+                    )
+                end
             else
-                health.info(string.format("jupyter lab extension: don't connect", jupyterlab_extension_ver))
+                health.info("jupyter lab extension: don't connect")
             end
+
             health.start("neopyter: status")
             health.info("attach=ready, connect=syncing\n")
             health.info(string.format("  %-30s %-10s %-10s %s", "file", "attach", "connect", "remote_path"))

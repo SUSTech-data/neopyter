@@ -200,7 +200,7 @@ If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopy
 {
   "neopyter": {
     "mode": "proxy",
-    "remote_address": "128.0.0.1:9001"
+    "remote_address": "127.0.0.1:9001"
   }
 }
 ```
