@@ -4,11 +4,11 @@ import { RPCError } from './error';
 
 export type Dispatcher = { [key: string]: (...args: any[]) => unknown };
 
-export class RpcServer {
+export class RpcService {
   transport?: BaseTransport;
   constructor(private dispatcher: Dispatcher) {}
 
-  start<T extends BaseTransport, PT extends unknown[]>(transportCtr: new (server: RpcServer, ...args: PT) => T, ...params: PT) {
+  start<T extends BaseTransport, PT extends unknown[]>(transportCtr: new (server: RpcService, ...args: PT) => T, ...params: PT) {
     this.transport = new transportCtr(this, ...params);
   }
 

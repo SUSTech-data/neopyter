@@ -133,6 +133,9 @@ Configure `JupyterLab` in side panel
   host where neovim is located
 - `Port`: Idle port of the `IP`'s' host
 
+
+*NOTICE:* all settings is saved to localStorage
+
 ### Neovim plugin
 
 With 💤lazy.nvim:
@@ -358,16 +361,16 @@ require'nvim-treesitter.configs'.setup {
     - [ ] Close notebook when buffer unload
 - Jupyter Lab
   - Settings
-    - [x] Tcp server host/port settings
+    - [x] TCP server host/port settings
   - Status [Sidebar](https://jupyterlab.readthedocs.io/en/stable/user/interface.html#left-and-right-sidebar)
-    - [x] Display `ip:port`
+    - [x] Settings `ip:port`
     - [ ] Display client info
 - Performance
-  - [x] Rewrite `RpcClient`, support async rpc request
+  - [x] Rewrite `RpcClient`, support async RPC request
         `vim.rpcrequest` and `vim.rpcnotify`
 - Document
   - [ ] API Document
 
 ## Acknowledges
 
-- [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim): Selenium-automated Jupyter Notebook that is synchronised with NeoVim in real-time.
+- [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim): Selenium-automated Jupyter Notebook that is synchronised with Neovim in real-time.

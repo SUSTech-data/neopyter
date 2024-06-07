@@ -15,10 +15,16 @@
   },
   "properties": {
     "mode": {
-      "title": "Neopyter mode",
+      "title": "Work mode",
       "type": "string",
       "default": "direct",
       "enum": ["direct", "proxy"]
+    },
+    "loglevel": {
+      "title": "Log level",
+      "type": "string",
+      "default": "error",
+      "enum": ["info", "warn", "debug", "error"]
     }
   },
   "dependencies": {

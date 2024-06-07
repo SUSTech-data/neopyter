@@ -1,7 +1,8 @@
-import { RpcServer } from '../rpcServer';
+import { RpcService } from '../rpcService';
 import { BaseTransport } from './base';
 import { Message, MessageType, deserializeStream } from '../msgpackRpcProtocol';
 import { RPCError } from '../error';
+import logger from '../logger';
 
 function base64ToBytes(str: string) {
   const binString = atob(str);
@@ -17,7 +18,7 @@ export class WebsocketTransport extends BaseTransport {
   private websocket?: WebSocket;
   private readableStream?: ReadableStream;
   constructor(
-    server: RpcServer,
+    server: RpcService,
     private url: string,
     private autoRetry: boolean
   ) {
@@ -30,7 +31,6 @@ export class WebsocketTransport extends BaseTransport {
       this.websocket.binaryType = 'arraybuffer';
       this.readableStream = new ReadableStream({
         start: controller => {
-          // console.log('start');
           this.websocket!.addEventListener('open', event => {
             this.onOpen(event);
           });
@@ -50,11 +50,11 @@ export class WebsocketTransport extends BaseTransport {
         }
       });
       for await (const message of deserializeStream(this.readableStream)) {
-        // console.log(message);
+        logger.info(message);
         this.onRead(message);
       }
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       this.checkRetry();
       throw e;
     }
@@ -78,13 +78,13 @@ export class WebsocketTransport extends BaseTransport {
   }
 
   protected onOpen(_event: Event) {
-    console.log(`connection websocket ${this.websocket!.url}`);
+    logger.info(`connection websocket ${this.websocket!.url}`);
   }
   protected onError(event: Event) {
-    console.error('websocket error', event);
+    logger.error('websocket error', event);
   }
   protected onClose(event: Event) {
-    console.log(`disconnect websocket: ${this.websocket!.url}`, event);
+    logger.info(`disconnect websocket: ${this.websocket!.url}`, event);
     this.websocket!.close();
     this.websocket = undefined;
     this.readableStream = undefined;
@@ -93,12 +93,12 @@ export class WebsocketTransport extends BaseTransport {
 
   protected checkRetry() {
     if (this.autoRetry && this.websocket === undefined) {
-      console.log('reconnect websocket server after 1s');
+      logger.info('reconnect websocket server after 1s');
       setTimeout(() => {
         if (this.autoRetry && this.websocket === undefined) {
           this.start();
         } else {
-          console.error('checkRetry repeat');
+          console.error('check reconnect repeat');
         }
       }, 1000);
     }

@@ -1,8 +1,8 @@
 import { RequestMessage, NotificationMessage, ResponseMessage, serializeMessage } from '../msgpackRpcProtocol';
-import { RpcServer } from '../rpcServer';
+import { RpcService } from '../rpcService';
 
 export abstract class BaseTransport {
-  constructor(private server: RpcServer) {}
+  constructor(private server: RpcService) {}
 
   abstract sendData(data: Uint8Array): void;
   async onRequest(message: RequestMessage) {

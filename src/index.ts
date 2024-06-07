@@ -1,5 +1,4 @@
-import { Kernel, ServerConnection } from '@jupyterlab/services';
-import { URLExt } from '@jupyterlab/coreutils';
+import { Kernel } from '@jupyterlab/services';
 import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import { ILabShell, ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
@@ -9,8 +8,7 @@ import { ICompletionProviderManager, KernelCompleterProvider, CompletionProvider
 
 import * as R from 'remeda';
 
-import { RpcServer, Dispatcher } from './rpcServer';
-import { WebsocketTransport } from './transport';
+import { Dispatcher } from './rpcService';
 import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
@@ -55,13 +53,12 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry,
     _completionProviderManager: ICompletionProviderManager
   ) => {
-    settingStore.setSettingRegistry(settingRegistry);
     const completionProviderManager = _completionProviderManager as CompletionProviderManager;
     const providers = completionProviderManager.getProviders();
     console.log('JupyterLab extension neopyter is activated!');
     const kernelCompleterProvider = providers.get('CompletionProvider:kernel') as KernelCompleterProvider;
 
-    const sidebar = new StatusSidePanel(settingRegistry);
+    const sidebar = new StatusSidePanel();
     sidebar.title.caption = 'Neopyter';
     sidebar.title.icon = statusPageIcon;
     app.shell.add(sidebar, 'right');
@@ -368,25 +365,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     Object.assign(dispatcher, docmanagerDispatcher);
     Object.assign(dispatcher, notebookDispatcher);
     Object.assign(dispatcher, cellDispatcher);
-
-    const startConnection = async () => {
-      const server = new RpcServer(dispatcher);
-      const mode = await settingStore.getMode();
-      console.log(`current mode:${mode}`);
-      if (mode === 'proxy') {
-        const settings = ServerConnection.makeSettings();
-        const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
-        console.log(`connect to:${url}`);
-        server.start(WebsocketTransport, url, false);
-      } else {
-        const ip = await settingStore.getIp();
-        const port = await settingStore.getPort();
-        const url = `ws://${ip}:${port}`;
-        console.log(`connect to:${url}`);
-        server.start(WebsocketTransport, url, true);
-      }
-    };
-    startConnection();
+    settingStore.startConnection(dispatcher);
   }
 };
 

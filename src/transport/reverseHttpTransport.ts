@@ -1,11 +1,11 @@
-import { RpcServer } from '../rpcServer';
+import { RpcService } from '../rpcService';
 import { BaseTransport } from './base';
 
-// deprecated!!! use WebsocketTransport instand
+// deprecated!!! use WebsocketTransport instead
 export class ReverseHttpTransport extends BaseTransport {
   // private encoder = new TextEncoder();
   constructor(
-    server: RpcServer,
+    server: RpcService,
     private url: string
   ) {
     super(server);

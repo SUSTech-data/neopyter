@@ -24,6 +24,7 @@ local api = a.api
 ---@field private cells neopyter.Cell[]
 ---@field private active_cell_index number
 ---@field private augroup? number
+---@field private _is_exist boolean
 local Notebook = {
     bufnr = -1,
 }
@@ -114,7 +115,12 @@ function Notebook:is_attached()
 end
 
 function Notebook:is_connecting()
-    return self.client:is_connecting() and self:is_exist()
+    if self._is_exist then
+        return self.client:is_connecting()
+    else
+        self._is_exist = self:is_exist()
+        return self.client:is_connecting() and self._is_exist
+    end
 end
 
 function Notebook:safe_sync()

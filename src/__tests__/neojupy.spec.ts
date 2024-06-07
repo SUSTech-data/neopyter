@@ -1,6 +1,6 @@
 import { ServerConnection } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
-import { RpcServer } from '../rpcServer';
+import { RpcService } from '../rpcService';
 import { WebsocketTransport } from '../transport';
 import { MessageType } from '../msgpackRpcProtocol';
 
@@ -15,7 +15,7 @@ describe('neopyter', () => {
 
     expect(
       new Promise((resolve, reject) => {
-        const server = new RpcServer({
+        const server = new RpcService({
           echo: (message: string) => {
             resolve(message);
           }

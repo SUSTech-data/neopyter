@@ -1,10 +1,15 @@
 {
-  "neodev": {
-    "library": {
-      "plugins": ["plenary.nvim", "websocket.nvim", "nvim-cmp"]
+  "lspconfig": {
+    "lua_ls": {
+      "Lua.addonManager.addons": [
+        "nvim",
+        "luassert",
+        "busted"
+      ]
     }
   },
   "neopyter": {
-    "mode": "direct"
+    "mode": "direct",
+    "remote_address": "127.0.0.1:9103"
   }
 }

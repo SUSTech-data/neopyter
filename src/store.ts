@@ -1,132 +1,71 @@
-import { useState, useEffect } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { createSet, createUse, injectAction } from './utilitytype';
+import { LogLevel } from './types';
+import { ServerConnection } from '@jupyterlab/services';
+import { URLExt } from '@jupyterlab/coreutils';
+import logger from './logger';
+import { Dispatcher, RpcService as RpcService } from './rpcService';
+import { WebsocketTransport } from './transport';
 
 export interface IExtensionSetting {
   mode: 'direct' | 'proxy';
   ip: string;
   port: number;
+  loglevel: LogLevel;
 }
 
-interface ISettingState {
-  settingRegistry?: ISettingRegistry;
-  _ip: string;
-  _port: number;
-}
-
-const settingState = create<ISettingState>()(
+const settingState = create<IExtensionSetting>()(
   persist(
     (_set, _get) => ({
-      settingRegistry: undefined,
-      _ip: '127.0.0.1',
-      _port: 9001
+      mode: 'direct',
+      ip: '127.0.0.1',
+      port: 9001,
+      loglevel: LogLevel.error
     }),
     {
-      name: 'neopyter-setting',
-      partialize: state => Object.fromEntries(Object.entries(state).filter(([key]) => !['settingRegistry'].includes(key)))
+      name: 'neopyter-setting'
     }
   )
 );
 
 const actions = {
-  getMode: async () => {
-    const { settingRegistry } = settingStore.getState();
-    const labSettings = await settingRegistry!.load('neopyter:labplugin');
-    const mode = labSettings.composite['mode'] as 'proxy' | 'direct';
-    return mode ?? 'direct';
+  notifyJupyterServer: async () => {
+    const data = JSON.stringify(settingStore.getState());
+    logger.info('notify jupyter server, send:', data);
+    const connectSettings = ServerConnection.makeSettings();
+    const baseUrl = connectSettings.baseUrl;
+    const url = URLExt.join(baseUrl, 'neopyter', 'update_settings');
+    const response = await ServerConnection.makeRequest(
+      url,
+      {
+        method: 'POST',
+        body: data
+      },
+      connectSettings
+    );
+    logger.info('notify jupyter server, receive:', await response.json());
   },
-
-  useMode: () => {
-    const { settingRegistry } = settingStore.getState();
-    const [mode, setMode] = useState<IExtensionSetting['mode']>('direct');
-
-    useEffect(() => {
-      const updateMode = async () => {
-        setMode(await settingStore.getMode());
-      };
-      const watch = async () => {
-        const settings = await settingRegistry!.load('neopyter:labplugin');
-        settings.changed.connect(updateMode);
-      };
-      watch();
-      updateMode();
-    }, []);
-
-    return mode;
-  },
-  getIp: async () => {
-    const { settingRegistry, _ip } = settingStore.getState();
-    const labSettings = await settingRegistry!.load('neopyter:labplugin');
-    const mode = labSettings.composite['mode'] ?? 'direct';
-    if (mode === 'direct') {
-      return _ip;
+  startConnection: async (dispatcher: Dispatcher) => {
+    logger.info('start connecting..');
+    const server = new RpcService(dispatcher);
+    const { mode, ip, port } = settingStore.getState();
+    logger.info(`current mode: ${mode}`);
+    await settingStore.notifyJupyterServer();
+    if (mode === 'proxy') {
+      const settings = ServerConnection.makeSettings();
+      const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
+      console.info(`neopyter connect to:${url}`);
+      server.start(WebsocketTransport, url, false);
     } else {
-      const ip = labSettings.composite['ip'] as string;
-      return ip ?? '127.0.0.1';
+      const url = `ws://${ip}:${port}`;
+      console.info(`neopyter connect to:${url}`);
+      server.start(WebsocketTransport, url, true);
     }
   },
-
-  useIp: () => {
-    const { settingRegistry } = settingStore();
-    const [ip, setIP] = useState<IExtensionSetting['ip']>('127.0.0.1');
-
-    useEffect(() => {
-      const updateIP = async () => {
-        setIP(await settingStore.getIp());
-      };
-      const watch = async () => {
-        const settings = await settingRegistry!.load('neopyter:labplugin');
-        settings.changed.connect(updateIP);
-      };
-      watch();
-      updateIP();
-    }, []);
-    return ip;
-  },
-  getPort: async () => {
-    const { settingRegistry, _port } = settingStore.getState();
-    const labSettings = await settingRegistry!.load('neopyter:labplugin');
-    const mode = labSettings.composite['mode'] ?? 'direct';
-    if (mode === 'direct') {
-      return _port;
-    } else {
-      const port = labSettings.composite['port'] as number;
-      return port ?? 9001;
-    }
-  },
-
-  usePort: () => {
-    const { settingRegistry } = settingStore();
-    const [port, setPort] = useState<IExtensionSetting['port']>(9001);
-
-    useEffect(() => {
-      const updatePort = async () => {
-        setPort(await settingStore.getPort());
-      };
-      const watch = async () => {
-        const settings = await settingRegistry!.load('neopyter:labplugin');
-        settings.changed.connect(updatePort);
-      };
-      watch();
-      updatePort();
-    }, []);
-    return port;
-  },
-  updateSetting: async (setting: IExtensionSetting) => {
-    const { settingRegistry } = settingStore.getState();
-    const labSettings = await settingRegistry!.load('neopyter:labplugin');
-    labSettings.set('mode', setting.mode);
-    if (setting.mode === 'proxy') {
-      labSettings.set('ip', setting.ip);
-      labSettings.set('port', setting.port);
-    } else {
-      settingStore.setState({
-        _ip: setting.ip,
-        _port: setting.port
-      });
-    }
+  updateSettings: async (newSettings: IExtensionSetting) => {
+    settingState.setState(newSettings);
+    settingStore.notifyJupyterServer();
   }
 };
 

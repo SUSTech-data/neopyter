@@ -92,15 +92,15 @@ class UpdateSettingsHandler(APIHandler):
         print(mode, host, port, tcpServer.is_running)
         if mode == "direct":
             if tcpServer.is_running:
+                print("tcp server is running, will shutdown")
                 asyncio.create_task(tcpServer.stop())
-                print("success, tcp server is running, shutdown it")
                 return self.finish(
                     {
                         "code": 0,
-                        "message": "success, tcp server is running, shutdown it",
+                        "message": "success, tcp server is running, will shutdown",
                     }
                 )
-            print("success, tcp server is shutdown")
+            print(" tcp server is closed")
             return self.finish(
                 {
                     "code": 0,
@@ -109,7 +109,7 @@ class UpdateSettingsHandler(APIHandler):
             )
 
         if host == tcpServer.host and port == tcpServer.port and tcpServer.is_running:
-            print("no update, don't restart server")
+            print("there are not update, ignore")
             return self.finish(
                 {
                     "code": 0,
@@ -119,8 +119,8 @@ class UpdateSettingsHandler(APIHandler):
 
         tcpServer.host = host
         tcpServer.port = port
+        print("will start tcpserver")
         asyncio.create_task(tcpServer.start())
-        print("start tcpserver")
         return self.finish(
             {
                 "code": 0,
