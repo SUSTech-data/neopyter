@@ -115,12 +115,15 @@ function Notebook:is_attached()
 end
 
 function Notebook:is_connecting()
-    if self._is_exist then
-        return self.client:is_connecting()
-    else
-        self._is_exist = self:is_exist()
-        return self.client:is_connecting() and self._is_exist
+    if self.client:is_connecting() then
+        if self._is_exist ~= nil then
+            return self._is_exist
+        else
+            self._is_exist = self:is_exist()
+            return self._is_exist
+        end
     end
+    return false
 end
 
 function Notebook:safe_sync()
