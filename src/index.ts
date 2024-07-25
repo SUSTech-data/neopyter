@@ -130,10 +130,6 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         try {
           return !!(await docmanager.services.contents.get(path));
         } catch (e) {
-          if ((e as { response: Response }).response.status !== 404) {
-            // throw e;
-          }
-          console.log(e);
           return false;
         }
       },
