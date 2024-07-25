@@ -92,7 +92,7 @@ function Notebook:attach()
     end
 
     self:update_cells()
-
+    self._is_exist = nil
     if self:is_connecting() then
         self:open_or_reveal()
         self:activate()
