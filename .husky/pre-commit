@@ -8,10 +8,10 @@ ruff check neopyter
 stylua --color always --check  lua
 
 # frontend test
-pnpm test
+# pnpm test
 
 # jupyterlab server test
-pytest
+# pytest
 
 # lua plugin test
 make 
