@@ -149,6 +149,7 @@ With 💤lazy.nvim:
         mode="direct",
         remote_address = "127.0.0.1:9001",
         file_pattern = { "*.ju.*" },
+        trim_whitespace = false,
         on_attach = function(bufnr)
             -- do some buffer keymap
         end,

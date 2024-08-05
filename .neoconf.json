@@ -2,6 +2,7 @@
   "lspconfig": {
     "lua_ls": {
       "Lua.addonManager.addons": [
+        "neopyter",
         "nvim",
         "luassert",
         "busted"

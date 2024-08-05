@@ -4,7 +4,6 @@
   API...........................................................|neopyter-api|
 ------------------------------------------------------------------------------
 
-
 ------------------------------------------------------------------------------
                                                                       *neopyter*
 What is Neopyter ?
@@ -22,18 +21,18 @@ Fields ~
 {remote_address} `(optional)` `(string)`
 {file_pattern} `(optional)` `(string[])`
 {auto_attach} `(optional)` `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
-{auto_connect} `(optional)` `(boolean)` # auto connect jupyter lab
-{mode} `(optional)` "direct"|"proxy"
+{auto_connect} `(optional)` `(boolean)` Auto connect jupyter lab
+{mode} `(optional)` "direct"|"proxy" Work mode
 {filename_mapper} `(optional)` `(fun(ju_path:string):string)`
 {on_attach} `(optional)` `(fun(bufnr:number))`
 {jupyter} `(optional)` neopyter.JupyterOption
 {highlight} `(optional)` neopyter.HighlightOption
-{parse_option} `(optional)` neopyter.ParseOption
+{parser} `(optional)` neopyter.ParserOption
 
 ------------------------------------------------------------------------------
                                                                *neopyter.config*
                                `neopyter.config`
->
+>lua
   neopyter.config = {
       remote_address = "127.0.0.1:9001",
       file_pattern = { "*.ju.*" },
@@ -61,8 +60,9 @@ Fields ~
           -- Dim all cells except the current one
           shortsighted = true,
       },
-      parse_option = {
+      parser = {
           line_magic = true,
+          trim_whitespace = false,
       },
   }
 
@@ -71,10 +71,17 @@ Type ~
 neopyter.Option
 
 ------------------------------------------------------------------------------
+Class ~
+{neopyter.ParserOption}
+Fields ~
+{trim_whitespace} `(optional)` `(boolean)` Whether trim leading/trailing whitespace, but keep 1 line each cell at least, default false
+{line_magic} `(optional)` `(boolean)` Whether support line magic
+
+------------------------------------------------------------------------------
                                                               *neopyter.setup()*
                            `neopyter.setup`({config})
 Parameters ~
-{config} neopyter.Option
+{config} `(optional)` neopyter.Option
 
 ------------------------------------------------------------------------------
                                                                   *neopyter-api*
@@ -212,6 +219,7 @@ Fields ~
 {private} cells neopyter.Cell[]
 {private} active_cell_index `(number)`
 {private} augroup? `(number)`
+{private} _is_exist `(boolean)`
 
 ------------------------------------------------------------------------------
 Class ~
@@ -256,7 +264,6 @@ Parameters ~
 {...} `(any)`
 Return ~
 `(any)`
-
 
 ------------------------------------------------------------------------------
                                                            *Notebook:is_exist()*
@@ -323,7 +330,6 @@ Parameters ~
 ------------------------------------------------------------------------------
                                                     *Notebook:kernel_complete()*
                  `Notebook:kernel_complete`({source}, {offset})
-
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

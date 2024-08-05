@@ -78,16 +78,14 @@ function M.nvim_create_autocmd(event, opts)
     a.api.nvim_create_autocmd(event, opts)
 end
 
----@class neopyter.ParseOption
----@field line_magic boolean|nil
----@field content_annotated_cell_types string[]|nil
-
 ---parse lines
 ---@param lines string[]
 ---@param filetype? string default python
 ---@return neopyter.Cell[]
 function M.parse_content(lines, filetype)
-    local option = require("neopyter").config.parse_option
+    local option = require("neopyter").config.parser
+    ---@cast option -nil
+
     filetype = filetype or "python"
     ---@type neopyter.Cell []
     local cells = {}
@@ -148,7 +146,7 @@ function M.parse_content(lines, filetype)
         return table.concat(code_lines, "\n", i, j)
     end
 
-    for i, cell in ipairs(cells) do
+    for _, cell in ipairs(cells) do
         if cell then
             cell.end_line = cell.start_line + #cell.lines
         end
@@ -173,6 +171,9 @@ function M.parse_content(lines, filetype)
             cell.source = concat_code(cell.lines)
         else
             cell.source = concat_code(cell.lines, 2)
+        end
+        if option.trim_whitespace then
+            cell.source = vim.trim(cell.source)
         end
     end
     return cells

@@ -22,6 +22,7 @@ add_dependence("https://github.com/nvim-lua/plenary.nvim", "plenary.nvim")
 add_dependence("https://github.com/nvim-treesitter/nvim-treesitter", "nvim-treesitter")
 add_dependence("https://github.com/nvim-treesitter/nvim-treesitter-textobjects", "nvim-treesitter-textobjects")
 add_dependence("https://github.com/echasnovski/mini.nvim", "mini.nvim")
+add_dependence("https://github.com/AbaoFromCUG/websocket.nvim", "websocket.nvim")
 --
 vim.opt.rtp:append(__project_root__)
 vim.opt.rtp:append(vim.fs.joinpath(__project_root__, "after"))

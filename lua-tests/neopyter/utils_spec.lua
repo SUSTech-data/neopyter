@@ -143,6 +143,7 @@ describe("parse notebook", function()
         end)
 
         it("line magic", function()
+            require("neopyter").setup()
             local cells = utils.parse_content({
                 "# %%",
                 "# %time",
@@ -232,6 +233,80 @@ describe("parse notebook", function()
                     cell_type = "markdown",
                 },
             }, cells)
+        end)
+    end)
+    describe("parser option", function()
+        describe("trim leading/tailing whitespace", function()
+            it("default cell", function()
+                require("neopyter").setup()
+                local cells = utils.parse_content({
+                    "# %%",
+                    "\n\t",
+                })
+                assert.are.same({
+                    {
+                        lines = { "# %%", "\n\t" },
+                        source = "\n\t",
+                        start_line = 1,
+                        end_line = 3,
+                        cell_type = "code",
+                    },
+                }, cells)
+            end)
+            it("only exist whitespace", function()
+                require("neopyter").setup({ parser = { trim_whitespace = true } })
+                local cells = utils.parse_content({
+                    "# %%",
+                    "\n\t",
+                })
+                assert.are.same({
+                    {
+                        lines = { "# %%", "\n\t" },
+                        source = "",
+                        start_line = 1,
+                        end_line = 3,
+                        cell_type = "code",
+                    },
+                }, cells)
+            end)
+            it("trim tailing and leading whitespace", function()
+                require("neopyter").setup({ parser = { trim_whitespace = true } })
+                local cells = utils.parse_content({
+                    "# %%",
+                    "\t",
+                    "1+1",
+                    "\t",
+                })
+                assert.are.same({
+                    {
+                        lines = { "# %%", "\t", "1+1", "\t" },
+                        source = "1+1",
+                        start_line = 1,
+                        end_line = 5,
+                        cell_type = "code",
+                    },
+                }, cells)
+            end)
+            it("trim markdown whitespace", function()
+                require("neopyter").setup({ parser = { trim_whitespace = true } })
+                local cells = utils.parse_content({
+                    "# %%[md]",
+                    '"""',
+                    "\t",
+                    "# Foo",
+                    "",
+                    '"""',
+                })
+                assert.are.same({
+                    {
+                        lines = { "# %%[md]", '"""', "\t", "# Foo", "", '"""' },
+                        source = "# Foo",
+                        start_line = 1,
+                        end_line = 7,
+                        cell_type = "markdown",
+                    },
+                }, cells)
+            end)
         end)
     end)
 end)

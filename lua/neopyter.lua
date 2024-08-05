@@ -24,13 +24,13 @@ local neopyter = {}
 ---@field remote_address? string
 ---@field file_pattern? string[]
 ---@field auto_attach? boolean Automatically attach to the Neopyter server when open file_pattern matched files
----@field auto_connect? boolean # auto connect jupyter lab
----@field mode? "direct"|"proxy"
+---@field auto_connect? boolean Auto connect jupyter lab
+---@field mode? "direct"|"proxy" Work mode
 ---@field filename_mapper? fun(ju_path:string):string
 ---@field on_attach? fun(bufnr:number)
 ---@field jupyter? neopyter.JupyterOption
 ---@field highlight? neopyter.HighlightOption
----@field parse_option? neopyter.ParseOption
+---@field parser? neopyter.ParserOption
 
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 ---@type neopyter.Option
@@ -61,12 +61,17 @@ neopyter.config = {
         -- Dim all cells except the current one
         shortsighted = true,
     },
-    parse_option = {
+    parser = {
         line_magic = true,
+        trim_whitespace = false,
     },
 }
 
----@param config neopyter.Option
+---@class neopyter.ParserOption
+---@field trim_whitespace? boolean Whether trim leading/trailing whitespace, but keep 1 line each cell at least, default false
+---@field line_magic? boolean Whether support line magic
+
+---@param config? neopyter.Option
 function neopyter.setup(config)
     neopyter.config = vim.tbl_deep_extend("force", neopyter.config, config or {})
 
