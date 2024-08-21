@@ -1,3 +1,4 @@
+;; inherits: python
 ;; extends
 
 ; first cell without separator
@@ -10,6 +11,9 @@
 
   ((comment) @_cellseparator
              (#match? @_cellseparator "^# [%][%](( |\\w).*)?$"))?
+  (#make-range! "cell.code" @_start @_end)
+  (#make-range! "cellbody.code" @_start @_end)
+  (#make-range! "cellcontent.code" @_start @_end)
   (#not-any-match? @_non_header "^# [%][%](( |\\w).*)?$"))
 
 ; code cell without content
@@ -23,7 +27,7 @@
   .
   ((comment) @_cellseparator
              (#match? @_cellseparator "^# [%][%](( |\\w).*)?$"))
-  )
+  (#make-range! "cell.code" @_start @_end))
 
 
 ; cell with one expression
@@ -39,6 +43,9 @@
   .
   ((comment) @_cellseparator
              (#match? @_cellseparator "^# [%][%](( |\\w).*)?$"))
+  (#make-range! "cell.code" @_start @_end)
+  (#make-range! "cellcontent.code" @_innerstart @_end)
+  (#make-range! "cellbody.code" @_innerstart @_end)
   (#not-any-match? @_non_header "^# [%][%](( |\\w).*)?$"))
 
 ; cell with two+ expression
@@ -56,6 +63,9 @@
   .
   ((comment) @_cellseparator
              (#match? @_cellseparator "^# [%][%](( |\\w).*)?$"))
+  (#make-range! "cell.code" @_start @_end)
+  (#make-range! "cellcontent.code" @_innerstart @_end)
+  (#make-range! "cellbody.code" @_innerstart @_end)
   (#not-any-match? @_non_header "^# [%][%](( |\\w).*)?$"))
 
 ; last code cell(empty)
@@ -65,6 +75,7 @@
              (#not-match? @cellseparator.code "^# [%]{2} [[](markdown>|md)[]].*$")
              (#not-match? @cellseparator.code "^# [%]{2} [[]\<raw>[]].*$")
              (#not-match? @cellseparator.code "^# [%]{2} [[](\<markdown>|\<md>|\<raw>|\<code>)\@!\\w\+[]].*$") 
+             (#make-range! "cell.code" @_start @_end)
              )
   .
   )
@@ -76,11 +87,14 @@
              (#not-match? @cellseparator.code "^# [%]{2} [[](markdown>|md)[]].*$")
              (#not-match? @cellseparator.code "^# [%]{2} [[]\<raw>[]].*$")
              (#not-match? @cellseparator.code "^# [%]{2} [[](\<markdown>|\<md>|\<raw>|\<code>)\@!\\w\+[]].*$") 
+             (#make-range! "cell.code" @_start @_end)
              )
   .
   (
    (_) @_non_header  @_innerstart @_end
    (#not-any-match? @_non_header "^# [%][%](( |\\w).*)?$")
+   (#make-range! "cellcontent.code" @_innerstart @_end)
+   (#make-range! "cellbody.code" @_innerstart @_end)
    )
   .
   )
@@ -97,6 +111,10 @@
   .
   (_)+ @_non_header @_end
   (#not-any-match? @_non_header "^# [%][%](( |\\w).*)?$")
+  (#make-range! "cellcontent.code" @_innerstart @_end)
+  (#make-range! "cellbody.code" @_innerstart @_end)
+  (#make-range! "cell.code" @_start @_end)
+
   .
   )
 
@@ -114,7 +132,7 @@
    )? @cellbody.markdown @_end
  .
  (#match? @cellbody.markdown "^[\"']{3}.*[\"']{3}$")
- )
+ (#make-range! "cell.markdown" @_start @_end))
 
 
 ; raw cell
@@ -132,7 +150,7 @@
    )? @cellbody.raw @_end
  .
  (#match? @cellbody.raw "^[\"']{3}.*[\"']{3}$")
- )
+ (#make-range! "cell.raw" @_start @_end))
 
 
 ; special(other) cell
@@ -149,7 +167,7 @@
    )? @cellbody.special @_end
  .
  (#match? @cellbody.special "^[\"']{3}.*[\"']{3}$")
- )
+ (#make-range! "cell.special" @_start @_end))
 
 
 ; magic cell
@@ -166,7 +184,7 @@
    )? @cellbody.magic @_end
  .
  (#match? @cellbody.magic "^[\"']{3}.*[\"']{3}$")
- )
+ (#make-range! "cell.magic" @_start @_end))
 
 
 ; line magic

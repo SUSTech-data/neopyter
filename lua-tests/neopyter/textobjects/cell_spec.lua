@@ -2,6 +2,10 @@ local common = require("lua-tests.neopyter.common")
 local query = require("nvim-treesitter.query")
 
 describe("first cell without separator", function()
+    before_each(function()
+        require("neopyter.treesitter").setup()
+        require("neopyter.treesitter").load_query("textobjects")
+    end)
     describe("whitespace", function()
         if true then
             --  tree-sitter don't support whitespace module

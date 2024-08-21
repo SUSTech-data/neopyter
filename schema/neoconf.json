@@ -8,7 +8,10 @@
   "definitions": {
     "mode": {
       "type": "string",
-      "enum": ["proxy", "direct"]
+      "enum": [
+        "proxy",
+        "direct"
+      ]
     },
     "remote_address": {
       "type": "string"

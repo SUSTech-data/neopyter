@@ -4,6 +4,8 @@
       "Lua.addonManager.addons": [
         "neopyter",
         "nvim",
+        "nvim-cmp",
+        "plenary.nvim",
         "luassert",
         "busted"
       ]
@@ -11,6 +13,6 @@
   },
   "neopyter": {
     "mode": "direct",
-    "remote_address": "127.0.0.1:9103"
+    "remote_address": "127.0.0.1:9103",
   }
 }

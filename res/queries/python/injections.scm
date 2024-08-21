@@ -1,3 +1,4 @@
+;; inherits: python
 ;; extends
 
 (

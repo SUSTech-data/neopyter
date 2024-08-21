@@ -1,4 +1,5 @@
 local highlight = require("neopyter.highlight")
+local textobject = require("neopyter.textobjects")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
@@ -30,6 +31,7 @@ local neopyter = {}
 ---@field on_attach? fun(bufnr:number)
 ---@field jupyter? neopyter.JupyterOption
 ---@field highlight? neopyter.HighlightOption
+---@field textobject? neopyter.TextObjectOption
 ---@field parser? neopyter.ParserOption
 
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
@@ -60,6 +62,9 @@ neopyter.config = {
         enable = true,
         -- Dim all cells except the current one
         shortsighted = true,
+    },
+    textobject = {
+        enable = true,
     },
     parser = {
         line_magic = true,
@@ -99,6 +104,7 @@ function neopyter.setup(config)
     end
 
     highlight.setup(neopyter.config.highlight)
+    textobject.setup(neopyter.config.textobject)
 end
 
 ---@tag neopyter-api

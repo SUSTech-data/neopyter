@@ -14,9 +14,13 @@ local ns_highlight = vim.api.nvim_create_namespace("neopyter-highlighter")
 ---@param opts neopyter.HighlightOption
 function M.setup(opts)
     if opts.enable then
+        require("neopyter.treesitter").load_query("injections")
+        require("neopyter.treesitter").load_query("highlights")
+
         local config = require("neopyter").config
         local augroup = vim.api.nvim_create_augroup("neopyter-highlighter", {})
         local updated = false
+
         if opts.shortsighted then
             vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
                 pattern = config.file_pattern,

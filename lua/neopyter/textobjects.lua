@@ -2,6 +2,9 @@ local query = require("nvim-treesitter.query")
 
 local M = {}
 
+---@class neopyter.TextObjectOption
+---@field enable boolean
+
 local function get_char_after_position(bufnr, row, col)
     if row == nil then
         return nil
@@ -79,6 +82,14 @@ function M.include_whitespace(bufnr, textobject, selection_mode)
         end_row, end_col = next_position(bufnr, end_row, end_col, false)
     end
     return { start_row, start_col, end_row, end_col }
+end
+
+---setup textobject
+---@param opts neopyter.TextObjectOption
+function M.setup(opts)
+    if opts.enable then
+        require("neopyter.treesitter").load_query("textobjects")
+    end
 end
 
 return M
