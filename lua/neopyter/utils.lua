@@ -93,12 +93,14 @@ function M.parse_content(lines, filetype)
         if vim.startswith(line, "# %%") then
             local cell_magic, magic_param = line:match("^# %%%%(%w+)(.*)")
             if cell_magic ~= nil then
-                table.insert(cells, {
-                    lines = { line },
-                    start_line = i,
-                    cell_type = "code",
-                    cell_magic = "%%" .. cell_magic .. magic_param,
-                })
+                -- table.insert(cells, {
+                --     lines = { line },
+                --     start_line = i,
+                --     cell_type = "code",
+                --     cell_magic = "%%" .. cell_magic .. magic_param,
+                -- })
+
+                table.insert(cells[#cells].lines, line:sub(2))
             else
                 local titleornil, cell_type = line:match("^# %%%%(.*)%[(%w+)%]")
                 if titleornil == nil then
