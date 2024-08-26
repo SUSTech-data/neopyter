@@ -132,7 +132,11 @@ function M.parse_content(lines, filetype)
                 no_separator = true,
             })
         else
-            table.insert(cells[#cells].lines, line)
+            if vim.startswith(line, "# !") or vim.startswith(line, "# %") then
+                table.insert(cells[#cells].lines, line:sub(3))
+            else
+                table.insert(cells[#cells].lines, line)
+            end
         end
     end
     local function concat_code(code_lines, i, j)
