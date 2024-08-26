@@ -337,7 +337,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           }
         );
         console.log(completionItems);
-        return completionItems.items;
+        return completionItems.items.map(({ type, label, insertText, source }) => ({ type, label, insertText, source }));
       }
     };
     const cellDispatcher = {
