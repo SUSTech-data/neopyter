@@ -50,6 +50,7 @@ function source:complete(params, callback)
         local code = params.context.cursor_before_line
         local offset = math.min(params.offset, #code)
         local items = jupyter.notebook:kernel_complete(code, offset)
+        items = items or {}
         items = vim.tbl_map(function(item)
             local type = item.type
             local kind = utils.first_upper(type)
