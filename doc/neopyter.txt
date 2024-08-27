@@ -27,6 +27,7 @@ Fields ~
 {on_attach} `(optional)` `(fun(bufnr:number))`
 {jupyter} `(optional)` neopyter.JupyterOption
 {highlight} `(optional)` neopyter.HighlightOption
+{textobject} `(optional)` neopyter.TextObjectOption
 {parser} `(optional)` neopyter.ParserOption
 
 ------------------------------------------------------------------------------
@@ -59,6 +60,9 @@ Fields ~
           enable = true,
           -- Dim all cells except the current one
           shortsighted = true,
+      },
+      textobject = {
+          enable = true,
       },
       parser = {
           line_magic = true,
