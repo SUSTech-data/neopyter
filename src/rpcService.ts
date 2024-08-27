@@ -1,6 +1,7 @@
 import { MessageType, NotificationMessage, RequestMessage, ResponseMessage } from './msgpackRpcProtocol';
 import { BaseTransport } from './transport';
 import { RPCError } from './error';
+import logger from './logger';
 
 export type Dispatcher = { [key: string]: (...args: any[]) => unknown };
 
@@ -35,7 +36,7 @@ export class RpcService {
         });
       }
     } catch (error: unknown) {
-      console.error(error);
+      logger.error(error);
       if (message.type === MessageType.Request && responseFn) {
         responseFn({
           type: MessageType.Response,
@@ -43,6 +44,8 @@ export class RpcService {
           error: error as Error
         });
       }
+    } finally {
+      logger.info(`rpc request: call [${message.method}] with arguments [${message.params}]`);
     }
   }
 }

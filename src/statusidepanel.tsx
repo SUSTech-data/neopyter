@@ -13,12 +13,16 @@ const Form = withTheme(AntDTheme);
 const SettingForm = () => {
   const [schema, setSchema] = useState<RJSFSchema>(undefined!);
   const settings = settingStore();
+
   useEffect(() => {
     const updateSchema = async () => {
       const settingSchema = await import('../schema/labplugin' + '.json');
       setSchema(settingSchema);
     };
     updateSchema();
+
+    logger.setLevel(settingStore.getState().loglevel);
+    return settingStore.subscribe(({ loglevel }) => logger.setLevel(loglevel));
   }, []);
 
   const onSubmit = useCallback(async ({ formData }: { formData: IExtensionSetting }) => {

@@ -4,7 +4,7 @@ import { ILabShell, ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } fr
 import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { ICompletionProviderManager, KernelCompleterProvider, CompletionProviderManager } from '@jupyterlab/completer';
+import { ICompletionProviderManager, KernelCompleterProvider, CompletionProviderManager, CompletionHandler } from '@jupyterlab/completer';
 
 import * as R from 'remeda';
 
@@ -14,6 +14,19 @@ import { statusPageIcon } from './icons';
 import { WindowedList } from '@jupyterlab/ui-components';
 import { DockPanel } from '@lumino/widgets';
 import { settingStore } from './store';
+import logger from './logger';
+import { CompletionItem, CompletionParams } from './types';
+
+const convertCompleteSource = (completeSource: string) => {
+  return (item: CompletionHandler.ICompletionItem) => ({
+    label: item.label,
+    type: item.type,
+    insertText: item.insertText,
+    document: item.documentation,
+
+    source: completeSource
+  });
+};
 
 function triggerFocus(element: HTMLElement) {
   const eventType = 'onfocusin' in element ? 'focusin' : 'focus';
@@ -53,10 +66,11 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry,
     _completionProviderManager: ICompletionProviderManager
   ) => {
-    const completionProviderManager = _completionProviderManager as CompletionProviderManager;
-    const providers = completionProviderManager.getProviders();
     console.log('JupyterLab extension neopyter is activated!');
-    const kernelCompleterProvider = providers.get('CompletionProvider:kernel') as KernelCompleterProvider;
+
+    const completionProviderManager = _completionProviderManager as CompletionProviderManager;
+    const completerProvider = completionProviderManager.getProviders();
+    logger.info(completerProvider);
 
     const sidebar = new StatusSidePanel();
     sidebar.title.caption = 'Neopyter';
@@ -260,7 +274,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       partialSync: (path: string, from: number, to: number, cells: TCell[]) => {
         // replace cells from(include)-to(include) to new cells
         const { notebook, sharedModel } = getNotebookModel(path);
-        console.log(
+        logger.info(
           `partialSync: current cell num:${sharedModel.cells.length}, from:${from}(include), to:${to}(include), update to cell num:${cells.length}`
         );
         cells.forEach((cell, i) => {
@@ -321,12 +335,44 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const { notebookPanel } = getNotebookModel(path);
         notebookPanel.content.mode = mode;
       },
-      // kernelComplete: async (path: string, index: number, row: number, col: number) => {
+      /**
+       * @param path notebook file path
+       */
+      complete: async (path: string, { source, offset, cellIndex }: CompletionParams) => {
+        const { notebookPanel, notebook } = getNotebookModel(path);
+
+        if (cellIndex >= notebook.widgets.length) {
+          console.warn('complete cellIndex not exists in notebook');
+        }
+        const cell = notebook.widgets[cellIndex];
+        const completionItems: CompletionItem[] = [];
+        for (const [completeSource, completer] of completerProvider) {
+          try {
+            const reply = await completer.fetch(
+              {
+                text: source,
+                offset: offset
+              },
+              {
+                widget: notebookPanel,
+                editor: cell?.editor,
+                session: notebookPanel.sessionContext.session
+              }
+            );
+            completionItems.push(...reply.items.map(convertCompleteSource(completeSource)));
+          } catch (e) {
+            logger.error(`Completer [${completeSource}] error, please your other jupyterlab extensions:`, e);
+          }
+        }
+        logger.info(completionItems);
+        return completionItems;
+      },
       kernelComplete: async (path: string, source: string, offset: number) => {
         const { notebookPanel } = getNotebookModel(path);
+        const kernelCompleteSource = 'CompletionProvider:kernel';
 
-        console.log('kernelComplete:', source, offset);
-        const completionItems = await kernelCompleterProvider.fetch(
+        const kernelCompleterProvider = completerProvider.get(kernelCompleteSource) as KernelCompleterProvider;
+        const reply = await kernelCompleterProvider.fetch(
           {
             text: source,
             offset: offset
@@ -336,8 +382,10 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
             session: notebookPanel.sessionContext.session
           }
         );
-        console.log(completionItems);
-        return completionItems.items.map(({ type, label, insertText }) => ({ type, label, insertText }));
+        const completionItems = reply.items.map(convertCompleteSource(kernelCompleteSource));
+        logger.info(completionItems);
+
+        return completionItems;
       }
     };
     const cellDispatcher = {

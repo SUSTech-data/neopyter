@@ -36,9 +36,10 @@ end
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 function source:complete(params, callback)
-    local notebook_buf = vim.tbl_get(jupyter, "notebook", "bufnr")
-    if params.context.bufnr ~= notebook_buf then
+    local notebook = jupyter.notebook
+    if notebook == nil or params.context.bufnr ~= notebook.bufnr then
         callback()
+        return
     end
 
     a.run(function()
@@ -49,31 +50,52 @@ function source:complete(params, callback)
 
         local code = params.context.cursor_before_line
         local offset = math.min(params.offset, #code)
-        local items = jupyter.notebook:kernel_complete(code, offset)
-        items = vim.tbl_map(function(item)
-            local type = item.type
-            local kind = utils.first_upper(type)
+        notebook:partial_sync(params.context.cursor.row, params.context.cursor.row, params.context.cursor.row)
+        local cell_idx = notebook:get_cursor_cell_pos()
 
-            if jupyter_complete_spec_types[type] ~= nil then
-                return {
-                    label = item.label,
-                    -- Text
-                    kind = 1,
-                    insertText = item.insertText,
-                    cmp = {
-                        kind_hl_group = "CmpItemKind" .. jupyter_complete_spec_types[type],
-                        kind_text = kind,
-                    },
-                }
-            else
-                return {
-                    label = item.label,
-                    -- Text
-                    kind = cmp.lsp.CompletionItemKind[kind],
-                    insertText = item.insertText,
-                }
-            end
-        end, items)
+        local items = jupyter.notebook:complete({
+            source = code,
+            offset = offset - 1,
+            cellIndex = cell_idx - 1,
+            params = params,
+        })
+        items = vim.iter(items)
+            :filter(function(item)
+                print(vim.inspect(params.option))
+                if params.option.completers then
+                    ---@type string[]
+                    local completers = params.option.completers
+                    return vim.tbl_contains(completers, item.source)
+                end
+                return true
+            end)
+            :map(function(item)
+                local type = item.type
+                local kind = utils.first_upper(type)
+
+                if jupyter_complete_spec_types[type] ~= nil then
+                    return {
+                        label = item.label,
+                        -- Text
+                        kind = 1,
+                        insertText = item.insertText,
+                        cmp = {
+                            kind_hl_group = "CmpItemKind" .. jupyter_complete_spec_types[type],
+                            kind_text = kind,
+                        },
+                        document = item.document,
+                    }
+                else
+                    return {
+                        label = item.label,
+                        -- Text
+                        kind = cmp.lsp.CompletionItemKind[kind],
+                        insertText = item.insertText,
+                        document = item.document,
+                    }
+                end
+            end)
+            :totable()
         callback(items)
     end, function() end)
 end

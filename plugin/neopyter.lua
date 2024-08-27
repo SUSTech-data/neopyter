@@ -63,8 +63,8 @@ local cmds = {
             end
             if file_or_current == "current" then
                 local path = jupyter.jupyterlab:current_ipynb()
-                if path == nil then
-                    utils.notify_error("Current don't open any ipynb!")
+                if path == nil or path == vim.NIL then
+                    utils.notify_error("Current don't open/select any notebook in jupyterlab!")
                     return
                 end
                 file_or_current = path

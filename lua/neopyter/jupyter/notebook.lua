@@ -223,6 +223,13 @@ function Notebook:get_cursor_cell_pos()
     return #self.cells, 0, 0
 end
 
+---get cell by index
+---@param idx number
+---@return neopyter.Cell
+function Notebook:get_cell(idx)
+    return self.cells[idx]
+end
+
 function Notebook:full_sync()
     local cells = vim.tbl_map(function(cell)
         return {
@@ -318,7 +325,17 @@ function Notebook:set_mode(mode)
     return self:_request("setMode", mode)
 end
 
----
+---complete
+---@param params {source: string, offset: number, cellIndex: number}
+---@return {label: string, type: string, insertText:string, source: string}[]
+function Notebook:complete(params)
+    return self:_request("complete", params)
+end
+
+---kernel complete
+---@param source string
+---@param offset number
+---@return {label: string, type: string, insertText:string, source: string}[]
 function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
