@@ -6,6 +6,7 @@
         "nvim",
         "nvim-cmp",
         "plenary.nvim",
+        "websocket.nvim",
         "luassert",
         "busted"
       ]
