@@ -93,12 +93,14 @@ function M.parse_content(lines, filetype)
         if vim.startswith(line, "# %%") then
             local cell_magic, magic_param = line:match("^# %%%%(%w+)(.*)")
             if cell_magic ~= nil then
-                table.insert(cells, {
-                    lines = { line },
-                    start_line = i,
-                    cell_type = "code",
-                    cell_magic = "%%" .. cell_magic .. magic_param,
-                })
+                -- table.insert(cells, {
+                --     lines = { line },
+                --     start_line = i,
+                --     cell_type = "code",
+                --     cell_magic = "%%" .. cell_magic .. magic_param,
+                -- })
+
+                table.insert(cells[#cells].lines, line:sub(2))
             else
                 local titleornil, cell_type = line:match("^# %%%%(.*)%[(%w+)%]")
                 if titleornil == nil then
@@ -130,7 +132,11 @@ function M.parse_content(lines, filetype)
                 no_separator = true,
             })
         else
-            table.insert(cells[#cells].lines, line)
+            if vim.startswith(line, "# !") or vim.startswith(line, "# %") then
+                table.insert(cells[#cells].lines, line:sub(3))
+            else
+                table.insert(cells[#cells].lines, line)
+            end
         end
     end
     local function concat_code(code_lines, i, j)
