@@ -310,6 +310,15 @@ Return ~
 `(number)` #col of cursor in cell
 
 ------------------------------------------------------------------------------
+                                                           *Notebook:get_cell()*
+                           `Notebook:get_cell`({idx})
+cell by index
+Parameters ~
+{idx} `(number)`
+Return ~
+neopyter.Cell
+
+------------------------------------------------------------------------------
                                                        *Notebook:partial_sync()*
        `Notebook:partial_sync`({start_row}, {old_end_row}, {new_end_row})
 
@@ -332,8 +341,23 @@ Parameters ~
 {mode} 
 
 ------------------------------------------------------------------------------
+                                                           *Notebook:complete()*
+                         `Notebook:complete`({params})
+
+Parameters ~
+{params} {source: `(string,)` offset: number, cellIndex: number}
+Return ~
+{label: `(string,)` type: string, insertText:string, source: string}[]
+
+------------------------------------------------------------------------------
                                                     *Notebook:kernel_complete()*
                  `Notebook:kernel_complete`({source}, {offset})
+complete
+Parameters ~
+{source} `(string)`
+{offset} `(number)`
+Return ~
+{label: `(string,)` type: string, insertText:string, source: string}[]
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

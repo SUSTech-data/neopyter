@@ -1,32 +1,33 @@
-import { settingStore } from './store';
 import { LogLevel } from './types';
 
-export const info = (...data: any[]) => {
-  if (settingStore.getState().loglevel === LogLevel.info) {
-    console.log(...data);
-  }
-};
+let info = console.info.bind(window.console);
+let debug = console.debug.bind(window.console);
+let warn = console.warn.bind(window.console);
+const error = console.error.bind(window.console);
 
-export const warn = (...data: any[]) => {
-  const level = settingStore.getState().loglevel;
-  if (level === LogLevel.warn || level === LogLevel.info) {
-    console.warn(...data);
-  }
-};
+function setLevel(loglevel: LogLevel) {
+  if (loglevel === LogLevel.info) {
+    info = console.info.bind(window.console);
+  } else {
+    info = () => {};
 
-export const debug = (...data: any[]) => {
-  const level = settingStore.getState().loglevel;
-  if (level === LogLevel.warn || level === LogLevel.info || level === LogLevel.debug) {
-    console.debug(...data);
+    if (loglevel === LogLevel.debug) {
+      debug = console.debug.bind(window.console);
+    } else {
+      debug = () => {};
+      if (loglevel === LogLevel.warn) {
+        warn = console.warn.bind(window.console);
+      } else {
+        warn = () => {};
+      }
+    }
   }
-};
+}
 
-export const error = (...data: any[]) => {
-  console.error(...data);
-};
 export default {
   info,
   warn,
   debug,
-  error
+  error,
+  setLevel
 } as const;

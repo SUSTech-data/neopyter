@@ -98,7 +98,7 @@ export class WebsocketTransport extends BaseTransport {
         if (this.autoRetry && this.websocket === undefined) {
           this.start();
         } else {
-          console.error('check reconnect repeat');
+          logger.error('check reconnect repeat');
         }
       }, 1000);
     }

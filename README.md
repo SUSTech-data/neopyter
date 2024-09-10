@@ -250,8 +250,14 @@ local cmp = require("cmp")
 
 cmp.setup({
     sources = cmp.config.sources({
-        -- addition source
+        -- default: all source, maybe some noice
         { name = "neopyter" },
+        -- only kernel source, like jupynium, support jupyterlab completer id:
+        -- * "CompletionProvider:kernel"
+        -- * "CompletionProvider:context"
+        -- * "lsp" if jupyterlab-lsp is installed
+        -- * ...
+        -- { name = "neopyter", option={ completers = { "CompletionProvider:kernel" } } },
     }),
     formatting = {
         format = lspkind.cmp_format({

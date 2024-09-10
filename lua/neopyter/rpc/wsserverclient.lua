@@ -47,6 +47,7 @@ function WSServerClient:connect(address)
             if self.single_connection ~= nil then
                 utils.notify_warn("There are multiple lab extension connections at same time, please check if multiple tagbs are opened")
                 connect:close()
+                return
             end
             self.single_connection = connect
             self.single_connection:attach({
