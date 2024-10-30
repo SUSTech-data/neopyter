@@ -3,6 +3,7 @@ local textobject = require("neopyter.textobjects")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
+local Path = require("plenary.path")
 
 ---@toc
 
@@ -40,7 +41,7 @@ neopyter.config = {
     remote_address = "127.0.0.1:9001",
     file_pattern = { "*.ju.*" },
     filename_mapper = function(ju_path)
-        local ipynb_path = ju_path:gsub("%.ju%.%w+", ".ipynb")
+        local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
         return ipynb_path
     end,
 
