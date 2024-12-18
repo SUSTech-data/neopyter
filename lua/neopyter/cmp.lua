@@ -61,7 +61,6 @@ function source:complete(params, callback)
         })
         items = vim.iter(items)
             :filter(function(item)
-                print(vim.inspect(params.option))
                 if params.option.completers then
                     ---@type string[]
                     local completers = params.option.completers
