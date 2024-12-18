@@ -27,8 +27,10 @@ require("lazy.minit").repro({
                 "hrsh7th/cmp-buffer",
                 "hrsh7th/cmp-path",
                 "hrsh7th/cmp-cmdline",
+                "onsails/lspkind.nvim",
             },
             config = function()
+                local lspkind = require("lspkind")
                 local cmp = require("cmp")
                 cmp.setup({
                     snippet = {
@@ -43,6 +45,24 @@ require("lazy.minit").repro({
                     }, {
                         { name = "buffer" },
                     }),
+                    formatting = {
+                        format = lspkind.cmp_format({
+                            mode = "symbol_text",
+                            maxwidth = 50,
+                            ellipsis_char = "...",
+                            menu = {
+                                neopyter = "[Neopyter]",
+                            },
+                            symbol_map = {
+                                -- specific complete item kind icon
+                                ["Magic"] = "🪄",
+                                ["Path"] = "📁",
+                                ["Dict key"] = "🔑",
+                                ["Instance"] = "󱃻",
+                                ["Statement"] = "󱇯",
+                            },
+                        }),
+                    },
                 })
             end,
             lazy = false,
