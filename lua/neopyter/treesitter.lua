@@ -11,8 +11,8 @@ local __filepath__ = debug.getinfo(1).source:sub(2)
 ---@param predicate any[]
 ---@param metadata table
 function M.match_cellseparator(match, pattern, source, predicate, metadata)
-    print(match)
-    print(pattern)
+    -- print(match)
+    -- print(pattern)
 end
 
 function M.make_range_include_whitespace() end

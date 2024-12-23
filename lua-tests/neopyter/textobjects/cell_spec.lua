@@ -48,6 +48,6 @@ describe("first cell without separator", function()
         -- query.
         local nodes = query.get_capture_matches(buf, "@cell", "textobjects")
         assert.is_equal(1, #nodes)
-        print(vim.inspect(nodes))
+        -- print(vim.inspect(nodes))
     end)
 end)
