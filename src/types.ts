@@ -1,25 +1,25 @@
-import { CompletionHandler } from '@jupyterlab/completer';
+import type { CompletionHandler } from '@jupyterlab/completer';
 
 export enum WorkMode {
   direct = 'direct',
-  proxy = 'proxy'
+  proxy = 'proxy',
 }
 export enum LogLevel {
   info = 'info',
   warn = 'warn',
   debug = 'debug',
-  error = 'error'
+  error = 'error',
 }
 
-export type CompletionParams = {
+export interface CompletionParams {
   /** code before cursor, provided by nvim-cmp */
-  source: string;
+  source: string
   /** the cell index of cursor */
-  cellIndex: number;
+  cellIndex: number
   /** offset of cursor in source, provided by nvim-cmp */
-  offset: number;
-};
+  offset: number
+}
 
 export type CompletionItem = CompletionHandler.ICompletionItem & {
-  source: string;
+  source: string
 };

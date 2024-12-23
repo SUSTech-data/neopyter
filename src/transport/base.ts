@@ -1,5 +1,6 @@
-import { RequestMessage, NotificationMessage, ResponseMessage, serializeMessage } from '../msgpackRpcProtocol';
-import { RpcService } from '../rpcService';
+import type { NotificationMessage, RequestMessage, ResponseMessage } from '../msgpackRpcProtocol';
+import type { RpcService } from '../rpcService';
+import { serializeMessage } from '../msgpackRpcProtocol';
 
 export abstract class BaseTransport {
   constructor(private server: RpcService) {}
@@ -10,6 +11,7 @@ export abstract class BaseTransport {
       this.sendData(serializeMessage(response));
     });
   }
+
   async onNotify(message: NotificationMessage) {
     this.server.dispatchMethod(message);
   }

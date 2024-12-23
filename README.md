@@ -133,7 +133,6 @@ Configure `JupyterLab` in side panel
   host where neovim is located
 - `Port`: Idle port of the `IP`'s' host
 
-
 *NOTICE:* all settings is saved to localStorage
 
 ### Neovim plugin
@@ -219,7 +218,6 @@ end
   - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s
     [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
     directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
-
 
 ## Integration
 

@@ -6,28 +6,28 @@ const errorRef = 'https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
 export enum MessageType {
   Request = 0,
   Response = 1,
-  Notification = 2
+  Notification = 2,
 }
 
-export type RequestMessage = {
-  type: MessageType.Request;
-  msgid: number; // 32-bit unsigned integer number.
-  method: string;
-  params: unknown[];
-};
+export interface RequestMessage {
+  type: MessageType.Request
+  msgid: number // 32-bit unsigned integer number.
+  method: string
+  params: unknown[]
+}
 
-export type ResponseMessage = {
-  type: MessageType.Response;
-  msgid: number; // 32-bit unsigned integer number.
-  error?: Error;
-  result?: unknown[];
-};
+export interface ResponseMessage {
+  type: MessageType.Response
+  msgid: number // 32-bit unsigned integer number.
+  error?: Error
+  result?: unknown[]
+}
 
-export type NotificationMessage = {
-  type: MessageType.Notification;
-  method: string;
-  params: unknown[];
-};
+export interface NotificationMessage {
+  type: MessageType.Notification
+  method: string
+  params: unknown[]
+}
 
 export type Message = RequestMessage | ResponseMessage | NotificationMessage;
 
@@ -43,7 +43,8 @@ export function deserializeMessage(data: Uint8Array): Message {
 
   if (msgType === MessageType.Request) {
     return { type: MessageType.Request, msgid: message[1], method: message[2], params: message[3] };
-  } else if (msgType === MessageType.Response) {
+  }
+  else if (msgType === MessageType.Response) {
     return { type: MessageType.Response, msgid: message[1], error: message[2], result: message[3] };
   }
   return { type: MessageType.Notification, method: message[1], params: message[2] };
@@ -52,7 +53,8 @@ export function deserializeMessage(data: Uint8Array): Message {
 export function serializeMessage(message: Message): Uint8Array {
   if (message.type === MessageType.Request) {
     return encode([message.type, message.msgid, message.method, message.params]);
-  } else if (message.type === MessageType.Response) {
+  }
+  else if (message.type === MessageType.Response) {
     return encode([message.type, message.msgid, message.error ? message.error.toString() : undefined, message.result]);
   }
   return encode([message.type, message.method, message.params]);
@@ -71,9 +73,11 @@ export async function* deserializeStream(stream: ReadableStream) {
 
     if (msgType === MessageType.Request) {
       yield { type: MessageType.Request, msgid: message[1], method: message[2], params: message[3] } as RequestMessage;
-    } else if (msgType === MessageType.Response) {
+    }
+    else if (msgType === MessageType.Response) {
       yield { type: MessageType.Response, msgid: message[1], error: message[2], result: message[3] } as ResponseMessage;
-    } else {
+    }
+    else {
       yield { type: MessageType.Notification, method: message[1], params: message[2] } as NotificationMessage;
     }
   }

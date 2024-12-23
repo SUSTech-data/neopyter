@@ -1,18 +1,19 @@
+import type { Dispatcher } from './rpcService';
+import { URLExt } from '@jupyterlab/coreutils';
+import { ServerConnection } from '@jupyterlab/services';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createSet, createUse, injectAction } from './utilitytype';
-import { LogLevel } from './types';
-import { ServerConnection } from '@jupyterlab/services';
-import { URLExt } from '@jupyterlab/coreutils';
 import logger from './logger';
-import { Dispatcher, RpcService as RpcService } from './rpcService';
+import { RpcService } from './rpcService';
 import { WebsocketTransport } from './transport';
+import { LogLevel } from './types';
+import { createSet, createUse, injectAction } from './utilitytype';
 
 export interface IExtensionSetting {
-  mode: 'direct' | 'proxy';
-  ip: string;
-  port: number;
-  loglevel: LogLevel;
+  mode: 'direct' | 'proxy'
+  ip: string
+  port: number
+  loglevel: LogLevel
 }
 
 const settingState = create<IExtensionSetting>()(
@@ -21,14 +22,15 @@ const settingState = create<IExtensionSetting>()(
       mode: 'direct',
       ip: '127.0.0.1',
       port: 9001,
-      loglevel: LogLevel.error
+      loglevel: LogLevel.error,
     }),
     {
-      name: 'neopyter-setting'
-    }
-  )
+      name: 'neopyter-setting',
+    },
+  ),
 );
-
+// disable rule, because of `settingStore` is defined later
+/* eslint "ts/no-use-before-define": "off" */
 const actions = {
   notifyJupyterServer: async () => {
     const data = JSON.stringify(settingStore.getState());
@@ -40,9 +42,9 @@ const actions = {
       url,
       {
         method: 'POST',
-        body: data
+        body: data,
       },
-      connectSettings
+      connectSettings,
     );
     logger.info('notify jupyter server, receive:', await response.json());
   },
@@ -57,7 +59,8 @@ const actions = {
       const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
       console.info(`neopyter connect to:${url}`);
       server.start(WebsocketTransport, url, false);
-    } else {
+    }
+    else {
       const url = `ws://${ip}:${port}`;
       console.info(`neopyter connect to:${url}`);
       server.start(WebsocketTransport, url, true);
@@ -66,7 +69,7 @@ const actions = {
   updateSettings: async (newSettings: IExtensionSetting) => {
     settingState.setState(newSettings);
     settingStore.notifyJupyterServer();
-  }
+  },
 };
 
 export const settingStore = injectAction(createSet(createUse(settingState)), actions);

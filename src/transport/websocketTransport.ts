@@ -1,8 +1,9 @@
-import { RpcService } from '../rpcService';
-import { BaseTransport } from './base';
-import { Message, MessageType, deserializeStream } from '../msgpackRpcProtocol';
+import type { Message } from '../msgpackRpcProtocol';
+import type { RpcService } from '../rpcService';
 import { RPCError } from '../error';
 import logger from '../logger';
+import { deserializeStream, MessageType } from '../msgpackRpcProtocol';
+import { BaseTransport } from './base';
 
 function base64ToBytes(str: string) {
   const binString = atob(str);
@@ -20,40 +21,42 @@ export class WebsocketTransport extends BaseTransport {
   constructor(
     server: RpcService,
     private url: string,
-    private autoRetry: boolean
+    private autoRetry: boolean,
   ) {
     super(server);
     this.start();
   }
+
   async start() {
     try {
       this.websocket = new WebSocket(this.url);
       this.websocket.binaryType = 'arraybuffer';
       this.readableStream = new ReadableStream({
-        start: controller => {
-          this.websocket!.addEventListener('open', event => {
+        start: (controller) => {
+          this.websocket!.addEventListener('open', (event) => {
             this.onOpen(event);
           });
-          this.websocket!.addEventListener('message', event => {
+          this.websocket!.addEventListener('message', (event) => {
             const buf = base64ToBytes(event.data);
             controller.enqueue(buf);
           });
 
-          this.websocket!.addEventListener('error', event => {
+          this.websocket!.addEventListener('error', (event) => {
             this.onError(event);
             throw event;
           });
-          this.websocket!.addEventListener('close', event => {
+          this.websocket!.addEventListener('close', (event) => {
             this.onClose(event);
             controller.close();
           });
-        }
+        },
       });
       for await (const message of deserializeStream(this.readableStream)) {
         logger.info(message);
         this.onRead(message);
       }
-    } catch (e) {
+    }
+    catch (e) {
       logger.error(e);
       this.checkRetry();
       throw e;
@@ -80,9 +83,11 @@ export class WebsocketTransport extends BaseTransport {
   protected onOpen(_event: Event) {
     logger.info(`connection websocket ${this.websocket!.url}`);
   }
+
   protected onError(event: Event) {
     logger.error('websocket error', event);
   }
+
   protected onClose(event: Event) {
     logger.info(`disconnect websocket: ${this.websocket!.url}`, event);
     this.websocket!.close();
@@ -97,7 +102,8 @@ export class WebsocketTransport extends BaseTransport {
       setTimeout(() => {
         if (this.autoRetry && this.websocket === undefined) {
           this.start();
-        } else {
+        }
+        else {
           logger.error('check reconnect repeat');
         }
       }, 1000);

@@ -1,8 +1,8 @@
-import { ServerConnection } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
+import { ServerConnection } from '@jupyterlab/services';
+import { MessageType } from '../msgpackRpcProtocol';
 import { RpcService } from '../rpcService';
 import { WebsocketTransport } from '../transport';
-import { MessageType } from '../msgpackRpcProtocol';
 
 /**
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
@@ -14,25 +14,25 @@ describe('neopyter', () => {
     const url = URLExt.join(settings.wsUrl, 'neopyter', 'channel');
 
     expect(
-      new Promise((resolve, reject) => {
+      new Promise((resolve, _reject) => {
         const server = new RpcService({
           echo: (message: string) => {
             resolve(message);
-          }
+          },
         });
         server.start(WebsocketTransport, url, false);
         server.transport!.onRequest({
           type: MessageType.Request,
           msgid: 0,
           method: 'echo',
-          params: ['World']
+          params: ['World'],
         });
         // mock
         const transport = server.transport as any;
         transport.sendData = () => {
           transport.websocket.close();
         };
-      })
+      }),
     ).resolves.toBe('World');
   });
 });

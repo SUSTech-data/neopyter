@@ -9,7 +9,7 @@ test.use({ autoGoto: false });
 test('should emit an activation console message', async ({ page }) => {
   const logs: string[] = [];
 
-  page.on('console', message => {
+  page.on('console', (message) => {
     logs.push(message.text());
   });
 

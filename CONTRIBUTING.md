@@ -16,7 +16,7 @@ Note: You will need `NodeJS` to build the extension package. Recommend use `pnpm
 # Clone the repo to your local environment
 # Change directory to the current project directory
 # Install package in development mode
-pip install -e "."
+pip install -e ".[dev]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
 # Rebuild extension Typescript source after making changes

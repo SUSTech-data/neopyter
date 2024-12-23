@@ -1,34 +1,39 @@
 {
   "name": "neopyter",
+  "type": "module",
   "version": "0.2.6",
   "description": "A JupyterLab extension. Integrate JupyterLab and Neovim",
+  "author": {
+    "name": "Abao Zhang",
+    "email": "abaodoit@gmail.com"
+  },
+  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/SUSTech-data/neopyter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SUSTech-data/neopyter"
+  },
+  "bugs": {
+    "url": "https://github.com/SUSTech-data/neopyter/issues"
+  },
   "keywords": [
     "jupyter",
     "jupyterlab",
     "jupyterlab-extension",
     "neovim"
   ],
-  "homepage": "https://github.com/SUSTech-data/neopyter",
-  "bugs": {
-    "url": "https://github.com/SUSTech-data/neopyter/issues"
-  },
-  "license": "BSD-3-Clause",
-  "author": {
-    "name": "Abao Zhang",
-    "email": "abaodoit@gmail.com"
-  },
-  "files": [
-    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
-    "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
-    "schema/*.json"
+  "sideEffects": [
+    "style/*.css",
+    "style/index.js"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "schema/*.json",
+    "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
   "style": "style/index.css",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/SUSTech-data/neopyter"
-  },
   "scripts": {
     "build": "pnpm build:lib && pnpm build:labextension:dev",
     "build:prod": "run-s clean build:lib:prod build:labextension",
@@ -42,13 +47,10 @@
     "clean:labextension": "rimraf neopyter/labextension neopyter/_version.py",
     "clean:all": "pnpm clean:lib && pnpm clean:labextension && pnpm clean:lintcache",
     "eslint": "pnpm eslint:check --fix",
-    "eslint:check": "eslint . --cache --ext .ts,.tsx",
+    "eslint:check": "eslint . --cache",
     "install:extension": "pnpm build",
-    "lint": "pnpm stylelint && pnpm prettier && pnpm eslint",
-    "lint:check": "pnpm stylelint:check && pnpm prettier:check && pnpm eslint:check",
-    "prettier": "pnpm prettier:base --write --list-different",
-    "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css}\"",
-    "prettier:check": "pnpm prettier:base --check",
+    "lint": "pnpm stylelint && pnpm eslint",
+    "lint:check": "pnpm stylelint:check && pnpm eslint:check",
     "stylelint": "pnpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"style/**/*.css\"",
     "test": "jest --coverage",
@@ -58,61 +60,49 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@jupyterlab/application": "^4.1.5",
-    "@jupyterlab/apputils": "^4.2.5",
-    "@jupyterlab/logconsole": "^4.1.5",
-    "@jupyterlab/notebook": "^4.1.5",
-    "@lumino/widgets": "^2.3.1",
+    "@jupyterlab/application": "^4.3.4",
+    "@jupyterlab/apputils": "^4.4.4",
+    "@jupyterlab/logconsole": "^4.3.4",
+    "@jupyterlab/notebook": "^4.3.4",
+    "@lumino/widgets": "^2.5.0",
     "@msgpack/msgpack": "3.0.0-beta2",
-    "@rjsf/antd": "^5.18.2",
-    "@rjsf/core": "^5.18.2",
-    "@rjsf/utils": "^5.18.2",
-    "@rjsf/validator-ajv8": "^5.18.2",
-    "@types/react": "^18.3.3",
-    "antd": "^5.16.2",
+    "@rjsf/antd": "^5.23.2",
+    "@rjsf/core": "^5.23.2",
+    "@rjsf/utils": "^5.23.2",
+    "@rjsf/validator-ajv8": "^5.23.2",
+    "@types/react": "^18.3.18",
+    "antd": "^5.22.5",
     "react": "^18.3.1",
-    "remeda": "^1.55.0",
-    "zustand": "^4.5.2"
+    "remeda": "^1.61.0",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
-    "@commitlint/cli": "^18.6.1",
-    "@commitlint/config-conventional": "^18.6.3",
-    "@jupyterlab/builder": "^4.1.5",
-    "@jupyterlab/completer": "^4.1.5",
-    "@jupyterlab/coreutils": "^6.1.5",
-    "@jupyterlab/docmanager": "^4.1.5",
-    "@jupyterlab/services": "^7.1.5",
-    "@jupyterlab/settingregistry": "^4.1.5",
-    "@jupyterlab/testutils": "^4.1.5",
-    "@jupyterlab/ui-components": "^4.1.5",
-    "@lumino/coreutils": "^2.1.2",
-    "@lumino/disposable": "^2.1.2",
-    "@types/jest": "^29.5.12",
+    "@antfu/eslint-config": "^3.12.0",
+    "@jupyterlab/builder": "^4.3.4",
+    "@jupyterlab/completer": "^4.3.4",
+    "@jupyterlab/coreutils": "^6.3.4",
+    "@jupyterlab/docmanager": "^4.3.4",
+    "@jupyterlab/services": "^7.3.4",
+    "@jupyterlab/settingregistry": "^4.3.4",
+    "@jupyterlab/testutils": "^4.3.4",
+    "@jupyterlab/ui-components": "^4.3.4",
+    "@lumino/coreutils": "^2.2.0",
+    "@lumino/disposable": "^2.1.3",
+    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "css-loader": "^6.10.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^8.10.0",
-    "eslint-plugin-prettier": "^5.1.3",
+    "eslint": "^9.17.0",
     "husky": "^8.0.3",
     "jest": "^29.7.0",
+    "lint-staged": "^15.2.11",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.2.5",
-    "rimraf": "^5.0.5",
-    "source-map-loader": "^1.1.3",
-    "style-loader": "^3.3.4",
+    "rimraf": "^5.0.10",
     "stylelint": "^15.11.0",
     "stylelint-config-recommended": "^13.0.0",
     "stylelint-config-standard": "^34.0.0",
-    "stylelint-prettier": "^4.1.0",
-    "typescript": "~5.0.4",
-    "yjs": "^13.6.14"
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.2",
+    "yjs": "^13.6.21"
   },
-  "sideEffects": [
-    "style/*.css",
-    "style/index.js"
-  ],
   "styleModule": "style/index.js",
   "publishConfig": {
     "access": "public"
@@ -122,30 +112,20 @@
     "schemaDir": "schema",
     "outputDir": "neopyter/labextension"
   },
-  "prettier": {
-    "singleQuote": true,
-    "trailingComma": "none",
-    "arrowParens": "avoid",
-    "endOfLine": "auto",
-    "overrides": [
-      {
-        "files": "package.json",
-        "options": {
-          "tabWidth": 4
-        }
-      }
-    ]
-  },
   "stylelint": {
     "extends": [
       "stylelint-config-recommended",
-      "stylelint-config-standard",
-      "stylelint-prettier/recommended"
+      "stylelint-config-standard"
     ],
     "rules": {
       "property-no-vendor-prefix": null,
       "selector-no-vendor-prefix": null,
       "value-no-vendor-prefix": null
     }
+  },
+  "lint-staged": {
+    "*.py": "ruff format",
+    "*.css": "pnpm stylelint",
+    "*.{json,js,jsx,ts,tsx}": "pnpm eslint"
   }
 }

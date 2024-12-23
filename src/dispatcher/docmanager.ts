@@ -1,6 +1,6 @@
-import { IDocumentManager } from '@jupyterlab/docmanager';
-import { IDisposable } from '@lumino/disposable';
-import { Kernel } from '@jupyterlab/services';
+import type { IDocumentManager } from '@jupyterlab/docmanager';
+import type { Kernel } from '@jupyterlab/services';
+import type { IDisposable } from '@lumino/disposable';
 
 type OmitIDisposable<T> = { [key in Exclude<keyof T, keyof IDisposable>]: T[key] };
 
@@ -18,7 +18,7 @@ type TokenDispatcher<T extends IDisposable> = {
 
 // https://jupyterlab.readthedocs.io/en/stable/api/classes/docmanager.DocumentManager-1.html
 // TODO:reflection generate dispatcher
-export const genDocManagerDispatcher = (docmanager: IDocumentManager): Partial<TokenDispatcher<IDocumentManager>> => {
+export function genDocManagerDispatcher(docmanager: IDocumentManager): Partial<TokenDispatcher<IDocumentManager>> {
   return {
     closeAll: async () => {
       docmanager.closeAll();
@@ -42,10 +42,10 @@ export const genDocManagerDispatcher = (docmanager: IDocumentManager): Partial<T
     findWidget: (path: string) => {
       return docmanager.findWidget(path);
     },
-    newUntitled: async (opts: { path?: string; type?: 'notebook' | 'file' }) => {
+    newUntitled: async (opts: { path?: string, type?: 'notebook' | 'file' }) => {
       const model = await docmanager.newUntitled(opts);
       return model.path;
     },
-    open
+    open,
   };
-};
+}

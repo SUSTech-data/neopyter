@@ -8,16 +8,19 @@ const error = console.error.bind(window.console);
 function setLevel(loglevel: LogLevel) {
   if (loglevel === LogLevel.info) {
     info = console.info.bind(window.console);
-  } else {
+  }
+  else {
     info = () => {};
 
     if (loglevel === LogLevel.debug) {
       debug = console.debug.bind(window.console);
-    } else {
+    }
+    else {
       debug = () => {};
       if (loglevel === LogLevel.warn) {
         warn = console.warn.bind(window.console);
-      } else {
+      }
+      else {
         warn = () => {};
       }
     }
@@ -29,5 +32,5 @@ export default {
   warn,
   debug,
   error,
-  setLevel
+  setLevel,
 } as const;

@@ -9,10 +9,14 @@ local __filepath__ = debug.getinfo(1).source:sub(2)
 ---@param pattern integer
 ---@param source integer|string
 ---@param predicate any[]
----@param metadata table
+---@param metadata vim.treesitter.query.TSMetadata
+---@return boolean?
 function M.match_cellseparator(match, pattern, source, predicate, metadata)
-    -- print(match)
-    -- print(pattern)
+    print(match)
+    print(pattern)
+    print(source)
+    print(predicate)
+    print(metadata)
 end
 
 function M.make_range_include_whitespace() end

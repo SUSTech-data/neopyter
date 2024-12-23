@@ -1,18 +1,4 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
-
-# lint
-pnpm lint
-ruff check neopyter
-stylua --color always --check  lua
-
-# frontend test
-# pnpm test
-
-# jupyterlab server test
-# pytest
-
-# lua plugin test
-make 
-
+pnpm lint-staged
+pnpm run test

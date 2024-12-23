@@ -1,16 +1,17 @@
+import type { RJSFSchema } from '@rjsf/utils';
+import type { IExtensionSetting } from './store';
 import { ReactWidget, SidePanel } from '@jupyterlab/ui-components';
-import React, { useCallback, useEffect, useState } from 'react';
-import { withTheme } from '@rjsf/core';
 import { Theme as AntDTheme } from '@rjsf/antd';
-import { RJSFSchema } from '@rjsf/utils';
+import { withTheme } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import { Button, Tooltip } from 'antd';
-import { IExtensionSetting, settingStore } from './store';
+import React, { useCallback, useEffect, useState } from 'react';
 import logger from './logger';
+import { settingStore } from './store';
 
 const Form = withTheme(AntDTheme);
 
-const SettingForm = () => {
+function SettingForm() {
   const [schema, setSchema] = useState<RJSFSchema>(undefined!);
   const settings = settingStore();
 
@@ -32,18 +33,20 @@ const SettingForm = () => {
 
   return (
     <>
-      {schema ? (
-        <Form schema={schema} validator={validator} formData={settings} onSubmit={onSubmit as any}>
-          <Tooltip title="Please reload web page after saved">
-            <Button type="primary" htmlType="submit" style={{ left: '50%', position: 'relative' }}>
-              Save
-            </Button>
-          </Tooltip>
-        </Form>
-      ) : undefined}
+      {schema
+        ? (
+            <Form schema={schema} validator={validator} formData={settings} onSubmit={onSubmit as any}>
+              <Tooltip title="Please reload web page after saved">
+                <Button type="primary" htmlType="submit" style={{ left: '50%', position: 'relative' }}>
+                  Save
+                </Button>
+              </Tooltip>
+            </Form>
+          )
+        : undefined}
     </>
   );
-};
+}
 
 export class StatusSidePanel extends SidePanel {
   constructor() {

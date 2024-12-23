@@ -1,32 +1,34 @@
-import { Kernel } from '@jupyterlab/services';
-import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
-import { ILabShell, ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
-import { Notebook, INotebookTracker, NotebookActions, NotebookPanel } from '@jupyterlab/notebook';
+import type { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import type { CompletionHandler, CompletionProviderManager, KernelCompleterProvider } from '@jupyterlab/completer';
+import type { Notebook, NotebookPanel } from '@jupyterlab/notebook';
+import type { Kernel } from '@jupyterlab/services';
+import type { WindowedList } from '@jupyterlab/ui-components';
+import type { ReadonlyPartialJSONObject } from '@lumino/coreutils';
+import type { DockPanel } from '@lumino/widgets';
+import type { Dispatcher } from './rpcService';
+import type { CompletionItem, CompletionParams } from './types';
+import { ILabShell, ILayoutRestorer } from '@jupyterlab/application';
+
+import { ICompletionProviderManager } from '@jupyterlab/completer';
+
 import { IDocumentManager } from '@jupyterlab/docmanager';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { ICompletionProviderManager, KernelCompleterProvider, CompletionProviderManager, CompletionHandler } from '@jupyterlab/completer';
-
+import { NotebookActions } from '@jupyterlab/notebook';
 import * as R from 'remeda';
-
-import { Dispatcher } from './rpcService';
-import { StatusSidePanel } from './statusidepanel';
 import { statusPageIcon } from './icons';
-import { WindowedList } from '@jupyterlab/ui-components';
-import { DockPanel } from '@lumino/widgets';
-import { settingStore } from './store';
 import logger from './logger';
-import { CompletionItem, CompletionParams } from './types';
+import { StatusSidePanel } from './statusidepanel';
+import { settingStore } from './store';
 
-const convertCompleteSource = (completeSource: string) => {
+function convertCompleteSource(completeSource: string) {
   return (item: CompletionHandler.ICompletionItem) => ({
     label: item.label,
     type: item.type,
     insertText: item.insertText,
     document: item.documentation,
 
-    source: completeSource
+    source: completeSource,
   });
-};
+}
 
 function triggerFocus(element: HTMLElement) {
   const eventType = 'onfocusin' in element ? 'focusin' : 'focus';
@@ -36,8 +38,9 @@ function triggerFocus(element: HTMLElement) {
   if ('createEvent' in document) {
     event = document.createEvent('Event');
     event.initEvent(eventType, bubbles, true);
-  } else if ('Event' in window) {
-    event = new Event(eventType, { bubbles: bubbles, cancelable: true });
+  }
+  else if ('Event' in window) {
+    event = new Event(eventType, { bubbles, cancelable: true });
   }
 
   element.focus();
@@ -45,30 +48,29 @@ function triggerFocus(element: HTMLElement) {
 }
 
 // Transfer Data
-type TCell = {
-  cell_type: string;
-  source: string;
-};
+interface TCell {
+  cell_type: string
+  source: string
+}
 
 /**
- * Initialization data for the neopyter extension. */
+ * Initialization data for the neopyter extension.
+ */
 const neopyterPlugin: JupyterFrontEndPlugin<void> = {
   id: 'neopyter:labplugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [ILabShell, IDocumentManager, INotebookTracker, ILayoutRestorer, ISettingRegistry, ICompletionProviderManager],
+  requires: [ILabShell, IDocumentManager, ILayoutRestorer, ICompletionProviderManager],
   activate: (
     app: JupyterFrontEnd,
     labShell: ILabShell,
     docmanager: IDocumentManager,
-    nbtracker: INotebookTracker,
     restorer: ILayoutRestorer,
-    settingRegistry: ISettingRegistry,
-    _completionProviderManager: ICompletionProviderManager
+    iCompletionProviderManager: ICompletionProviderManager,
   ) => {
     console.log('JupyterLab extension neopyter is activated!');
 
-    const completionProviderManager = _completionProviderManager as CompletionProviderManager;
+    const completionProviderManager = iCompletionProviderManager as CompletionProviderManager;
     const completerProvider = completionProviderManager.getProviders();
     logger.info(completerProvider);
 
@@ -97,12 +99,12 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       const sharedModel = notebook?.model?.sharedModel;
 
       if (!notebookPanel || !sharedModel || !notebook) {
-        throw `Don't open ${path} and current don't select untitled ipynb`;
+        throw new Error(`Don't open ${path} and current don't select untitled ipynb`);
       }
       return {
         notebookPanel,
         notebook,
-        sharedModel
+        sharedModel,
       };
     };
 
@@ -112,7 +114,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       return {
         notebook,
         sharedNotebookModel,
-        sharedModel
+        sharedModel,
       };
     };
 
@@ -127,7 +129,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       },
       executeCommand: async (command: string, args?: ReadonlyPartialJSONObject) => {
         await app.commands.execute(command, args);
-      }
+      },
     };
     const docmanagerDispatcher = {
       getCurrentNotebook: () => {
@@ -143,7 +145,8 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       isFileExist: async (path: string) => {
         try {
           return !!(await docmanager.services.contents.get(path));
-        } catch (e) {
+        }
+        catch {
           return false;
         }
       },
@@ -165,7 +168,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           const event = new FocusEvent('focus', {
             bubbles: true,
             cancelable: true,
-            view: window
+            view: window,
           });
           node.click();
           node.dispatchEvent(event);
@@ -176,7 +179,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const dockPanel: DockPanel = labShell._dockPanel;
 
         for (const tabBar of dockPanel.tabBars()) {
-          const tabIndex = tabBar.titles.findIndex(title => {
+          const tabIndex = tabBar.titles.findIndex((title) => {
             return title.owner === notebookPanel;
           });
           if (tabIndex >= 0) {
@@ -197,7 +200,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       selectBelow: () => {
         const { notebook } = getNotebookModel();
         notebook && NotebookActions.selectBelow(notebook);
-      }
+      },
     };
     const notebookDispatcher = {
       getCellNum: (path: string) => {
@@ -211,8 +214,8 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
             currentNum,
             R.range(0, num - currentNum).map(() => ({
               cell_type: notebook.notebookConfig.defaultCell,
-              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
-            }))
+              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {},
+            })),
           );
           return;
         }
@@ -233,7 +236,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const { notebook, sharedModel } = getNotebookModel(path);
         return sharedModel.insertCell(index, {
           cell_type: notebook.notebookConfig.defaultCell,
-          metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
+          metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {},
         });
       },
       activateCell: (path: string, index: number) => {
@@ -251,19 +254,21 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           if (cellModel) {
             if (cell.cell_type === undefined || cellModel.cell_type === cell.cell_type) {
               cellModel.setSource(cell.source);
-            } else {
+            }
+            else {
               sharedModel.deleteCell(idx);
               sharedModel.insertCell(idx, {
                 cell_type: cell.cell_type,
                 source: cell.source,
-                metadata: cellModel.getMetadata()
+                metadata: cellModel.getMetadata(),
               });
             }
-          } else {
+          }
+          else {
             sharedModel.insertCell(idx, {
               cell_type: cell.cell_type,
               source: cell.source,
-              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
+              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {},
             });
           }
         });
@@ -275,7 +280,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         // replace cells from(include)-to(include) to new cells
         const { notebook, sharedModel } = getNotebookModel(path);
         logger.info(
-          `partialSync: current cell num:${sharedModel.cells.length}, from:${from}(include), to:${to}(include), update to cell num:${cells.length}`
+          `partialSync: current cell num:${sharedModel.cells.length}, from:${from}(include), to:${to}(include), update to cell num:${cells.length}`,
         );
         cells.forEach((cell, i) => {
           const idx = i + from;
@@ -283,19 +288,21 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           if (idx <= to && cellModel) {
             if (cell.cell_type === undefined || cellModel.cell_type === cell.cell_type) {
               cellModel.setSource(cell.source);
-            } else {
+            }
+            else {
               sharedModel.deleteCell(idx);
               sharedModel.insertCell(idx, {
                 cell_type: cell.cell_type,
                 source: cell.source,
-                metadata: cellModel.getMetadata()
+                metadata: cellModel.getMetadata(),
               });
             }
-          } else {
+          }
+          else {
             sharedModel.insertCell(idx, {
               cell_type: cell.cell_type,
               source: cell.source,
-              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {}
+              metadata: notebook.notebookConfig.defaultCell === 'code' ? { trusted: true } : {},
             });
           }
         });
@@ -307,19 +314,18 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
       save: async (path: string) => {
         const { notebookPanel } = getNotebookModel(path);
         const context = docmanager.contextForWidget(notebookPanel);
-        context?.path;
         return await context?.save();
       },
-      runSelectedCell: async (path: string) => {
+      runSelectedCell: async (_path: string) => {
         return await app.commands.execute('notebook:run-cell');
       },
-      runAllAbove: async (path: string) => {
+      runAllAbove: async (_path: string) => {
         return await app.commands.execute('notebook:run-all-above');
       },
-      runAllBelow: async (path: string) => {
+      runAllBelow: async (_path: string) => {
         return await app.commands.execute('notebook:run-all-below');
       },
-      runAll: async (path: string) => {
+      runAll: async (_path: string) => {
         return await app.commands.execute('notebook:run-all-cells');
       },
       restartKernel: async (path: string) => {
@@ -351,16 +357,17 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
             const reply = await completer.fetch(
               {
                 text: source,
-                offset: offset
+                offset,
               },
               {
                 widget: notebookPanel,
                 editor: cell?.editor,
-                session: notebookPanel.sessionContext.session
-              }
+                session: notebookPanel.sessionContext.session,
+              },
             );
             completionItems.push(...reply.items.map(convertCompleteSource(completeSource)));
-          } catch (e) {
+          }
+          catch (e) {
             logger.error(`Completer [${completeSource}] error, please your other jupyterlab extensions:`, e);
           }
         }
@@ -375,18 +382,18 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         const reply = await kernelCompleterProvider.fetch(
           {
             text: source,
-            offset: offset
+            offset,
           },
           {
             widget: notebookPanel,
-            session: notebookPanel.sessionContext.session
-          }
+            session: notebookPanel.sessionContext.session,
+          },
         );
         const completionItems = reply.items.map(convertCompleteSource(kernelCompleteSource));
         logger.info(completionItems);
 
         return completionItems;
-      }
+      },
     };
     const cellDispatcher = {
       setCellSource: (path: string, cellIdx: number, source: string) => {
@@ -400,17 +407,17 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
           sharedNotebookModel.insertCell(cellIdx, {
             cell_type: type,
             source: sharedModel.getSource(),
-            metadata: sharedModel.getMetadata()
+            metadata: sharedModel.getMetadata(),
           });
         }
-      }
+      },
     };
 
     Object.assign(dispatcher, docmanagerDispatcher);
     Object.assign(dispatcher, notebookDispatcher);
     Object.assign(dispatcher, cellDispatcher);
     settingStore.startConnection(dispatcher);
-  }
+  },
 };
 
 export default [neopyterPlugin];

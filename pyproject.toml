@@ -27,7 +27,9 @@ dependencies = ["jupyterlab>=4.0.0,<5"]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
 [project.optional-dependencies]
-test = [
+dev = [
+    # build
+    "hatch",
     # formatter
     "ruff",
     # test
@@ -67,11 +69,11 @@ skip-if-exists = ["neopyter/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
-npm = ["jlpm"]
+npm = ["pnpm"]
 
 [tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
 build_cmd = "install:extension"
-npm = ["jlpm"]
+npm = ["pnpm"]
 source_dir = "src"
 build_dir = "neopyter/labextension"
 
@@ -81,7 +83,7 @@ version_cmd = "hatch version"
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
     "python -m pip install 'jupyterlab>=4.0.0,<5'",
-    "jlpm",
+    "pnpm install",
     "pnpm build:prod",
 ]
 before-build-python = ["pnpm clean:all"]

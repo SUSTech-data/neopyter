@@ -1,18 +1,19 @@
 {
   "name": "neopyter-ui-tests",
+  "type": "module",
   "version": "1.0.0",
-  "description": "JupyterLab neopyter Integration Tests",
   "private": true,
+  "description": "JupyterLab neopyter Integration Tests",
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",
     "test": "pnpm playwright test",
     "test:update": "jlpm playwright test --update-snapshots"
   },
+  "dependencies": {
+    "react": "^18.3.1"
+  },
   "devDependencies": {
     "@jupyterlab/galata": "^5.0.0",
     "@playwright/test": "^1.32.0"
-  },
-  "dependencies": {
-    "react": "^18.3.1"
   }
 }
