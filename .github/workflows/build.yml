@@ -36,7 +36,7 @@ jobs:
           python -m pip install .[test]
 
           jupyter labextension list
-          jupyter labextension list 2>&1 | grep -ie "lab-extension.*OK"
+          jupyter labextension list 2>&1 | grep -ie "neopyter.*OK"
           # python -m jupyterlab.browser_check
       - name: Package the extension
         run: |
@@ -73,7 +73,7 @@ jobs:
           pip install "jupyterlab>=4.0.0,<5" lab_extension*.whl
 
           jupyter labextension list
-          jupyter labextension list 2>&1 | grep -ie "lab-extension.*OK"
+          jupyter labextension list 2>&1 | grep -ie "neopyter.*OK"
           python -m jupyterlab.browser_check --no-browser-test
   integration-tests:
     name: Integration tests

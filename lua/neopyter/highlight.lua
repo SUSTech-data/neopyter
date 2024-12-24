@@ -1,4 +1,3 @@
--- Code mostly based on koenverburg/peepsight.nvim
 local utils = require("neopyter.utils")
 local query = require("nvim-treesitter.query")
 local textobjects = require("neopyter.textobjects")
@@ -22,6 +21,7 @@ function M.setup(opts)
         local updated = false
 
         if opts.shortsighted then
+            -- Code mostly based on koenverburg/peepsight.nvim
             vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
                 pattern = config.file_pattern,
                 callback = function()
@@ -56,12 +56,12 @@ end
 function M.update_static_highlight()
     vim.api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
 
-    -- code cell separator
-    M.highlight_capture({ "@cellseparator.code", "@cellseparator.magic" }, "CursorLine", "linewise", false, 9000)
+    M.highlight_capture({ "@cellseparator" }, "CursorLine", "linewise", false, 9000)
+    -- cell separator
     -- markdown cell
-    M.highlight_capture({ "@cell.markdown", "@cell.raw", "@cell.special" }, "CursorLine", "linewise", true, 9000)
+    -- M.highlight_capture({ "@cell.markdown", "@cell.raw", "@cell.special" }, "CursorLine", "linewise", true, 9000)
     -- line magic
-    M.highlight_capture({ "@linemagic" }, "Keyword", "charwise", false, 9000)
+    -- M.highlight_capture({ "@linemagic" }, "Keyword", "charwise", false, 9000)
 end
 
 function M.update_dynamic_highlight()

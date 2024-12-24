@@ -7,6 +7,7 @@
         "nvim-cmp",
         "plenary.nvim",
         "websocket.nvim",
+        "nvim-treesitter",
         "luassert",
         "busted"
       ]

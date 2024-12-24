@@ -1,4 +1,5 @@
 local highlight = require("neopyter.highlight")
+local treesitter = require("neopyter.treesitter")
 local textobject = require("neopyter.textobjects")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
@@ -33,6 +34,7 @@ local neopyter = {}
 ---@field jupyter? neopyter.JupyterOption
 ---@field highlight? neopyter.HighlightOption
 ---@field textobject? neopyter.TextObjectOption
+---@field treesitter? neopyter.TSOption
 ---@field parser? neopyter.ParserOption
 
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
@@ -66,6 +68,11 @@ neopyter.config = {
     },
     textobject = {
         enable = true,
+    },
+    treesitter = {
+        enable = true,
+        patterns = {
+        },
     },
     parser = {
         line_magic = true,
@@ -104,6 +111,7 @@ function neopyter.setup(config)
         })
     end
 
+    treesitter.setup()
     highlight.setup(neopyter.config.highlight)
     textobject.setup(neopyter.config.textobject)
 end
