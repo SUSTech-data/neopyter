@@ -36,7 +36,7 @@ jobs:
           python -m pip install .[test]
 
           jupyter labextension list
-          jupyter labextension list 2>&1 | grep -ie "lab-extension.*OK"
+          jupyter labextension list 2>&1 | grep -ie "neopyter.*OK"
           # python -m jupyterlab.browser_check
       - name: Package the extension
         run: |
@@ -44,12 +44,12 @@ jobs:
 
           pip install build
           python -m build
-          pip uninstall -y "lab_extension" jupyterlab
+          pip uninstall -y "neopyter" jupyterlab
       - name: Upload extension packages
         uses: actions/upload-artifact@v4
         with:
           name: extension-artifacts
-          path: dist/lab_extension*
+          path: dist/neopyter*
           if-no-files-found: error
   test_isolated:
     needs: build
@@ -70,10 +70,10 @@ jobs:
           sudo rm -rf $(which node)
           sudo rm -rf $(which node)
 
-          pip install "jupyterlab>=4.0.0,<5" lab_extension*.whl
+          pip install "jupyterlab>=4.0.0,<5" neopyter*.whl
 
           jupyter labextension list
-          jupyter labextension list 2>&1 | grep -ie "lab-extension.*OK"
+          jupyter labextension list 2>&1 | grep -ie "neopyter.*OK"
           python -m jupyterlab.browser_check --no-browser-test
   integration-tests:
     name: Integration tests
@@ -97,7 +97,7 @@ jobs:
       - name: Install the extension
         run: |
           set -eux
-          python -m pip install "jupyterlab>=4.0.0,<5" lab_extension*.whl
+          python -m pip install "jupyterlab>=4.0.0,<5" neopyter*.whl
       - name: Install dependencies
         working-directory: ui-tests
         env:
@@ -121,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lab_extension-playwright-tests
+          name: neopyter-playwright-tests
           path: |
             ui-tests/test-results
             ui-tests/playwright-report

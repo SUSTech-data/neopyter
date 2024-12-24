@@ -1,363 +1,506 @@
+*neopyter.txt*                For                 Last change: 2025 January 11
+
 ==============================================================================
-  Neopyter's purpose................................................|neopyter|
-  Usages......................................................|neopyter-usage|
-  API...........................................................|neopyter-api|
-------------------------------------------------------------------------------
+Table of Contents                                 *neopyter-table-of-contents*
 
-------------------------------------------------------------------------------
-                                                                      *neopyter*
-What is Neopyter ?
+1. Introduction                                        |neopyter-introduction|
+  - How does it work?                |neopyter-introduction-how-does-it-work?|
+2. Requirements                                        |neopyter-requirements|
+3. Installation                                        |neopyter-installation|
+  - JupyterLab Extension          |neopyter-installation-jupyterlab-extension|
+  - Neovim Plugin                        |neopyter-installation-neovim-plugin|
+4. Usage                                                      |neopyter-usage|
+5. Configuration                                      |neopyter-configuration|
+6. Available Vim Commands                    |neopyter-available-vim-commands|
+7. Integration                                          |neopyter-integration|
+  - neoconf.nvim                           |neopyter-integration-neoconf.nvim|
+  - nvim-cmp                                   |neopyter-integration-nvim-cmp|
+  - textobjects                             |neopyter-integration-textobjects|
+8. API                                                          |neopyter-api|
+  - Async                                                 |neopyter-api-async|
+9. Features                                                |neopyter-features|
+10. Acknowledges                                       |neopyter-acknowledges|
+11. Configuration Types                         |neopyter-configuration-types|
 
-# Abstract~
+==============================================================================
+1. Introduction                                        *neopyter-introduction*
 
-The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jupyter lab.
+The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in
+Jupyter Lab.
 
 
-------------------------------------------------------------------------------
-                                                                *neopyter-usage*
-Class ~
-{neopyter.Option}
-Fields ~
-{remote_address} `(optional)` `(string)`
-{file_pattern} `(optional)` `(string[])`
-{auto_attach} `(optional)` `(boolean)` Automatically attach to the Neopyter server when open file_pattern matched files
-{auto_connect} `(optional)` `(boolean)` Auto connect jupyter lab
-{mode} `(optional)` "direct"|"proxy" Work mode
-{filename_mapper} `(optional)` `(fun(ju_path:string):string)`
-{on_attach} `(optional)` `(fun(bufnr:number))`
-{jupyter} `(optional)` neopyter.JupyterOption
-{highlight} `(optional)` neopyter.HighlightOption
-{textobject} `(optional)` neopyter.TextObjectOption
-{parser} `(optional)` neopyter.ParserOption
+HOW DOES IT WORK?                    *neopyter-introduction-how-does-it-work?*
 
-------------------------------------------------------------------------------
-                                                               *neopyter.config*
-                               `neopyter.config`
->lua
-  neopyter.config = {
-      remote_address = "127.0.0.1:9001",
-      file_pattern = { "*.ju.*" },
-      filename_mapper = function(ju_path)
-          local ipynb_path = ju_path:gsub("%.ju%.%w+", ".ipynb")
-          return ipynb_path
-      end,
+This project includes two parts: a `JupyterLab extension`
+<https://jupyterlab.readthedocs.io/en/stable/user/extensions.html> and a Neovim
+plugin
 
-      auto_attach = true,
-      auto_connect = true,
-      mode = "direct",
-      jupyter = {
-          auto_activate_file = true,
-          -- Always scroll to the current cell.
-          scroll = {
-              enable = true,
-              align = "center",
-          },
-      },
+- The `JupyterLab extension` exposes functions of `Jupyter lab`, and provides a remote procedure call(RPC) service
+- The `Neovim plugin` calls the RPC service when it receives events from `Neovim` via `autocmd`
 
-      use_default_keybindings = true,
+This project provides two work modes for different network environments. If the
+browser where your jupyter lab is located cannot directly access nvim, you must
+use `proxy` mode; If you need to collaborate and use the same Jupyter with
+others, you must use direct mode
 
-      highlight = {
-          enable = true,
-          -- Dim all cells except the current one
-          shortsighted = true,
-      },
-      textobject = {
-          enable = true,
-      },
-      parser = {
-          line_magic = true,
-          trim_whitespace = false,
-      },
-  }
+directproxyArchitectureAdvantageLower communication costsShareable JupyterLab instanceLower Neovim loadDisadvantageHigher Neovim loadExclusive JupyterLab instance- `direct` mode: (default, recommended) In this mode, neovim is server and neovim
+    plugin(neopyter) is listening to `remote_address`, the browser where jupyter
+    lab is located will connect to neovim
+- `proxy` mode: In this mode, Jupyter lab server(server side, the host you run
+    `jupyter lab` to start JupyterLab) is server and jupyter lab server
+    extension(neopyter) is listening to `{IP}:{Port}`, the neovim plugin(neopyter)
+    will connect to`{IP}:{Port}`
 
+Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement
+abilities like jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>.
+
+
+==============================================================================
+2. Requirements                                        *neopyter-requirements*
+
+- 📔JupyterLab >= 4.0.0
+- ✌️ Neovim latest
+    - 👍`nvim-lua/plenary.nvim`
+    - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
+
+
+==============================================================================
+3. Installation                                        *neopyter-installation*
+
+`Neopyter` support two parts, so we need to install them separately.
+
+
+JUPYTERLAB EXTENSION              *neopyter-installation-jupyterlab-extension*
+
+To install the jupyterlab extension, execute:
+
+>bash
+    pip install neopyter
 <
-Type ~
-neopyter.Option
 
-------------------------------------------------------------------------------
-Class ~
-{neopyter.ParserOption}
-Fields ~
-{trim_whitespace} `(optional)` `(boolean)` Whether trim leading/trailing whitespace, but keep 1 line each cell at least, default false
-{line_magic} `(optional)` `(boolean)` Whether support line magic
+Configure `JupyterLab` in side panel
 
-------------------------------------------------------------------------------
-                                                              *neopyter.setup()*
-                           `neopyter.setup`({config})
-Parameters ~
-{config} `(optional)` neopyter.Option
+- `mode`: Refer to the previous introduction about mode
+- `IP`: If `mode=proxy`, set to the IP of the host where jupyter server is located. If `proxy=direct`, set to the IP of the
+    host where neovim is located
+- `Port`: Idle port of the `IP`'s' host
 
-------------------------------------------------------------------------------
-                                                                  *neopyter-api*
+_NOTICE:_ all settings is saved to localStorage
 
 
-==============================================================================
-------------------------------------------------------------------------------
-Class ~
-{neopyter.JupyterOption}
-Fields ~
-{auto_activate_file} `(optional)` `(boolean)`
-{scroll} `(optional)` {enable?: `(boolean,)` align?: neopyter.ScrollToAlign}
+NEOVIM PLUGIN                            *neopyter-installation-neovim-plugin*
 
-------------------------------------------------------------------------------
-                                                                    *JupyterLab*
-                                  `JupyterLab`
-Class ~
-{neopyter.JupyterLab}
-Fields ~
-{client} neopyter.RpcClient
-{private} augroup `(number)`
-{notebook_map} `({[string]:)` neopyter.Notebook}
+- With 💤lazy.nvim:
 
-------------------------------------------------------------------------------
-Class ~
-{neopyter.NewJupyterLabOption}
-Fields ~
-{address} `(optional)` `(string)`
+For all config, ref to |neopyter-configuration| and
+|neopyter-configuration-types|
 
-------------------------------------------------------------------------------
-                                                              *JupyterLab:new()*
-                            `JupyterLab:new`({opts})
-RpcClient and connect
-Parameters ~
-{opts} neopyter.NewJupyterLabOption
-Return ~
-neopyter.JupyterLab
+>lua
+    {
+        "SUSTech-data/neopyter",
+        ---@type neopyter.Option
+        opts = {
+            mode="direct",
+            remote_address = "127.0.0.1:9001",
+            file_pattern = { "*.ju.*" },
+            on_attach = function(bufnr)
+                -- do some buffer keymap
+            end,
+        },
+    }
+<
 
-------------------------------------------------------------------------------
-                                                           *JupyterLab:attach()*
-                             `JupyterLab:attach`()
-autocmd
+Suggest keymaps(`neopyter` don’t provide default keymap):
 
-------------------------------------------------------------------------------
-                                                      *JupyterLab:is_attached()*
-                           `JupyterLab:is_attached`()
-status of jupyterlab
-Return ~
-`(boolean)`
-
-------------------------------------------------------------------------------
-                                                          *JupyterLab:connect()*
-                        `JupyterLab:connect`({address})
-server
-Parameters ~
-{address} `(optional)` `(string)` address of neopyter server
-
-------------------------------------------------------------------------------
-                                                  *JupyterLab:_on_bufwinenter()*
-                      `JupyterLab:_on_bufwinenter`({buf})
-not exists, create with buf
-Parameters ~
-{buf} `(number)`
-
-------------------------------------------------------------------------------
-                                 *JupyterLab:get_jupyterlab_extension_version()*
-                `JupyterLab:get_jupyterlab_extension_version`()
-remote version
-Return ~
-`(string|nil)`
-
-------------------------------------------------------------------------------
-                                                             *JupyterLab:echo()*
-                            `JupyterLab:echo`({msg})
-echo
-Parameters ~
-{msg} `(string)`
-Return ~
-`(string|nil)`
-
-------------------------------------------------------------------------------
-                                                  *JupyterLab:execute_command()*
-                `JupyterLab:execute_command`({command}, {args})
-jupyter lab's commands
-Parameters ~
-{command} `(string)`
-{args} `(optional)` `(table<string, any>)`
-Return ~
-`(nil)`
-documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
-
-------------------------------------------------------------------------------
-Class ~
-{neopyter.NewUntitledOption}
-Fields ~
-{path} `(optional)` `(string)`
-{type} `(optional)` `notebook`|`file`
-
-------------------------------------------------------------------------------
-                                                        *JupyterLab:createNew()*
-         `JupyterLab:createNew`({ipynb_path}, {widget_name}, {kernel})
-new notebook, and selected it
-
-------------------------------------------------------------------------------
-                                                    *JupyterLab:current_ipynb()*
-                          `JupyterLab:current_ipynb`()
-current notebook of jupyter lab
+>lua
+    on_attach = function(buf)
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
+        end
+        -- same, recommend the former
+        map("n", "<C-Enter>", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
+        -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
+    
+        -- same, recommend the former
+        map("n", "<space>X", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
+        -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
+    
+        -- same, recommend the former, but the latter is silent
+        map("n", "<space>nt", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
+        -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
+    
+        map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
+        map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
+    
+        map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
+    end
+<
 
 
 ==============================================================================
-------------------------------------------------------------------------------
-Class ~
-{neopyter.Cell}
-Fields ~
-{start_line} `(number)` include
-{lines} `(string[])`
-{end_line} `(number)` exclude
-{source} `(string)`
-{title} `(string)`
-{no_separator} `(optional)` `(boolean)`
-{cell_type} `(optional)` `(string)`
-{cell_magic} `(optional)` `(string)`
-{metadata} `(optional)` `(table<string, any>)`
+4. Usage                                                      *neopyter-usage*
 
-------------------------------------------------------------------------------
-                                                                      *Notebook*
-                                   `Notebook`
-Class ~
-{neopyter.Notebook}
-Fields ~
-{private} client neopyter.RpcClient
-{bufnr} `(number)`
-{local_path} `(string)` relative path
-{remote_path} `(string?)` #remote ipynb path
-{private} cells neopyter.Cell[]
-{private} active_cell_index `(number)`
-{private} augroup? `(number)`
-{private} _is_exist `(boolean)`
-
-------------------------------------------------------------------------------
-Class ~
-{neopyter.NewNotebokOption}
-Fields ~
-{client} neopyter.RpcClient
-{bufnr} `(number)`
-{local_path} `(string)`
-
-------------------------------------------------------------------------------
-                                                                *Notebook:new()*
-                              `Notebook:new`({o})
-Constructor, please don't call directly, obtain from jupyterlab
-Parameters ~
-{o} neopyter.NewNotebokOption
-Return ~
-neopyter.Notebook
-
-------------------------------------------------------------------------------
-                                                             *Notebook:attach()*
-                              `Notebook:attach`()
-autocmd&notebook
-
-------------------------------------------------------------------------------
-                                                             *Notebook:detach()*
-                              `Notebook:detach`()
-detach autocmd
-
-------------------------------------------------------------------------------
-                                                        *Notebook:is_attached()*
-                            `Notebook:is_attached`()
-check attach status
-Return ~
-`(boolean)`
-
-------------------------------------------------------------------------------
-                                                           *Notebook:_request()*
-                      `Notebook:_request`({method}, {...})
-request
-Parameters ~
-{method} `(string)`
-{...} `(any)`
-Return ~
-`(any)`
-
-------------------------------------------------------------------------------
-                                                           *Notebook:is_exist()*
-                             `Notebook:is_exist`()
-exist corresponding notebook in remote server
-
-------------------------------------------------------------------------------
-                                                            *Notebook:is_open()*
-                              `Notebook:is_open`()
-whether corresponding `.ipynb` file opened in jupyter lab or not
-Return ~
-`(boolean)`
-
-------------------------------------------------------------------------------
-                                                     *Notebook:scroll_to_item()*
-              `Notebook:scroll_to_item`({idx}, {align}, {margin})
-to item
-Parameters ~
-{idx} `(number)`
-{align} `(optional)` 'center' | 'top-center' | 'start' | 'end'| 'auto' | 'smart'
-{margin} `(optional)` `(number)`
-Return ~
-`(unknown|nil)`
-
-------------------------------------------------------------------------------
-                                                     *Notebook:set_cursor_pos()*
-                        `Notebook:set_cursor_pos`({pos})
-Parameters ~
-{pos} `(integer[])` (row, col) tuple representing the new position
-
-------------------------------------------------------------------------------
-                                                *Notebook:get_cursor_cell_pos()*
-                        `Notebook:get_cursor_cell_pos`()
-current cell of cursor position, start from 1
-Return ~
-`(number)` #index of cell
-Return ~
-`(number)` #row of cursor in cell
-Return ~
-`(number)` #col of cursor in cell
-
-------------------------------------------------------------------------------
-                                                           *Notebook:get_cell()*
-                           `Notebook:get_cell`({idx})
-cell by index
-Parameters ~
-{idx} `(number)`
-Return ~
-neopyter.Cell
-
-------------------------------------------------------------------------------
-                                                       *Notebook:partial_sync()*
-       `Notebook:partial_sync`({start_row}, {old_end_row}, {new_end_row})
-
-------------------------------------------------------------------------------
-                                                               *Notebook:save()*
-                               `Notebook:save`()
-ipynb, same as `Ctrl+S` on jupyter lab
-Return ~
-`(boolean)`
-
-------------------------------------------------------------------------------
-'command'
-'edit'
-
-------------------------------------------------------------------------------
-                                                           *Notebook:set_mode()*
-                          `Notebook:set_mode`({mode})
-notebook mode
-Parameters ~
-{mode} 
-
-------------------------------------------------------------------------------
-                                                           *Notebook:complete()*
-                         `Notebook:complete`({params})
-
-Parameters ~
-{params} {source: `(string,)` offset: number, cellIndex: number}
-Return ~
-{label: `(string,)` type: string, insertText:string, source: string}[]
-
-------------------------------------------------------------------------------
-                                                    *Notebook:kernel_complete()*
-                 `Notebook:kernel_complete`({source}, {offset})
-complete
-Parameters ~
-{source} `(string)`
-{offset} `(number)`
-Return ~
-{label: `(string,)` type: string, insertText:string, source: string}[]
+- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
+- Open a `*.ju.py` file in neovim
+- Now you can type `# %%` in Neovim to create a code cell.
+    - You’ll see everything you type below that will be synchronised in the browser
 
 
- vim:tw=78:ts=8:noet:ft=help:norl:
+==============================================================================
+5. Configuration                                      *neopyter-configuration*
+
+Default configuration ~
+
+>lua
+    ---@type neopyter.Option
+    local default_config = {
+        remote_address = "127.0.0.1:9001",
+        file_pattern = { "*.ju.*" },
+        filename_mapper = function(ju_path)
+            local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
+            return ipynb_path
+        end,
+    
+        auto_attach = true,
+        auto_connect = true,
+        mode = "direct",
+        ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
+        jupyter = {
+            auto_activate_file = true,
+            -- Always scroll to the current cell.
+            scroll = {
+                ets = true,
+                align = "center",
+            },
+        },
+    
+        ---@type neopyter.HighlightOption  # ref `:h neopyter.HighlightOption`
+        highlight = {
+            enable = true,
+            mode = "separator",
+        },
+        ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
+        textobject = {
+            ---@see neopyter.TextObjectOption
+            enable = true,
+            queries = { "cellseparator" },
+        },
+        ---@type neopyter.InjectionOption  # ref `:h neopyter.InjectionOption`
+        injection = {
+            enable = true,
+        },
+        parser = {
+            ---@see neopyter.ParserOption
+            trim_whitespace = false,
+            python = {},
+        },
+    }
+<
+
+See |neopyter-configuration-types| for all type description.
+
+
+==============================================================================
+6. Available Vim Commands                    *neopyter-available-vim-commands*
+
+- Status
+    - `:Neopyter status` alias to `:checkhealth neopyter` currently
+- Server
+    - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
+    - `:Neopyter disconnect`
+- Sync
+    - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
+    - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
+- Run
+    - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
+    - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
+    - `:Neopyter run allBelow`, same as `Run`>`Run Selected Cell and All Below` menu in `Jupyter lab`
+    - `:Neopyter run all`, same as `Run`>`Run All Cells` menu in `Jupyter lab`
+- Kernel
+    - `:Neopyter kernel restart`, same as `Kernel`>`Restart Kernel` menu in `Jupyter lab`
+    - `:Neopyter kernel restartRunAll`, same as `Kernel`>`Restart Kernel and Run All Cells` menu in `Jupyter lab`
+- Jupyter
+    - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`’s
+        command <https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list>
+        directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
+
+
+==============================================================================
+7. Integration                                          *neopyter-integration*
+
+
+NEOCONF.NVIM                               *neopyter-integration-neoconf.nvim*
+
+If neoconf.nvim <https://github.com/SUSTech-data/neopyter> is available,
+`neopyter` will automatically register/read `neoconf` settings
+
+`.neoconf.json` <./.neoconf.json>
+
+>json
+    {
+      "neopyter": {
+        "mode": "proxy",
+        "remote_address": "127.0.0.1:9001"
+      }
+    }
+<
+
+
+NVIM-CMP                                       *neopyter-integration-nvim-cmp*
+
+- `nvim-cmp`
+- `lspkind.nvim`
+
+>lua
+    
+    local lspkind = require("lspkind")
+    local cmp = require("cmp")
+    
+    cmp.setup({
+        sources = cmp.config.sources({
+            -- default: all source, maybe some noice
+            { name = "neopyter" },
+            -- only kernel source, like jupynium, support jupyterlab completer id:
+            -- * "CompletionProvider:kernel"
+            -- * "CompletionProvider:context"
+            -- * "lsp" if jupyterlab-lsp is installed
+            -- * ...
+            -- { name = "neopyter", option={ completers = { "CompletionProvider:kernel" } } },
+        }),
+        formatting = {
+            format = lspkind.cmp_format({
+                mode = "symbol_text",
+                maxwidth = 50,
+                ellipsis_char = "...",
+                menu = {
+                    neopyter = "[Neopyter]",
+                },
+                symbol_map = {
+                    -- specific complete item kind icon
+                    ["Magic"] = "🪄",
+                    ["Path"] = "📁",
+                    ["Dict key"] = "🔑",
+                    ["Instance"]="󱃻",
+                    ["Statement"]="󱇯",
+                },
+            }),
+        },
+    )}
+    
+        -- menu item highlight
+    vim.api.nvim_set_hl(0, "CmpItemKindMagic", { bg = "NONE", fg = "#D4D434" })
+    vim.api.nvim_set_hl(0, "CmpItemKindPath", { link = "CmpItemKindFolder" })
+    vim.api.nvim_set_hl(0, "CmpItemKindDictkey", { link = "CmpItemKindKeyword" })
+    vim.api.nvim_set_hl(0, "CmpItemKindInstance", { link = "CmpItemKindVariable" })
+    vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
+<
+
+More information, see nvim-cmp wiki
+<https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance>
+
+
+TEXTOBJECTS                                 *neopyter-integration-textobjects*
+
+Supported captures in `textobjects` query group
+
+- `@cell`
+    - `@cell.code`
+    - `@cell.magic`
+    - `@cell.markdown`
+    - `@cell.raw`
+- `@cellseparator`
+    - `@cellseparator.code`
+    - `@cellseparator.magic`
+    - `@cellseparator.markdown`
+    - `@cellseparator.raw`
+- `@cellbody`
+    - `@cellbody.code`
+    - `@cellbody.magic`
+    - `@cellbody.markdown`
+    - `@cellbody.raw`
+- `@cellcontent`
+    - `@cellcontent.code`
+    - `@cellcontent.magic`
+    - `@cellcontent.markdown`
+    - `@cellcontent.raw`
+- `@cellborder`
+    - `@cellborder.start`
+        - `@cellborder.start.markdown`
+        - `@cellborder.start.raw`
+    - `@cellborder.end`
+        - `@cellborder.end.markdown`
+        - `@cellborder.end.raw`
+- `@linemagic`
+
+>lua
+    require'nvim-treesitter.configs'.setup {
+        textobjects = {
+            move = {
+                enable = true,
+                goto_next_start = {
+                    ["]j"] = "@cellseparator",
+                },
+                goto_previous_start = {
+                    ["[j"] = "@cellseparator",
+                },
+            },
+        },
+    }
+<
+
+
+==============================================================================
+8. API                                                          *neopyter-api*
+
+`Neopyter` provides rich lua APIs, you could use below code as initialization:
+
+>lua
+    
+    -- Reference to `:h neopyter-jupyterlab-api` for all api document
+    local current_lab = require("neopyter.jupyter").jupyterlab
+    current_lab:execute_command("notebook:export-to-format", {format="html"})
+    
+    -- Reference to `:h neopyter-notebook-api` for all api document
+    local current_notebook = require("neopyter.jupyter").notebook
+    
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+<
+
+- |neopyter-notebook-api|
+- |neopyter-jupyterlab-api-api|
+
+
+ASYNC                                                     *neopyter-api-async*
+
+`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
+
+- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
+- A single API call always works
+
+>lua
+    vim.defer_fn(function()
+        -- non-async context, API response may be unordered
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end, 0)
+    
+    require("neopyter.async").run(function()
+        -- async context, so which will call and return in order
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end)
+<
+
+
+==============================================================================
+9. Features                                                *neopyter-features*
+
+- Neovim
+    - ☒ Full sync
+    - ☒ Partial sync
+    - ☒ Scroll view automatically
+    - ☒ Activate cell automatically
+    - ☒ Save notebook automatically
+    - Completion
+        - ☒ Magic completion item
+        - ☒ Path completion item
+    - Tree-sitter
+        - ☒ Highlight
+            - Separator+non-code
+            - Shortsighted
+        - ☒ Textobjects
+        - ☐ Fold
+    - Kernel management
+        - ☒ Restart kernel
+        - ☒ Restart kernel and run all
+    - Run cell
+        - ☒ Run selected cell
+        - ☒ Run all above selected cell
+        - ☒ Run selected cell and all below
+        - ☒ Run all cell
+    - Sync
+        - ☒ Set synchronized `.ipynb` manually
+    - Notebook manager
+        - ☒ Open corresponding notebook if exists
+        - ☒ Sync with untitled notebook default
+        - ☐ Close notebook when buffer unload
+- Jupyter Lab
+    - Settings
+        - ☒ TCP server host/port settings
+    - Status Sidebar <https://jupyterlab.readthedocs.io/en/stable/user/interface.html#left-and-right-sidebar>
+        - ☒ Settings `ip:port`
+        - ☐ Display client info
+- Performance
+    - ☒ Rewrite `RpcClient`, support async RPC request
+        `vim.rpcrequest` and `vim.rpcnotify`
+    - ☒ Rewrite `highlights` and `textobjects` queries
+    - ☒ Rewrite parser with tree-sitter
+    - ☒ Unified `highlights`, `textobjects`, `parser` to unified parser
+- Document
+    - ☒ API Document
+
+
+==============================================================================
+10. Acknowledges                                       *neopyter-acknowledges*
+
+- jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>: Selenium-automated Jupyter Notebook that is synchronised with Neovim in real-time.
+- snacks.nvim <https://github.com/folke/snacks.nvim>: The `zen` highlight is inspired by `snacks.zen`
+
+
+==============================================================================
+Configuration Types                             *neopyter-configuration-types*
+
+*neopyter.Option*
+
+    Fields: ~
+      • {remote_address}?   (`string`)
+      • {file_pattern}?     (`string[]`)
+      • {auto_attach}?      (`boolean`) Automatically attach to the Neopyter
+                            server when open file_pattern matched files
+      • {auto_connect}?     (`boolean`) Auto connect jupyter lab
+      • {mode}?             (`"direct"|"proxy"`) Work mode
+      • {filename_mapper}?  (`fun(ju_path:string):string`)
+      • {on_attach}?        (`fun(bufnr:number)`)
+      • {jupyter}?          (`neopyter.JupyterOption`)
+      • {highlight}?        (`neopyter.HighlightOption`)
+      • {textobject}?       (`neopyter.TextObjectOption`)
+      • {injection}?        (`neopyter.InjectionOption`)
+      • {parser}?           (`neopyter.ParserOption`)
+
+
+
+
+
+*neopyter.HighlightOption*
+
+    Fields: ~
+      • {enable}  (`boolean`)
+      • {mode}    (`"zen"|"separator"`)
+
+
+
+
+
+*neopyter.TextObjectOption*
+
+    Fields: ~
+      • {enable}   (`boolean`)
+      • {queries}  (`("cellseparator"|"cellcontent"|"cell")[]`) default
+                   cellseparator
+
+
+
+
+
+*neopyter.InjectionOption*
+
+    Fields: ~
+      • {enable}  (`boolean`)
+
+
+
+ vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

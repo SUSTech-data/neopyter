@@ -1,0 +1,316 @@
+
+==============================================================================
+Neopyter module: Jupyterlab                          *neopyter-jupyterlab-api*
+
+Neopyter provide a global `jupyterlab` represent remote `JupyterLab` instance,
+which provides some RPC-based API to control remote `JupyterLab` instance. You
+could obtain `neopyter.Notebook` instance to control notebook via `JupyterLab`
+
+Example: >lua
+    require("neopyter.async").run(function()
+        -- async context
+        local lab = require("neopyter.jupyter")
+        local notebook = lab:get_notebook(0) -- Get notebook via buffer
+        notebook:scroll_to_item(0) -- Scroll to first cell
+    end)
+<
+
+NOTICE: Most API is need a async context, but neopyter provide a wrapped async
+context automatically
+
+
+*neopyter.JupyterOption*
+
+    Fields: ~
+      • {auto_activate_file}?  (`boolean`)
+      • {scroll}?              (`{enable?: boolean, align?: neopyter.ScrollToAlign}`)
+
+
+JupyterLab:attach()                                      *JupyterLab:attach()*
+    attach autocmd
+
+JupyterLab:connect({address})                           *JupyterLab:connect()*
+    connect server
+
+    Parameters: ~
+      • {address}  (`string?`) address of neopyter server
+
+JupyterLab:current_ipynb()                        *JupyterLab:current_ipynb()*
+    get current notebook of jupyter lab
+
+    Return: ~
+        (`string`)
+
+JupyterLab:detach()                                      *JupyterLab:detach()*
+    detach jupyterlab, delete autocmd and disconnect with jupyterlab
+
+JupyterLab:disconnect()                              *JupyterLab:disconnect()*
+    disconnect with jupyterlab
+
+JupyterLab:echo({msg})                                     *JupyterLab:echo()*
+    test connection will return `hello: {msg}` as response
+
+    Parameters: ~
+      • {msg}  (`string`)
+
+    Return: ~
+        (`string?`)
+
+                                                *JupyterLab:execute_command()*
+JupyterLab:execute_command({command}, {args})
+    execute jupyter lab's commands
+
+    Parameters: ~
+      • {command}  (`string`)
+      • {args}     (`table<string, any>?`)
+
+    Return: ~
+        (`nil`)                                               *View documents*
+
+                               *JupyterLab:get_jupyterlab_extension_version()*
+JupyterLab:get_jupyterlab_extension_version()
+    get neopyter (jupyterlab extension) version
+
+    Return: ~
+        (`string`)
+
+JupyterLab:get_notebook({buf})                     *JupyterLab:get_notebook()*
+    get notebook via buffer
+
+    Parameters: ~
+      • {buf}  (`integer`)
+
+    Return: ~
+        (`neopyter.Notebook?`)
+
+                                        *JupyterLab:get_nvim_plugin_version()*
+JupyterLab:get_nvim_plugin_version()
+    get neopyter (nvim plugin) version
+
+    Return: ~
+        (`string`)
+
+JupyterLab:is_attached()                            *JupyterLab:is_attached()*
+    get status of jupyterlab
+
+    Return: ~
+        (`boolean`)
+
+JupyterLab:is_connecting()                        *JupyterLab:is_connecting()*
+    whether connecting with `jupyterlab`
+
+    Return: ~
+        (`boolean`)
+
+
+==============================================================================
+Neopyter module: Notebook                              *neopyter-notebook-api*
+
+Neopyter provide `neopyter.Notebook` represent remote `Notebook` instance,
+which provides some RPC-based API to control remote `Notebook` instance.
+Obtain notebook refer to `neopyter-jupyterlab-api`
+
+
+Notebook:activate()                                      *Notebook:activate()*
+    active notebook in jupyterlab @async
+
+Notebook:activate_cell()                            *Notebook:activate_cell()*
+    active cell
+
+Notebook:attach()                                          *Notebook:attach()*
+    attach autocmd. While connecting with jupyterlab, will full sync
+
+Notebook:complete({params})                              *Notebook:complete()*
+    code completion
+
+    Parameters: ~
+      • {params}  (`{source: string, offset: number, cellIndex: number}`)
+
+    Return: ~
+        (`{label: string, type: string, insertText:string, source: string}[]`)
+
+Notebook:detach()                                          *Notebook:detach()*
+    detach autocmd
+
+Notebook:full_sync()                                    *Notebook:full_sync()*
+
+Notebook:get_cell({row}, {col})                          *Notebook:get_cell()*
+    get cell by pose
+
+    Parameters: ~
+      • {row}  (`integer?`)
+      • {col}  (`integer?`)
+
+Notebook:get_cell_num()                              *Notebook:get_cell_num()*
+
+Notebook:get_cursor_cell_pos()                *Notebook:get_cursor_cell_pos()*
+    get current cell of cursor position, start from 1
+
+    Return (multiple): ~
+        (`number`) index of cell
+        (`number`) row of cursor in cell, 0-based
+        (`number`) col of cursor in cell, 0-based
+
+Notebook:get_cursor_pos()                          *Notebook:get_cursor_pos()*
+    get cursor pos
+
+    Return (multiple): ~
+        (`integer`) 0-index
+        (`integer`) 0-index
+
+Notebook:get_parser()                                  *Notebook:get_parser()*
+
+Notebook:is_attached()                                *Notebook:is_attached()*
+    check attach status
+
+    Return: ~
+        (`boolean`)
+
+Notebook:is_connecting()                            *Notebook:is_connecting()*
+
+Notebook:is_exist()                                      *Notebook:is_exist()*
+    is exist corresponding notebook in remote server
+
+Notebook:is_open()                                        *Notebook:is_open()*
+    whether corresponding `.ipynb` file opened in jupyter lab or not
+
+    Return: ~
+        (`boolean`)
+
+                                                  *Notebook:kernel_complete()*
+Notebook:kernel_complete({source}, {offset})
+    code completion, but kernel complete only
+
+    Parameters: ~
+      • {source}  (`string`)
+      • {offset}  (`number`)
+
+    Return: ~
+        (`{label: string, type: string, insertText:string, source: string}[]`)
+
+Notebook:open()                                              *Notebook:open()*
+
+Notebook:open_or_reveal()                          *Notebook:open_or_reveal()*
+
+Notebook:parse()                                            *Notebook:parse()*
+
+                                                     *Notebook:partial_sync()*
+Notebook:partial_sync({start_row}, {old_end_row}, {new_end_row})
+    partial sync
+
+    Parameters: ~
+      • {start_row}    (`integer`)
+      • {old_end_row}  (`integer`)
+      • {new_end_row}  (`integer`)
+
+Notebook:restart_kernel()                          *Notebook:restart_kernel()*
+
+Notebook:restart_run_all()                        *Notebook:restart_run_all()*
+
+Notebook:run_all()                                        *Notebook:run_all()*
+
+Notebook:run_all_above()                            *Notebook:run_all_above()*
+
+Notebook:run_all_below()                            *Notebook:run_all_below()*
+
+Notebook:run_selected_cell()                    *Notebook:run_selected_cell()*
+
+Notebook:safe_sync()                                    *Notebook:safe_sync()*
+
+Notebook:save()                                              *Notebook:save()*
+    save ipynb, same as `Ctrl+S` on jupyter lab
+
+    Return: ~
+        (`boolean`)
+
+                                                   *Notebook:scroll_to_item()*
+Notebook:scroll_to_item({idx}, {align}, {margin})
+    scroll to item
+
+    Parameters: ~
+      • {idx}     (`number`)
+      • {align}   (`neopyter.ScrollToAlign?`)
+      • {margin}  (`number?`)
+
+    Return: ~
+        (`unknown?`)
+
+Notebook:set_cursor_pos({pos})                     *Notebook:set_cursor_pos()*
+
+    Parameters: ~
+      • {pos}  (`integer[]`) (row, col) tuple representing the new position
+
+Notebook:set_mode({mode})                                *Notebook:set_mode()*
+    set notebook mode
+
+    Parameters: ~
+      • {mode}  (`"command"|"edit"`)
+
+
+==============================================================================
+Neopyter module: Treesitter                          *neopyter-treesitter-api*
+
+Neopyter don't depend on `nvim-treesitter`, this module provides some utility
+related to `treesitter`, such as capture and match.
+
+Example: >lua
+    local ts = require("neopyter.treesitter")
+    ts.get_buf_lang(0)
+<
+
+
+get_buf_lang()                              *neopyter-treesitter-get_buf_lang*
+
+                                      *neopyter-treesitter-include_whitespace*
+include_whitespace({bufnr}, {textobject}, {selection_mode})
+    include surrounding whitespace
+
+    Parameters: ~
+      • {bufnr}           (`number`)
+      • {textobject}      (`number[]`) (start_row, start_col, end_row,
+                          end_col) tuple for textobject position,
+                          TSNode:range() like
+      • {selection_mode}  (`'linewise'|'charwise'`)
+
+    Return: ~
+        (`table`)
+
+                                           *neopyter-treesitter-iter_captures*
+iter_captures({query}, {source}, {capture}, {start}, {stop}, {loop})
+    get captures
+
+    Parameters: ~
+      • {query}    (`vim.treesitter.Query`)
+      • {source}   (`vim.treesitter.LanguageTree|number|string|(string[])`)
+      • {capture}  (`string`)
+      • {start}    (`integer?`)
+      • {stop}     (`integer?`)
+      • {loop}     (`boolean?`)
+
+    Return: ~
+        (`Iter`)
+
+                                            *neopyter-treesitter-iter_matches*
+iter_matches({query}, {source}, {start}, {stop}, {loop})
+    get captures
+
+    Parameters: ~
+      • {query}   (`vim.treesitter.Query`)
+      • {source}  (`vim.treesitter.LanguageTree|number|string|(string[])`)
+      • {start}   (`integer?`)
+      • {stop}    (`integer?`)
+      • {loop}    (`boolean?`)
+
+    Return: ~
+        (`Iter`)
+
+load_query({query}, {lang}, {name})           *neopyter-treesitter-load_query*
+    load query to RTP
+
+    Parameters: ~
+      • {query}  (`string`)
+      • {lang}   (`string?`) language (default python)
+      • {name}   (`string?`) the prefix name
+
+
+ vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

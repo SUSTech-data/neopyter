@@ -3,10 +3,12 @@
     "lua_ls": {
       "Lua.addonManager.addons": [
         "neopyter",
+        "pathlib.nvim",
         "nvim",
         "nvim-cmp",
         "plenary.nvim",
         "websocket.nvim",
+        "nvim-treesitter",
         "luassert",
         "busted"
       ]
@@ -14,6 +16,10 @@
   },
   "neopyter": {
     "mode": "direct",
-    "remote_address": "127.0.0.1:9103"
+    "remote_address": "127.0.0.1:9103",
+    "highlight": {
+      "mode": "separator",
+      "enable": true
+    }
   }
 }

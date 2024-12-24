@@ -1,25 +1,6 @@
-# Neopyter
+# Introduction
 
 The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jupyter Lab.
-
-<!--toc:start-->
-- [Neopyter](#neopyter)
-  - [How does it work?](#how-does-it-work)
-  - [Screenshots](#screenshots)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-    - [JupyterLab Extension](#jupyterlab-extension)
-    - [Neovim plugin](#neovim-plugin)
-  - [Quick Start](#quick-start)
-  - [Available Vim Commands](#available-vim-commands)
-  - [Integration](#integration)
-    - [neoconf.nvim](#neoconfnvim)
-    - [nvim-cmp](#nvim-cmp)
-    - [nvim-treesitter-textobjects](#nvim-treesitter-textobjects)
-  - [API](#api)
-  - [Features](#features)
-  - [Acknowledges](#acknowledges)
-<!--toc:end-->
 
 ## How does it work?
 
@@ -80,10 +61,11 @@ others, you must use direct mode
   the browser where jupyter lab is located will connect to neovim
 
 - `proxy` mode: In this mode, Jupyter lab server(server side, the host you run `jupyter lab` to start JupyterLab) is server
-  and jupyter lab server extension(neopyter) is listening to `${IP}:{Port}`, the neovim plugin(neopyter) will connect to `${IP}:{Port}`
+  and jupyter lab server extension(neopyter) is listening to ``{IP}:{Port}`, the neovim plugin(neopyter) will connect to ``{IP}:{Port}`
 
 Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abilities like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim).
 
+<!-- panvimdoc-ignore-start -->
 ## Screenshots
 
 <table>
@@ -107,17 +89,20 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
         </th>
     </tr>
 </table>
+<!-- panvimdoc-ignore-end -->
 
-## Requirements
+# Requirements
 
 - 📔JupyterLab >= 4.0.0
-- ✌️ Neovim nightly
+- ✌️ Neovim latest
   - 👍`nvim-lua/plenary.nvim`
   - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
-## Installation
+# Installation
 
-### JupyterLab Extension
+`Neopyter` support two parts, so we need to install them separately.
+
+## JupyterLab Extension
 
 To install the jupyterlab extension, execute:
 
@@ -135,12 +120,13 @@ Configure `JupyterLab` in side panel
 
 *NOTICE:* all settings is saved to localStorage
 
-### Neovim plugin
+## Neovim Plugin
 
-With 💤lazy.nvim:
+- With 💤lazy.nvim:
+
+For all config, ref to `:h neopyter-configuration` and `:h neopyter-configuration-types`
 
 ```lua
-
 {
     "SUSTech-data/neopyter",
     ---@type neopyter.Option
@@ -151,14 +137,6 @@ With 💤lazy.nvim:
         on_attach = function(bufnr)
             -- do some buffer keymap
         end,
-        highlight = {
-            enable = true,
-            shortsighted = false,
-        },
-        parser = {
-            -- trim leading/tailing whitespace of cell
-            trim_whitespace = false,
-        }
     },
 }
 ```
@@ -189,14 +167,70 @@ on_attach = function(buf)
 end
 ```
 
-## Quick Start
+# Usage
 
 - Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
 - Open a `*.ju.py` file in neovim
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
 
-## Available Vim Commands
+# Configuration
+
+<details>
+<summary><strong>Default configuration</strong></summary>
+<!-- doc-inject:default-config -->
+
+```lua
+---@type neopyter.Option
+local default_config = {
+    remote_address = "127.0.0.1:9001",
+    file_pattern = { "*.ju.*" },
+    filename_mapper = function(ju_path)
+        local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
+        return ipynb_path
+    end,
+
+    auto_attach = true,
+    auto_connect = true,
+    mode = "direct",
+    ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
+    jupyter = {
+        auto_activate_file = true,
+        -- Always scroll to the current cell.
+        scroll = {
+            ets = true,
+            align = "center",
+        },
+    },
+
+    ---@type neopyter.HighlightOption  # ref `:h neopyter.HighlightOption`
+    highlight = {
+        enable = true,
+        mode = "separator",
+    },
+    ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
+    textobject = {
+        ---@see neopyter.TextObjectOption
+        enable = true,
+        queries = { "cellseparator" },
+    },
+    ---@type neopyter.InjectionOption  # ref `:h neopyter.InjectionOption`
+    injection = {
+        enable = true,
+    },
+    parser = {
+        ---@see neopyter.ParserOption
+        trim_whitespace = false,
+        python = {},
+    },
+}
+```
+
+</details>
+
+See `:h neopyter-configuration-types` for all type description.
+
+# Available Vim Commands
 
 - Status
   - `:Neopyter status` alias to `:checkhealth neopyter` currently
@@ -219,9 +253,9 @@ end
     [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
     directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
-## Integration
+# Integration
 
-### neoconf.nvim
+## neoconf.nvim
 
 If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopyter` will automatically register/read `neoconf` settings
 
@@ -236,7 +270,7 @@ If [neoconf.nvim](https://github.com/SUSTech-data/neopyter) is available, `neopy
 }
 ```
 
-### nvim-cmp
+## nvim-cmp
 
 - `nvim-cmp`
 - `lspkind.nvim`
@@ -288,44 +322,38 @@ vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
 
 More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
 
-### nvim-treesitter-textobjects
+## textobjects
 
 Supported captures in `textobjects` query group
 
-- @cell
-  - @cell.code
-  - @cell.magic
-  - @cell.markdown
-  - @cell.raw
-  - @cell.special
-- @cellseparator
-  - @cellseparator.code
-  - @cellseparator.magic
-  - @cellseparator.markdown
-  - @cellseparator.raw
-  - @cellseparator.special
-- @cellbody
-  - @cellbody.code
-  - @cellbody.magic
-  - @cellbody.markdown
-  - @cellbody.raw
-  - @cellbody.special
-- @cellcontent
-  - @cellcontent.code
-  - @cellcontent.magic
-  - @cellcontent.markdown
-  - @cellcontent.raw
-  - @cellcontent.special
-- @cellborder
-  - @cellborder.start
-    - @cellborder.start.markdown
-    - @cellborder.start.raw
-    - @cellborder.start.special
-  - @cellborder.end
-    - @cellborder.end.markdown
-    - @cellborder.end.raw
-    - @cellborder.end.special
-- @linemagic
+- `@cell`
+  - `@cell.code`
+  - `@cell.magic`
+  - `@cell.markdown`
+  - `@cell.raw`
+- `@cellseparator`
+  - `@cellseparator.code`
+  - `@cellseparator.magic`
+  - `@cellseparator.markdown`
+  - `@cellseparator.raw`
+- `@cellbody`
+  - `@cellbody.code`
+  - `@cellbody.magic`
+  - `@cellbody.markdown`
+  - `@cellbody.raw`
+- `@cellcontent`
+  - `@cellcontent.code`
+  - `@cellcontent.magic`
+  - `@cellcontent.markdown`
+  - `@cellcontent.raw`
+- `@cellborder`
+  - `@cellborder.start`
+    - `@cellborder.start.markdown`
+    - `@cellborder.start.raw`
+  - `@cellborder.end`
+    - `@cellborder.end.markdown`
+    - `@cellborder.end.raw`
+- `@linemagic`
 
 ```lua
 require'nvim-treesitter.configs'.setup {
@@ -334,11 +362,9 @@ require'nvim-treesitter.configs'.setup {
             enable = true,
             goto_next_start = {
                 ["]j"] = "@cellseparator",
-                ["]c"] = "@cellcontent",
             },
             goto_previous_start = {
                 ["[j"] = "@cellseparator",
-                ["[c"] = "@cellcontent",
             },
         },
     },
@@ -346,22 +372,53 @@ require'nvim-treesitter.configs'.setup {
 
 ```
 
-## API
+# API
 
-`Neopyter` provides rich lua APIs
+`Neopyter` provides rich lua APIs, you could use below code as initialization:
 
-- Jupyter Lab
+```lua
 
-  - `Neopyter execute ...` <-> `require("neopyter.jupyter").jupyterlab:execute_command(...)`
-  - All APIs see `:lua =require("neopyter.jupyter.jupyterlab").__injected_methods`
+-- Reference to `:h neopyter-jupyterlab-api` for all api document
+local current_lab = require("neopyter.jupyter").jupyterlab
+current_lab:execute_command("notebook:export-to-format", {format="html"})
 
-- Notebook
-  - `:Neopyter run current` <-> `require("neopyter.jupyter").notebook:run_selected_cell()`
-  - `:Neopyter run allAbove` <-> `require("neopyter.jupyter").notebook:run_all_above()`
-  - `:Neopyter run allBelow` <-> `require("neopyter.jupyter").notebook:run_all_below()`
-  - All APIs see `:lua =require("neopyter.jupyter.notebook").__injected_methods`
+-- Reference to `:h neopyter-notebook-api` for all api document
+local current_notebook = require("neopyter.jupyter").notebook
 
-## Features
+current_notebook:run_selected_cell()
+current_notebook:run_all_above()
+current_notebook:run_all_below()
+
+```
+
+- `:h neopyter-notebook-api`
+- `:h neopyter-jupyterlab-api-api`
+
+## Async
+
+`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
+
+- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
+- A single API call always works
+
+```lua
+vim.defer_fn(function()
+    -- non-async context, API response may be unordered
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+end, 0)
+
+require("neopyter.async").run(function()
+    -- async context, so which will call and return in order
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+end)
+
+```
+
+# Features
 
 - Neovim
   - [x] Full sync
@@ -372,14 +429,13 @@ require'nvim-treesitter.configs'.setup {
   - Completion
     - [x] Magic completion item
     - [x] Path completion item
-    - [ ] Disable others?
   - Tree-sitter
     - [x] Highlight
       - Separator+non-code
       - Shortsighted
     - [x] Textobjects
     - [ ] Fold
-  - Kernel manage
+  - Kernel management
     - [x] Restart kernel
     - [x] Restart kernel and run all
   - Run cell
@@ -402,9 +458,20 @@ require'nvim-treesitter.configs'.setup {
 - Performance
   - [x] Rewrite `RpcClient`, support async RPC request
         `vim.rpcrequest` and `vim.rpcnotify`
+  - [x] Rewrite `highlights` and `textobjects` queries
+  - [x] Rewrite parser with tree-sitter
+  - [x] Unified `highlights`, `textobjects`, `parser` to unified parser
 - Document
-  - [ ] API Document
+  - [x] API Document
 
-## Acknowledges
+# Acknowledges
 
 - [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim): Selenium-automated Jupyter Notebook that is synchronised with Neovim in real-time.
+- [snacks.nvim](https://github.com/folke/snacks.nvim): The `zen` highlight is inspired by `snacks.zen`
+
+<!-- panvimdoc-include-comment
+
+# Configuration Types
+This will be replaced by gen_doc.lua
+
+-->

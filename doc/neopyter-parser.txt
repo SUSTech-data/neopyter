@@ -1,0 +1,91 @@
+
+==============================================================================
+Neopyter module: Parser                                      *neopyter-parser*
+
+*neopyter.ICell*
+
+    Fields: ~
+      • {start_row}      (`number`) include, 0-based
+      • {end_row}        (`number`) include, 0-based
+      • {no_separator}?  (`boolean`) this cell without separator, like first
+                         cell
+      • {type}           (`string`)
+      • {title}?         (`string`)
+      • {metadata}?      (`table<string, any>`)
+
+*neopyter.INotebook*
+
+    Fields: ~
+      • {metadata}?  (`table`)
+      • {cells}      (`neopyter.ICell[]`)
+
+*neopyter.Parser*
+
+    Fields: ~
+      • {trim_whitespace}    (`boolean`)
+      • {separator_query}    (`vim.treesitter.Query`)
+      • {separator_capture}  (`string`)
+      • {new}                (`fun(self: neopyter.Parser)`) See
+                             |Parser:new()|.
+      • {iter_separator}     (`fun(self: neopyter.Parser, source: number|string|string[], row: number?, col: number?, direct: "forward"|"backward"): Iter`)
+                             See |Parser:iter_separator()|.
+      • {iter_cell}          (`fun(self: neopyter.Parser, source: number|string|string[], start_row: integer, end_row: integer): Iter`)
+                             See |Parser:iter_cell()|.
+      • {parse_notebook}     (`fun(self: neopyter.Parser, source: number|string|string[]): neopyter.INotebook`)
+                             See |Parser:parse_notebook()|.
+      • {parse_source}       (`fun(self: neopyter.Parser, source: number|string|string[], cell: neopyter.ICell)`)
+                             See |Parser:parse_source()|.
+
+*neopyter.ParserOption*
+
+    Fields: ~
+      • {trim_whitespace}?  (`boolean`) Whether trim leading/trailing
+                            whitespace, but keep 1 line each cell at least,
+                            default false
+      • {python}?           (`neopyter.PercentParserOption`)
+
+
+Parser:iter_cell({source}, {start_row}, {end_row})        *Parser:iter_cell()*
+    get iteration of cell
+
+    Parameters: ~
+      • {source}     (`number|string|string[]`) buffer or source code
+      • {start_row}  (`integer`) zero default
+      • {end_row}    (`integer`) full default
+
+    Return: ~
+        (`Iter`) ICell source
+
+                                                     *Parser:iter_separator()*
+Parser:iter_separator({source}, {row}, {col}, {direct})
+    get iteration of separator
+
+    Parameters: ~
+      • {source}  (`number|string|string[]`) buffer or source code
+      • {row}     (`number?`) 0-based, cursor position default
+      • {col}     (`number?`) 0-based, cursor position default
+      • {direct}  (`"forward"|"backward"`) default forward
+
+    Return: ~
+        (`Iter`)
+
+Parser:new()                                                    *Parser:new()*
+
+Parser:parse_notebook({source})                      *Parser:parse_notebook()*
+    get each cell range
+
+    Parameters: ~
+      • {source}  (`number|string|string[]`) buffer or source code
+
+    Return: ~
+        (`neopyter.INotebook`)
+
+Parser:parse_source({source}, {cell})                  *Parser:parse_source()*
+    parse cell source
+
+    Parameters: ~
+      • {source}  (`number|string|string[]`) buffer or source code
+      • {cell}    (`neopyter.ICell`)
+
+
+ vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

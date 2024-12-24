@@ -27,8 +27,9 @@ end
 
 ---comment
 ---@param address? string
+---@param on_connected? fun() # call while connected
 ---@async
-function AsyncRpcClient:connect(address)
+function AsyncRpcClient:connect(address, on_connected)
     self.address = address or self.address
     assert(self.tcp_client == nil, "current connection exists, can't call connect, please disconnect first")
     assert(self.address, "Rpc client address is empty")
@@ -40,6 +41,11 @@ function AsyncRpcClient:connect(address)
         self.tcp_client = nil
     else
         self.tcp_client:read_start(function(e, data)
+            if vim.is_callable(on_connected) then
+                ---@cast on_connected -nil
+                on_connected()
+                on_connected = nil
+            end
             if e ~= nil or data == nil then
                 for _, callback in ipairs(self.request_pool) do
                     callback(false, e)

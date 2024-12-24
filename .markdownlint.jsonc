@@ -4,6 +4,7 @@
   "MD003": {
     "style": "atx_closed"
   },
+  "single-h1": false,
   "no-hard-tabs": false,
   "whitespace": false,
   "MD007": {

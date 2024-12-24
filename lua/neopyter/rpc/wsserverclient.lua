@@ -24,8 +24,9 @@ end
 
 ---comment
 ---@param address? string
+---@param on_connected? fun() # call while connected
 ---@async
-function WSServerClient:connect(address)
+function WSServerClient:connect(address, on_connected)
     local restart_server = address ~= nil and self.address ~= address
     for _, fun in pairs(self.request_pool) do
         fun(false, "cancel")
@@ -58,6 +59,9 @@ function WSServerClient:connect(address)
                     self.single_connection = nil
                 end,
             })
+            if on_connected then
+                on_connected()
+            end
         end,
         on_disconnect = function()
             self:disconnect()

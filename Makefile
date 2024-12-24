@@ -1,4 +1,5 @@
 MINI_INIT=scripts/minimal_init.lua
+GEN_DOC=scripts/gen_doc.lua
 TESTS_DIR=lua-tests/
 
 # .PHONY: test doc
@@ -14,7 +15,11 @@ document:
 	@nvim \
 		--headless \
 		--noplugin \
-		-u ${MINI_INIT}  \
-		-c 'lua require("mini.doc").generate()' \
-		-c 'qa'
+		-u ${MINI_INIT} \
+		-l ${GEN_DOC}
+	@nvim \
+		--headless\
+		--noplugin \
+		-c "helptags ./doc" \
+		-c "qall!"
 

@@ -8,16 +8,28 @@ function M.load_buffer(content)
         content = vim.split(content, "\n", { trimempty = true })
         ---@cast content string[]
     end
-    -- local buf = vim.fn.bufadd("foo.py")
-    -- vim.fn.bufload(buf)
     --
     local buf = vim.api.nvim_create_buf(true, false)
-    -- vim.api.nvim_buf_set_name(buf, "demo.py")
 
     vim.api.nvim_buf_set_lines(buf, 0, 0, true, content)
     vim.api.nvim_buf_set_lines(buf, #content, #content + 1, true, {})
     vim.bo[buf].filetype = "python"
     return buf
+end
+
+---@param content elem_or_list<string>
+---@param query_name string
+---@return integer
+---@return vim.treesitter.Query
+---@return TSTree
+function M.to_treesitter(content, query_name)
+    local buf = M.load_buffer(content)
+    local parser = vim.treesitter.get_parser(buf, "python")
+    ---@cast parser -nil
+    local query = vim.treesitter.query.get("python", query_name)
+    local tree = parser:parse(true)
+    ---@cast query -nil
+    return buf, query, tree[1]
 end
 
 ---load file to buffer
@@ -32,5 +44,6 @@ function M.get_buf_conent(buf)
     local count = vim.api.nvim_buf_line_count(buf)
     return table.concat(vim.api.nvim_buf_get_lines(buf, 0, count, true), "\n")
 end
+
 
 return M

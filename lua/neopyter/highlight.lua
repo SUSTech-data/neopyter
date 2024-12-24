@@ -1,116 +1,82 @@
--- Code mostly based on koenverburg/peepsight.nvim
 local utils = require("neopyter.utils")
-local query = require("nvim-treesitter.query")
-local textobjects = require("neopyter.textobjects")
+local ts = require("neopyter.treesitter")
+local a = require("neopyter.async")
+local api = a.api
+local fn = a.fn
 
 ---@class neopyter.HighlightOption
 ---@field enable boolean
----@field shortsighted boolean
+---@field mode "zen"|"separator"
 
+---@nodoc
+---@class neopyter.Highlight
+---@field query {[string]: vim.treesitter.Query}
 local M = {}
 local ns_highlight = vim.api.nvim_create_namespace("neopyter-highlighter")
 
 ---setup/update highlight module
----@param opts neopyter.HighlightOption
-function M.setup(opts)
-    if opts.enable then
-        require("neopyter.treesitter").load_query("injections")
-        require("neopyter.treesitter").load_query("highlights")
+---@nodoc
+function M.setup()
+    local config = require("neopyter").config.highlight
+    ---@cast config -nil
+    local validator = {
+        enable = { config.enable, "boolean" },
+        mode = {
+            config.mode,
+            function(mode)
+                if mode == "zen" or mode == "separator" then
+                    return true
+                end
+                return false
+            end,
+            "one of `zen`, `separator`",
+        },
+    }
+    utils.validate_config("highlight", validator, config)
+    if not config.enable then
+        return
+    end
 
-        local config = require("neopyter").config
-        local augroup = vim.api.nvim_create_augroup("neopyter-highlighter", {})
-        local updated = false
+    M.query = {
+        python = vim.treesitter.query.parse(
+            "python",
+            [[
+                (module
+                  (comment) @cellseparator
+                  (#match-percent-separator? @cellseparator)
+                )
+            ]]
+        ),
+    }
+end
 
-        if opts.shortsighted then
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
-                pattern = config.file_pattern,
-                callback = function()
-                    updated = false
-                    vim.defer_fn(function()
-                        if updated == false then
-                            updated = true
-                            M.update_dynamic_highlight()
-                        end
-                    end, 10)
-                end,
-                group = augroup,
+local function update_zen_highlight(buf)
+    api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
+    api.nvim_set_hl(ns_highlight, "NeopyterDim", { link = "DiagnosticUnnecessary", default = true })
+    local notebook = require("neopyter.jupyter.jupyterlab"):get_notebook(buf)
+    if not notebook then
+        utils.notify_warn("Can't highlight buffer: cann't find notebook")
+        return
+    end
+    local cell = notebook:get_cell()
+    if not cell then
+        -- utils.notify_warn("Can't highlight buffer: cann't locate cell")
+        -- code don't parse
+        return
+    end
+
+    local start_row = cell.start_row
+    local end_row = cell.end_row
+
+    for i = fn.line("w0") - 1, fn.line("w$") - 1 do
+        if i < start_row or i > end_row then
+            api.nvim_buf_set_extmark(0, ns_highlight, i, 0, {
+                end_row = i + 1,
+                end_col = 0,
+                hl_group = "DiagnosticUnnecessary",
+                priority = 9000,
+                hl_eol = true,
             })
-        else
-            vim.api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
-                pattern = config.file_pattern,
-                callback = function()
-                    updated = false
-                    vim.defer_fn(function()
-                        if updated == false then
-                            updated = true
-                            M.update_static_highlight()
-                        end
-                    end, 10)
-                end,
-                group = augroup,
-            })
-        end
-    end
-end
-
-function M.update_static_highlight()
-    vim.api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
-
-    -- code cell separator
-    M.highlight_capture({ "@cellseparator.code", "@cellseparator.magic" }, "CursorLine", "linewise", false, 9000)
-    -- markdown cell
-    M.highlight_capture({ "@cell.markdown", "@cell.raw", "@cell.special" }, "CursorLine", "linewise", true, 9000)
-    -- line magic
-    M.highlight_capture({ "@linemagic" }, "Keyword", "charwise", false, 9000)
-end
-
-function M.update_dynamic_highlight()
-    vim.api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
-
-    local matches = query.get_capture_matches(0, "@cell", "textobjects")
-
-    local currentIndex
-    --- @type TSNode[]
-    local nodes = vim.tbl_map(function(match)
-        return match[vim.tbl_keys(match)[1]].node
-    end, matches or {})
-
-    local row = vim.api.nvim_win_get_cursor(0)[1] - 1
-    for index, node in ipairs(nodes) do
-        local start_row = node:start()
-        if start_row <= row then
-            currentIndex = index
-        else
-            break
-        end
-    end
-
-    M.highlight_capture({ "@linemagic" }, "Keyword", "charwise", false, 9000)
-    for index, node in ipairs(nodes) do
-        if currentIndex == index then
-            -- M.highlight_node(node, "Comment", "linewise", true, 9001)
-        else
-            M.highlight_node(node, "Comment", "linewise", true, 9001)
-            M.highlight_node(node, "CursorLine", "linewise", true, 9001)
-        end
-    end
-end
-
----highligh captures
----@param captures string|string[]
----@param hl_group string|number
----@param mode "charwise"|"linewise"
----@param include_whitespace boolean
----@param priority number
-function M.highlight_capture(captures, hl_group, mode, include_whitespace, priority)
-    local matches = query.get_capture_matches(0, captures, "textobjects")
-    for _, match in ipairs(matches or {}) do
-        --- @type TSNode
-        local node = match.node
-        if node then
-            M.highlight_node(node, hl_group, mode, include_whitespace, priority)
-        else
-            print("Error textobjects query:", vim.inspect(match))
         end
     end
 end
@@ -121,16 +87,15 @@ end
 ---@param mode 'charwise'|'linewise'
 ---@param include_whitespace boolean
 ---@param priority number
-function M.highlight_node(node, hl_group, mode, include_whitespace, priority)
+local function highlight_node(node, hl_group, mode, include_whitespace, priority)
     local range = { node:range(false) }
     if include_whitespace then
-        range = textobjects.include_whitespace(0, range, mode)
-        -- print(vim.inspect(range))
+        range = ts.include_whitespace(0, range, mode)
     end
     local start_row, start_col, end_row, end_col = unpack(range)
 
     if mode == "linewise" then
-        vim.api.nvim_buf_set_extmark(0, ns_highlight, start_row, 0, {
+        api.nvim_buf_set_extmark(0, ns_highlight, start_row, 0, {
             end_line = end_row + 1,
             end_col = 0,
             hl_group = hl_group,
@@ -138,12 +103,65 @@ function M.highlight_node(node, hl_group, mode, include_whitespace, priority)
             priority = priority,
         })
     else
-        vim.api.nvim_buf_set_extmark(0, ns_highlight, start_row, start_col, {
+        api.nvim_buf_set_extmark(0, ns_highlight, start_row, start_col, {
             end_line = end_row,
             end_col = end_col,
             hl_group = hl_group,
             hl_eol = false,
             priority = priority,
+        })
+    end
+end
+
+local function update_separator_highlight(buf)
+    api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
+
+    api.nvim_set_hl(ns_highlight, "NeopyterSeparator", { link = "CursorLine" })
+
+    -- print(vim.inspect(M.query))
+    -- print(vim.inspect(ts.get_buf_lang(buf)))
+    local query = M.query[ts.get_buf_lang(buf)]
+    ts.iter_captures(query, 0, "cellseparator"):each(function(node)
+        highlight_node(node, "CursorLine", "linewise", true, 9001)
+    end)
+end
+
+---@nodoc
+function M.attach(buf, augroup)
+    local config = require("neopyter").config.highlight
+    local updated = false
+    if not config or not config.enable then
+        return
+    end
+
+    if config.mode == "zen" then
+        utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
+            buffer = buf,
+            callback = function()
+                updated = false
+                -- throttling
+                a.defer_fn(function()
+                    if updated == false then
+                        updated = true
+                        update_zen_highlight(buf)
+                    end
+                end, 50)
+            end,
+            group = augroup,
+        })
+    else
+        utils.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
+            buffer = buf,
+            callback = function()
+                updated = false
+                a.defer_fn(function()
+                    if updated == false then
+                        updated = true
+                        update_separator_highlight(buf)
+                    end
+                end, 50)
+            end,
+            group = augroup,
         })
     end
 end
