@@ -65,6 +65,10 @@ others, you must use direct mode
 
 Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abilities like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim).
 
+## Specifications
+
+Please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/specification.ju.py](doc/specification.ju.py)
+
 <!-- panvimdoc-ignore-start -->
 ## Screenshots
 
@@ -124,7 +128,6 @@ Configure `JupyterLab` in side panel
 
 - With 💤lazy.nvim:
 
-For all config, ref to `:h neopyter-configuration` and `:h neopyter-configuration-types`
 
 ```lua
 {
@@ -141,45 +144,11 @@ For all config, ref to `:h neopyter-configuration` and `:h neopyter-configuratio
 }
 ```
 
-Suggest keymaps(`neopyter` don't provide default keymap):
-
-```lua
-on_attach = function(buf)
-    local function map(mode, lhs, rhs, desc)
-        vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
-    end
-    -- same, recommend the former
-    map("n", "<C-Enter>", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
-    -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
-
-    -- same, recommend the former
-    map("n", "<space>X", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
-    -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
-
-    -- same, recommend the former, but the latter is silent
-    map("n", "<space>nt", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
-    -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
-
-    map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
-    map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
-
-    map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
-end
-```
-
-# Usage
-
-- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
-- Open a `*.ju.py` file in neovim
-- Now you can type `# %%` in Neovim to create a code cell.
-  - You'll see everything you type below that will be synchronised in the browser
-
-# Configuration
 
 <details>
 <summary><strong>Default configuration</strong></summary>
-<!-- doc-inject:default-config -->
 
+<!-- doc-inject:default-config -->
 ```lua
 ---@type neopyter.Option
 local default_config = {
@@ -228,7 +197,42 @@ local default_config = {
 
 </details>
 
-See `:h neopyter-configuration-types` for all type description.
+See `:h neopyter-configuration-types` for all option type description.
+
+Suggest keymaps(`neopyter` don't provide default keymap):
+
+```lua
+on_attach = function(buf)
+    local function map(mode, lhs, rhs, desc)
+        vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
+    end
+    -- same, recommend the former
+    map("n", "<C-Enter>", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
+    -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
+
+    -- same, recommend the former
+    map("n", "<space>X", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
+    -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
+
+    -- same, recommend the former, but the latter is silent
+    map("n", "<space>nt", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
+    -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
+
+    map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
+    map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
+
+    map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
+end
+```
+
+
+# Usage
+
+- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
+- Open a `*.ju.py` file in neovim
+- Now you can type `# %%` in Neovim to create a code cell.
+  - You'll see everything you type below that will be synchronised in the browser
+
 
 # Available Vim Commands
 
@@ -391,8 +395,8 @@ current_notebook:run_all_below()
 
 ```
 
-- `:h neopyter-notebook-api`
-- `:h neopyter-jupyterlab-api-api`
+- Notebook API: `:h neopyter-notebook-api`
+- JupyterLab API`:h neopyter-jupyterlab-api-api`
 
 ## Async
 

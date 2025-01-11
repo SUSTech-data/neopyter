@@ -5,22 +5,22 @@ Table of Contents                                 *neopyter-table-of-contents*
 
 1. Introduction                                        |neopyter-introduction|
   - How does it work?                |neopyter-introduction-how-does-it-work?|
+  - Specifications                      |neopyter-introduction-specifications|
 2. Requirements                                        |neopyter-requirements|
 3. Installation                                        |neopyter-installation|
   - JupyterLab Extension          |neopyter-installation-jupyterlab-extension|
   - Neovim Plugin                        |neopyter-installation-neovim-plugin|
 4. Usage                                                      |neopyter-usage|
-5. Configuration                                      |neopyter-configuration|
-6. Available Vim Commands                    |neopyter-available-vim-commands|
-7. Integration                                          |neopyter-integration|
+5. Available Vim Commands                    |neopyter-available-vim-commands|
+6. Integration                                          |neopyter-integration|
   - neoconf.nvim                           |neopyter-integration-neoconf.nvim|
   - nvim-cmp                                   |neopyter-integration-nvim-cmp|
   - textobjects                             |neopyter-integration-textobjects|
-8. API                                                          |neopyter-api|
+7. API                                                          |neopyter-api|
   - Async                                                 |neopyter-api-async|
-9. Features                                                |neopyter-features|
-10. Acknowledges                                       |neopyter-acknowledges|
-11. Configuration Types                         |neopyter-configuration-types|
+8. Features                                                |neopyter-features|
+9. Acknowledges                                        |neopyter-acknowledges|
+10. Configuration Types                         |neopyter-configuration-types|
 
 ==============================================================================
 1. Introduction                                        *neopyter-introduction*
@@ -53,6 +53,12 @@ directproxyArchitectureAdvantageLower communication costsShareable JupyterLab in
 
 Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement
 abilities like jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>.
+
+
+SPECIFICATIONS                          *neopyter-introduction-specifications*
+
+Please refer to doc/specification.ipynb <doc/specification.ipynb> and
+doc/specification.ju.py <doc/specification.ju.py>
 
 
 ==============================================================================
@@ -92,9 +98,6 @@ NEOVIM PLUGIN                            *neopyter-installation-neovim-plugin*
 
 - With 💤lazy.nvim:
 
-For all config, ref to |neopyter-configuration| and
-|neopyter-configuration-types|
-
 >lua
     {
         "SUSTech-data/neopyter",
@@ -109,45 +112,6 @@ For all config, ref to |neopyter-configuration| and
         },
     }
 <
-
-Suggest keymaps(`neopyter` don’t provide default keymap):
-
->lua
-    on_attach = function(buf)
-        local function map(mode, lhs, rhs, desc)
-            vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
-        end
-        -- same, recommend the former
-        map("n", "<C-Enter>", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
-        -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
-    
-        -- same, recommend the former
-        map("n", "<space>X", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
-        -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
-    
-        -- same, recommend the former, but the latter is silent
-        map("n", "<space>nt", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
-        -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
-    
-        map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
-        map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
-    
-        map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
-    end
-<
-
-
-==============================================================================
-4. Usage                                                      *neopyter-usage*
-
-- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
-- Open a `*.ju.py` file in neovim
-- Now you can type `# %%` in Neovim to create a code cell.
-    - You’ll see everything you type below that will be synchronised in the browser
-
-
-==============================================================================
-5. Configuration                                      *neopyter-configuration*
 
 Default configuration ~
 
@@ -197,11 +161,46 @@ Default configuration ~
     }
 <
 
-See |neopyter-configuration-types| for all type description.
+See |neopyter-configuration-types| for all option type description.
+
+Suggest keymaps(`neopyter` don’t provide default keymap):
+
+>lua
+    on_attach = function(buf)
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
+        end
+        -- same, recommend the former
+        map("n", "<C-Enter>", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
+        -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
+    
+        -- same, recommend the former
+        map("n", "<space>X", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
+        -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
+    
+        -- same, recommend the former, but the latter is silent
+        map("n", "<space>nt", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
+        -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
+    
+        map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
+        map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
+    
+        map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
+    end
+<
 
 
 ==============================================================================
-6. Available Vim Commands                    *neopyter-available-vim-commands*
+4. Usage                                                      *neopyter-usage*
+
+- Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
+- Open a `*.ju.py` file in neovim
+- Now you can type `# %%` in Neovim to create a code cell.
+    - You’ll see everything you type below that will be synchronised in the browser
+
+
+==============================================================================
+5. Available Vim Commands                    *neopyter-available-vim-commands*
 
 - Status
     - `:Neopyter status` alias to `:checkhealth neopyter` currently
@@ -226,7 +225,7 @@ See |neopyter-configuration-types| for all type description.
 
 
 ==============================================================================
-7. Integration                                          *neopyter-integration*
+6. Integration                                          *neopyter-integration*
 
 
 NEOCONF.NVIM                               *neopyter-integration-neoconf.nvim*
@@ -350,7 +349,7 @@ Supported captures in `textobjects` query group
 
 
 ==============================================================================
-8. API                                                          *neopyter-api*
+7. API                                                          *neopyter-api*
 
 `Neopyter` provides rich lua APIs, you could use below code as initialization:
 
@@ -368,8 +367,8 @@ Supported captures in `textobjects` query group
     current_notebook:run_all_below()
 <
 
-- |neopyter-notebook-api|
-- |neopyter-jupyterlab-api-api|
+- Notebook API: |neopyter-notebook-api|
+- JupyterLab API|neopyter-jupyterlab-api-api|
 
 
 ASYNC                                                     *neopyter-api-async*
@@ -397,7 +396,7 @@ ASYNC                                                     *neopyter-api-async*
 
 
 ==============================================================================
-9. Features                                                *neopyter-features*
+8. Features                                                *neopyter-features*
 
 - Neovim
     - ☒ Full sync
@@ -445,7 +444,7 @@ ASYNC                                                     *neopyter-api-async*
 
 
 ==============================================================================
-10. Acknowledges                                       *neopyter-acknowledges*
+9. Acknowledges                                        *neopyter-acknowledges*
 
 - jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>: Selenium-automated Jupyter Notebook that is synchronised with Neovim in real-time.
 - snacks.nvim <https://github.com/folke/snacks.nvim>: The `zen` highlight is inspired by `snacks.zen`
