@@ -32,5 +32,5 @@ jobs:
       - name: Upload Distributions
         uses: actions/upload-artifact@v4
         with:
-          name: lab_extension-releaser-dist-${{ github.run_number }}
+          name: neopyter-releaser-dist-${{ github.run_number }}
           path: .jupyter_releaser_checkout/dist

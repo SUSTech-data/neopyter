@@ -1,27 +1,11 @@
 local highlight = require("neopyter.highlight")
-local textobject = require("neopyter.textobjects")
+local treesitter = require("neopyter.treesitter")
+local textobject = require("neopyter.textobject")
+local injection = require("neopyter.injection")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local utils = require("neopyter.utils")
-local Path = require("plenary.path")
 
----@toc
-
-local neopyter = {}
-
----@text
-
---- What is Neopyter ?
----
---- # Abstract~
----
---- The bridge between Neovim and jupyter lab, edit in Neovim and preview/run in jupyter lab.
----
----@tag neopyter
----@toc_entry Neopyter's purpose
-
----@tag neopyter-usage
----@toc_entry Usages
 ---@class neopyter.Option
 ---@field remote_address? string
 ---@field file_pattern? string[]
@@ -33,11 +17,19 @@ local neopyter = {}
 ---@field jupyter? neopyter.JupyterOption
 ---@field highlight? neopyter.HighlightOption
 ---@field textobject? neopyter.TextObjectOption
+---@field injection? neopyter.InjectionOption
 ---@field parser? neopyter.ParserOption
 
----@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
+-- File system
+---@nodoc
+---@class neopyter.Neopyter
+---@field parser {[string]: neopyter.Parser} Parser of language
+local neopyter = {}
+
+---@nodoc
+---@doc-capture default-config
 ---@type neopyter.Option
-neopyter.config = {
+local default_config = {
     remote_address = "127.0.0.1:9001",
     file_pattern = { "*.ju.*" },
     filename_mapper = function(ju_path)
@@ -48,42 +40,53 @@ neopyter.config = {
     auto_attach = true,
     auto_connect = true,
     mode = "direct",
+    ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
     jupyter = {
         auto_activate_file = true,
         -- Always scroll to the current cell.
         scroll = {
-            enable = true,
+            ets = true,
             align = "center",
         },
     },
 
-    use_default_keybindings = true,
-
+    ---@type neopyter.HighlightOption  # ref `:h neopyter.HighlightOption`
     highlight = {
         enable = true,
-        -- Dim all cells except the current one
-        shortsighted = true,
+        mode = "separator",
     },
+    ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
     textobject = {
+        ---@see neopyter.TextObjectOption
+        enable = true,
+        queries = { "cellseparator" },
+    },
+    ---@type neopyter.InjectionOption  # ref `:h neopyter.InjectionOption`
+    injection = {
         enable = true,
     },
     parser = {
-        line_magic = true,
+        ---@see neopyter.ParserOption
         trim_whitespace = false,
+        python = {},
     },
 }
 
----@class neopyter.ParserOption
----@field trim_whitespace? boolean Whether trim leading/trailing whitespace, but keep 1 line each cell at least, default false
----@field line_magic? boolean Whether support line magic
-
+---@nodoc
 ---@param config? neopyter.Option
 function neopyter.setup(config)
-    neopyter.config = vim.tbl_deep_extend("force", neopyter.config, config or {})
+    neopyter.config = vim.tbl_deep_extend("force", default_config, config or {})
 
     if pcall(require, "neoconf") then
         require("neopyter.neoconf").setup()
     end
+
+    neopyter.load_parser()
+
+    highlight.setup()
+    textobject.setup()
+
+    injection.setup()
 
     jupyter.jupyterlab = JupyterLab:new({
         address = neopyter.config.remote_address,
@@ -103,9 +106,19 @@ function neopyter.setup(config)
             end,
         })
     end
+end
 
-    highlight.setup(neopyter.config.highlight)
-    textobject.setup(neopyter.config.textobject)
+---load parser
+---@nodoc
+function neopyter.load_parser()
+    neopyter.parser = {}
+    local option = vim.deepcopy(neopyter.config.parser)
+    ---@cast option any
+    local PercentParser = require("neopyter.parser.percent")
+    local python_spec_option = option.python
+    option.python = nil
+    local python_option = vim.tbl_deep_extend("force", option, python_spec_option) --[[@as neopyter.PercentParserOption ]]
+    neopyter.parser["python"] = PercentParser:new(python_option)
 end
 
 ---@tag neopyter-api

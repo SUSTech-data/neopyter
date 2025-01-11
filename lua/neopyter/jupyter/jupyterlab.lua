@@ -1,26 +1,44 @@
 local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
-local async_wrap = require("neopyter.asyncwrap")
-local a = require("plenary.async")
+local a = require("neopyter.async")
 local Path = require("plenary.path")
 local api = a.api
 
-local __filepath__ = debug.getinfo(1).source:sub(2)
+--- @brief Neopyter provide a global `jupyterlab` represent remote `JupyterLab` instance,
+--- which provides some RPC-based API to control remote `JupyterLab` instance.
+--- You could obtain `neopyter.Notebook` instance to control notebook via `JupyterLab`
+---
+--- Example:
+---
+--- ```lua
+--- require("neopyter.async").run(function()
+---     -- async context
+---     local lab = require("neopyter.jupyter")
+---     local notebook = lab:get_notebook(0) -- Get notebook via buffer
+---     notebook:scroll_to_item(0) -- Scroll to first cell
+--- end)
+---
+--- ```
+--- NOTICE: Most API is need a async context, but neopyter provide a wrapped async context
+--- automatically
 
 ---@class neopyter.JupyterOption
 ---@field auto_activate_file? boolean
 ---@field scroll? {enable?: boolean, align?: neopyter.ScrollToAlign}
 
+---@nodoc
 ---@class neopyter.JupyterLab
 ---@field client neopyter.RpcClient
 ---@field private augroup number
 ---@field notebook_map {[string]: neopyter.Notebook}
 local JupyterLab = {}
 
+---@nodoc
 ---@class neopyter.NewJupyterLabOption
 ---@field address? string
 
 ---create RpcClient and connect
+---@nodoc
 ---@param opts neopyter.NewJupyterLabOption
 ---@return neopyter.JupyterLab
 function JupyterLab:new(opts)
@@ -74,6 +92,7 @@ function JupyterLab:attach()
     })
 end
 
+---detach jupyterlab, delete autocmd and disconnect with jupyterlab
 function JupyterLab:detach()
     for _, notebook in pairs(self.notebook_map) do
         if notebook:is_attached() then
@@ -88,8 +107,6 @@ end
 ---get status of jupyterlab
 ---@return boolean
 function JupyterLab:is_attached()
-    -- local status = self.client:is_connecting()
-    -- assert(status == (self.augroup ~= nil), "autogroup status shold keep same with client")
     return self.augroup ~= nil
 end
 
@@ -97,8 +114,7 @@ end
 ---@param address? string address of neopyter server
 function JupyterLab:connect(address)
     local config = require("neopyter").config
-    self.client:connect(address)
-    if self.client:is_connecting() then
+    local function on_connected()
         local jupyterlab_version = self:get_jupyterlab_extension_version()
         local nvim_version = self:get_nvim_plugin_version()
         if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
@@ -106,7 +122,15 @@ function JupyterLab:connect(address)
                 string.format("The version of jupyterlab extension(%s) and neovim plugin(%s) do not match", jupyterlab_version, nvim_version)
             )
         end
+        for _, notebook in pairs(self.notebook_map) do
+            if notebook:is_open() then
+                notebook:full_sync()
+            end
+        end
     end
+    self.client:connect(address, function()
+        a.run(on_connected, function() end)
+    end)
 
     api.nvim_exec_autocmds("BufWinEnter", {
         group = self.augroup,
@@ -114,10 +138,13 @@ function JupyterLab:connect(address)
     })
 end
 
+---disconnect with jupyterlab
 function JupyterLab:disconnect()
     self.client:disconnect()
 end
 
+---whether connecting with `jupyterlab`
+---@return boolean
 function JupyterLab:is_connecting()
     return self.client:is_connecting()
 end
@@ -174,20 +201,22 @@ function JupyterLab:_on_buf_unloaded(buf)
     self.notebook_map[file_path] = nil
 end
 
----get remote version
----@return string|nil
+---get neopyter (jupyterlab extension) version
+---@return string
 function JupyterLab:get_jupyterlab_extension_version()
     return self.client:request("getVersion")
 end
 
+---get neopyter (nvim plugin) version
+---@return string
 function JupyterLab:get_nvim_plugin_version()
-    local path = Path:new(__filepath__):parent():parent():parent():parent():joinpath("package.json")
+    local path = utils.get_plugin_path():joinpath("package.json")
     local content = utils.read_file(tostring(path))
     local packageJson = vim.json.decode(content)
     return packageJson["version"]
 end
 
----simple echo
+---test connection will return `hello: {msg}` as response
 ---@param msg string
 ---@return string|nil
 function JupyterLab:echo(msg)
@@ -203,24 +232,31 @@ function JupyterLab:execute_command(command, args)
     return self.client:request("executeCommand", command, args)
 end
 
----@class neopyter.NewUntitledOption
----@field path? string
----@field type? `notebook`|`file`
---
 ---create new notebook, and selected it
-function JupyterLab:createNew(ipynb_path, widget_name, kernel)
+---@nodoc
+---@deprecated
+function JupyterLab:create_new(ipynb_path, widget_name, kernel)
     return self.client:request("createNew", ipynb_path, widget_name, kernel)
 end
 
 ---get current notebook of jupyter lab
+---@return string
 function JupyterLab:current_ipynb()
     return self.client:request("getCurrentNotebook")
 end
 
-JupyterLab = async_wrap(JupyterLab, {
-    "attach",
-    "is_attached",
-    "is_connecting",
-})
+---get notebook via buffer
+---@param buf integer
+---@return neopyter.Notebook?
+function JupyterLab:get_notebook(buf)
+    for _, notebook in pairs(self.notebook_map) do
+        if notebook.bufnr == buf then
+            return notebook
+        end
+    end
+end
+
+---@nodoc
+JupyterLab = a.safe(JupyterLab)
 
 return JupyterLab

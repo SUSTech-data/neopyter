@@ -3,6 +3,15 @@ local a = require("plenary.async")
 local api = a.api
 local M = {}
 
+local source = debug.getinfo(1).source
+local __dirname__ = source:match("@(.*/)") or source:match("@(.*\\)")
+
+---get plugin root
+---@return Path
+function M.get_plugin_path()
+    return Path:new(__dirname__):parent():parent()
+end
+
 ---
 function M.first_upper(str)
     return (str:gsub("^%l", string.upper))
@@ -121,6 +130,7 @@ function M.parse_content(lines, filetype)
                     lines = { line },
                     start_line = i,
                     cell_type = cell_type or "code",
+
                     title = titleornil,
                 })
             end
@@ -209,5 +219,38 @@ function M.parse_address(address)
     local host, port = address:match("^(.-):(%d+)$")
     return host, tonumber(port)--[[@as number]]
 end
+
+-- ======= Code mostly based on Saghen/blink.cmp ===
+
+local function _validate(path, spec)
+    if vim.fn.has("nvim-0.11") == 0 then
+        return vim.validate(spec)
+    end
+    for key, key_spec in pairs(spec) do
+        local message = type(key_spec[3]) == "string" and key_spec[3] or nil --[[@as string?]]
+        local optional = type(key_spec[3]) == "boolean" and key_spec[3] or nil --[[@as boolean?]]
+        vim.validate(string.format("config `%s.%s`", path, key), key_spec[1], key_spec[2], optional, message)
+    end
+end
+
+--- @param tbl table The table to validate
+--- @param source table The original table that we're validating against
+--- @see vim.validate
+function M.validate_config(path, tbl, source)
+    -- validate
+    local _, err = pcall(_validate, path, tbl)
+    if err then
+        error(path .. "." .. err)
+    end
+
+    -- check for erroneous fields
+    for k, _ in pairs(source) do
+        if tbl[k] == nil then
+            error(string.format("unexpected field `%s.%s` found in configuration", path, k))
+        end
+    end
+end
+
+--- ===== end ============
 
 return M

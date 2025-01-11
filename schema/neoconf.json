@@ -29,6 +29,26 @@
       "description": "For `direct` mode, the address neovim listen to; for `proxy` mode, the address neovim connect to",
       "$ref": "#/definitions/remote_address",
       "default": "127.0.0.1:9001"
+    },
+    "highlight": {
+      "title": "Highlight options",
+      "type": "object",
+      "properties": {
+        "enable": {
+          "title": "Enable highlight",
+          "description": "enable or disable highlight",
+          "type": "boolean"
+        },
+        "mode": {
+          "title": "Highlight mode",
+          "description": "Support `separator` or `zen` mode",
+          "type": "string",
+          "enum": [
+            "zen",
+            "separator"
+          ]
+        }
+      }
     }
   },
   "type": "object"

@@ -7,16 +7,6 @@ local __project_root__ = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(__filepath
 function M.reload_neoconf_settings()
     local settings = neoconf.get("neopyter", {})
     local neopyter = require("neopyter")
-    vim.validate({
-        remote_address = { settings.remote_address, { "nil", "string" } },
-        mode = {
-            settings.mode,
-            function(v)
-                return v == "direct" or v == "proxy" or v == nil
-            end,
-            "direct or proxy",
-        },
-    })
     neopyter.config = vim.tbl_deep_extend("force", neopyter.config, settings)
 end
 

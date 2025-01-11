@@ -130,6 +130,8 @@ junit.xml
 doc/tags
 yarn.lock
 *.ipynb
+!/doc/specification.ipynb
 
 pyrightconfig.json
 .repro
+doc/bigfile.ju.py

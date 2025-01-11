@@ -1,10 +1,43 @@
 local a = require("plenary.async")
-local logger = require("neopyter.logger")
 
----wrap a class's member function,
+local async = {
+    run = a.run,
+}
+async.uv = vim.uv
+async.api = a.uv
+
+async.api = vim.api
+async.api = a.api
+
+async.fn = vim.fn
+async.fn = setmetatable({}, {
+    __index = function(_, k)
+        return function(...)
+            -- if we are in a fast event await the scheduler
+            if vim.in_fast_event() then
+                require("plenary.async.util").scheduler()
+            end
+            return vim.fn[k](...)
+        end
+    end,
+})
+
+async.defer_fn = vim.defer_fn
+
+async.defer_fn = function(fn, timeout)
+    vim.defer_fn(function()
+        a.run(function()
+            fn()
+        end, function() end)
+    end, timeout)
+end
+
+---Wrap a class's member function,
+---User could call `lua =require("neopyter.jupyter").notebook:run_selected_cell()` in main thread directly
 ---@param cls table
 ---@param ignored_methods? string[]
-local function async_wrap(cls, ignored_methods)
+function async.safe(cls, ignored_methods)
+    local logger = require("neopyter.logger")
     ignored_methods = ignored_methods or {}
     table.insert(ignored_methods, "new")
     local function is_ignored(key)
@@ -31,9 +64,11 @@ local function async_wrap(cls, ignored_methods)
                     return a.run(function()
                         return value(unpack(params))
                     end, function(result)
-                        print(string.format("Call api [%s] complete from main thread directly:%s", key, result))
-                        logger.log(string.format("Call api [%s] complete from main thread directly", key))
-                        return "Bad"
+                        local utils = require("neopyter.utils")
+                        ---WARN:Only when the user directly calls the API from the main thread, e.g. autocmd, keymap,
+                        ---     programmatic calls should be wrapped with `require("plenary.async").run(...)`
+                        utils.notify_info(string.format("Call api [%s] complete: %s", key, result))
+                        logger.log(string.format("Call api [%s] complete from main thread directly: %s", key, result))
                     end)
                 end
             end
@@ -43,4 +78,4 @@ local function async_wrap(cls, ignored_methods)
     logger.log(string.format("inject class end", vim.inspect(cls)))
     return cls
 end
-return async_wrap
+return async
