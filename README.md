@@ -75,7 +75,7 @@ Please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/spec
 <table>
     <tr>
         <th></th>
-        <th>Completion</th>
+        <th>[Completion](#blinkcmp)</th>
         <th>Cell Magic</th>
         <th>Line Magic</th>
     </tr>
@@ -83,10 +83,10 @@ Please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/spec
         <th>
         </th>
         <th>
-            <img alt="Completion" width="100%" src="./doc/completion.png">
+            <img alt="Completion" width="100%" src="./doc/complete_blink.png">
         </th>
         <th>
-            <img alt="Cell Magic" src="./doc/cell_magic.png">
+            <img alt="Cell Magic" src="./doc/cell_magic_js.png">
         </th>
         <th>
             <img alt="Line Magic" src="./doc/line_magic.png">
@@ -128,7 +128,6 @@ Configure `JupyterLab` in side panel
 
 - With 💤lazy.nvim:
 
-
 ```lua
 {
     "SUSTech-data/neopyter",
@@ -144,7 +143,6 @@ Configure `JupyterLab` in side panel
 }
 ```
 
-
 <details>
 <summary><strong>Default configuration</strong></summary>
 
@@ -158,8 +156,9 @@ local default_config = {
         local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
         return ipynb_path
     end,
-
+    --- auto attach to buffer
     auto_attach = true,
+    --- auto connect with remote jupyterlab
     auto_connect = true,
     mode = "direct",
     ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
@@ -167,7 +166,7 @@ local default_config = {
         auto_activate_file = true,
         -- Always scroll to the current cell.
         scroll = {
-            ets = true,
+            enable = true,
             align = "center",
         },
     },
@@ -179,7 +178,6 @@ local default_config = {
     },
     ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
     textobject = {
-        ---@see neopyter.TextObjectOption
         enable = true,
         queries = { "cellseparator" },
     },
@@ -187,8 +185,8 @@ local default_config = {
     injection = {
         enable = true,
     },
+    ---@type neopyter.ParserOption  # ref `:h neopyter.ParserOption`
     parser = {
-        ---@see neopyter.ParserOption
         trim_whitespace = false,
         python = {},
     },
@@ -225,14 +223,12 @@ on_attach = function(buf)
 end
 ```
 
-
 # Usage
 
 - Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
 - Open a `*.ju.py` file in neovim
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
-
 
 # Available Vim Commands
 
@@ -288,19 +284,16 @@ cmp.setup({
     sources = cmp.config.sources({
         -- default: all source, maybe some noice
         { name = "neopyter" },
-        -- only kernel source, like jupynium, support jupyterlab completer id:
-        -- * "CompletionProvider:kernel"
-        -- * "CompletionProvider:context"
-        -- * "lsp" if jupyterlab-lsp is installed
-        -- * ...
-        -- { name = "neopyter", option={ completers = { "CompletionProvider:kernel" } } },
+
+        -- { name = "neopyter", option={ source = { "CompletionProvider:kernel" } } },
     }),
     formatting = {
         format = lspkind.cmp_format({
             mode = "symbol_text",
-            maxwidth = 50,
-            ellipsis_char = "...",
             menu = {
+                buffer = "[Buf]",
+                nvim_lsp = "[LSP]",
+                nvim_lua = "[Lua]",
                 neopyter = "[Neopyter]",
             },
             symbol_map = {
@@ -308,8 +301,8 @@ cmp.setup({
                 ["Magic"] = "🪄",
                 ["Path"] = "📁",
                 ["Dict key"] = "🔑",
-                ["Instance"]="󱃻",
-                ["Statement"]="󱇯",
+                ["Instance"] = "󱃻",
+                ["Statement"] = "󱇯",
             },
         }),
     },
@@ -325,6 +318,29 @@ vim.api.nvim_set_hl(0, "CmpItemKindStatement", { link = "CmpItemKindVariable" })
 ```
 
 More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance)
+
+## blink.cmp
+
+- `blink.cmp`
+
+```lua
+require("blink-cmp").setup({
+    sources = {
+        default = {
+            "neopyter",
+        },
+        providers = {
+            neopyter = {
+                name = "Neopyter",
+                module = "neopyter.blink",
+                ---@type neopyter.CompleterOption
+                opts = {},
+            },
+        },
+    },
+})
+
+```
 
 ## textobjects
 

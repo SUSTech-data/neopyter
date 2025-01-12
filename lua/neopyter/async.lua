@@ -2,7 +2,28 @@ local a = require("plenary.async")
 
 local async = {
     run = a.run,
+
+    ---run function in async context, until timeout or complete
+    ---@param suspend_fn fun()
+    ---@param callback fun(success, ret_val)
+    ---@param timeout number?
+    run_blocking = function(suspend_fn, callback, timeout)
+        local resolved = false
+        local msg
+        vim.schedule(function()
+            a.run(suspend_fn, function(data)
+                msg = data
+                resolved = true
+            end)
+        end)
+
+        local success = vim.wait(timeout or 10000, function()
+            return resolved
+        end, 100)
+        callback(success, msg)
+    end,
 }
+
 async.uv = vim.uv
 async.api = a.uv
 
@@ -31,6 +52,20 @@ async.defer_fn = function(fn, timeout)
         end, function() end)
     end, timeout)
 end
+
+async.health = vim.health
+
+async.health = setmetatable({}, {
+    __index = function(_, k)
+        return function(...)
+            -- if we are in a fast event await the scheduler
+            if vim.in_fast_event() then
+                require("plenary.async.util").scheduler()
+            end
+            return vim.health[k](...)
+        end
+    end,
+})
 
 ---Wrap a class's member function,
 ---User could call `lua =require("neopyter.jupyter").notebook:run_selected_cell()` in main thread directly

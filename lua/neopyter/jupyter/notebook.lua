@@ -77,11 +77,16 @@ function Notebook:attach()
         api.nvim_buf_attach(self.bufnr, false, {
             on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
                 a.run(function()
-                    if not self:safe_sync() then
+                    local syncable = self:safe_sync()
+                    -- local connecting = self.client:is_connecting()
+                    -- local line = api.nvim_buf_get_lines(self.bufnr, a.fn.line(".") - 1, a.fn.line("."), true)[1]
+                    -- vim.notify(line.. "/" .. vim.inspect(connecting) .. "/" .. vim.inspect(syncable), nil, { id = "current line" })
+
+                    if syncable then
+                        self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
+                    else
                         self:parse()
-                        return
                     end
-                    self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
                 end, function() end)
             end,
         })
@@ -116,8 +121,7 @@ function Notebook:is_connecting()
         if self._is_exist ~= nil then
             return self._is_exist
         else
-            self._is_exist = self:is_exist()
-            return self._is_exist
+            return self:is_exist()
         end
     end
     return false
@@ -125,7 +129,9 @@ end
 
 function Notebook:safe_sync()
     if self:is_connecting() then
-        self:open_or_reveal()
+        if not self:is_open() then
+            self:open_or_reveal()
+        end
         return true
     end
     return false
@@ -157,7 +163,9 @@ end
 
 ---is exist corresponding notebook in remote server
 function Notebook:is_exist()
-    return self:_request("isFileExist")
+    local val = self:_request("isFileExist")
+    self._is_exist = val
+    return val
 end
 
 --- whether corresponding `.ipynb` file opened in jupyter lab or not
@@ -251,6 +259,17 @@ function Notebook:get_cell(row, col)
     end
 end
 
+---get cell source code
+---@param index integer
+---@return string?
+function Notebook:get_cell_source(index)
+    local cell = self.cells[index]
+    if cell then
+        return self:get_parser():parse_source(self.bufnr, cell)
+    end
+    return nil
+end
+
 function Notebook:full_sync()
     local cells = vim.iter(self.cells)
         :map(function(cell)
@@ -274,11 +293,6 @@ function Notebook:partial_sync(start_row, old_end_row, new_end_row)
 
     self:parse()
     local new_cells = self.cells
-
-    -- new cells length
-    local ncl = #new_cells
-    -- old cells length
-    local ocl = #old_cells
 
     local start_cell_index = -1
     local end_ocell_index = -1
@@ -353,10 +367,11 @@ function Notebook:set_mode(mode)
 end
 
 ---code completion
----@param params {source: string, offset: number, cellIndex: number}
----@return {label: string, type: string, insertText:string, source: string}[]
-function Notebook:complete(params)
-    return self:_request("complete", params)
+---@param options neopyter.CompletionParams
+---@return neopyter.CompletionItem[]
+function Notebook:complete(options)
+    return self:_request("reconciliatorComplete", options)
+    -- return self:_request("complete", options)
 end
 
 ---code completion, but kernel complete only
@@ -368,6 +383,8 @@ function Notebook:kernel_complete(source, offset)
 end
 
 ---@nodoc
-Notebook = a.safe(Notebook)
+Notebook = a.safe(Notebook, {
+    "is_connecting",
+})
 
 return Notebook

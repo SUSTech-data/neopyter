@@ -2,41 +2,16 @@ local M = {}
 local neopyter = require("neopyter")
 local jupyter = require("neopyter.jupyter")
 
-local a = require("plenary.async")
-
-local health = {}
-
-for key, value in pairs(vim.health) do
-    if key[1] ~= "_" then
-        health[key] = a.wrap(function(msg, callback)
-            vim.schedule(function()
-                value(msg)
-                callback()
-            end)
-        end, 2)
-    end
-end
-
-local function run_blocking(suspend_fn, ...)
-    local resolved = false
-    vim.schedule(function()
-        a.run(suspend_fn, function(ee)
-            resolved = true
-        end)
-    end)
-
-    local success, code = vim.wait(10000, function()
-        return resolved
-    end, 100)
-    if not success then
-        vim.inspect(jupyter.jupyterlab.client:disconnect())
-        vim.health.error(string.format("return code:%s", code))
-        vim.health.error("Call async function without return in a long time!!")
-    end
-end
+local a = require("neopyter.async")
+local health = a.health
 
 function M.check()
-    run_blocking(function()
+    if not jupyter.jupyterlab then
+        health.error(string.format("Please setup neopyter first"))
+        return
+    end
+
+    a.run_blocking(function()
         health.start("neopyter: config")
         health.info(vim.inspect(neopyter.config))
         local status = jupyter.jupyterlab:is_attached()
@@ -51,7 +26,9 @@ function M.check()
                 if nvim_plugin_ver ~= jupyterlab_extension_ver then
                     health.warn(
                         string.format(
-                            "The version of JupyterLab extension(%s) is older then neovim plugin(%s), please update via `pip install -U neopyter`"
+                            "The version of JupyterLab extension(neopyter==%s) is older then neovim plugin(neopyter==%s), please update via `pip install -U neopyter`",
+                            jupyterlab_extension_ver,
+                            nvim_plugin_ver
                         )
                     )
                 end
@@ -87,6 +64,11 @@ function M.check()
             end
         else
             health.info(string.format("neovim plugin(neopyter@%s) status: inactive", nvim_plugin_ver))
+        end
+    end, function(success)
+        if not success then
+            health.error(string.format("return code:%s", code))
+            health.error("Call async function without return in a long time!!")
         end
     end)
 end

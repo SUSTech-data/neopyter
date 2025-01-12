@@ -118,8 +118,14 @@ function JupyterLab:connect(address)
         local jupyterlab_version = self:get_jupyterlab_extension_version()
         local nvim_version = self:get_nvim_plugin_version()
         if jupyterlab_version ~= nil and nvim_version ~= jupyterlab_version then
-            utils.notify_error(
-                string.format("The version of jupyterlab extension(%s) and neovim plugin(%s) do not match", jupyterlab_version, nvim_version)
+            utils.notify_warn(
+                string.format(
+                    "Neovim plugin(neopyter==%s) but Jupyterlab extension(neopyter==%s)\n"
+                        .. "The version do not match!\n"
+                        .. "Please update your neopyter of JupyterLab via `pip install -U neopyter`",
+                    nvim_version,
+                    jupyterlab_version
+                )
             )
         end
         for _, notebook in pairs(self.notebook_map) do
@@ -226,7 +232,7 @@ end
 ---execute jupyter lab's commands
 ---@param command string
 ---@param args? table<string, any>
----@return nil
+---@return any
 ---[View documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
 function JupyterLab:execute_command(command, args)
     return self.client:request("executeCommand", command, args)

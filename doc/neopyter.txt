@@ -1,4 +1,4 @@
-*neopyter.txt*                For                 Last change: 2025 January 11
+*neopyter.txt*                For                 Last change: 2025 January 13
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -15,6 +15,7 @@ Table of Contents                                 *neopyter-table-of-contents*
 6. Integration                                          |neopyter-integration|
   - neoconf.nvim                           |neopyter-integration-neoconf.nvim|
   - nvim-cmp                                   |neopyter-integration-nvim-cmp|
+  - blink.cmp                                 |neopyter-integration-blink.cmp|
   - textobjects                             |neopyter-integration-textobjects|
 7. API                                                          |neopyter-api|
   - Async                                                 |neopyter-api-async|
@@ -124,8 +125,9 @@ Default configuration ~
             local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
             return ipynb_path
         end,
-    
+        --- auto attach to buffer
         auto_attach = true,
+        --- auto connect with remote jupyterlab
         auto_connect = true,
         mode = "direct",
         ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
@@ -133,7 +135,7 @@ Default configuration ~
             auto_activate_file = true,
             -- Always scroll to the current cell.
             scroll = {
-                ets = true,
+                enable = true,
                 align = "center",
             },
         },
@@ -145,7 +147,6 @@ Default configuration ~
         },
         ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
         textobject = {
-            ---@see neopyter.TextObjectOption
             enable = true,
             queries = { "cellseparator" },
         },
@@ -153,8 +154,8 @@ Default configuration ~
         injection = {
             enable = true,
         },
+        ---@type neopyter.ParserOption  # ref `:h neopyter.ParserOption`
         parser = {
-            ---@see neopyter.ParserOption
             trim_whitespace = false,
             python = {},
         },
@@ -259,19 +260,16 @@ NVIM-CMP                                       *neopyter-integration-nvim-cmp*
         sources = cmp.config.sources({
             -- default: all source, maybe some noice
             { name = "neopyter" },
-            -- only kernel source, like jupynium, support jupyterlab completer id:
-            -- * "CompletionProvider:kernel"
-            -- * "CompletionProvider:context"
-            -- * "lsp" if jupyterlab-lsp is installed
-            -- * ...
-            -- { name = "neopyter", option={ completers = { "CompletionProvider:kernel" } } },
+    
+            -- { name = "neopyter", option={ source = { "CompletionProvider:kernel" } } },
         }),
         formatting = {
             format = lspkind.cmp_format({
                 mode = "symbol_text",
-                maxwidth = 50,
-                ellipsis_char = "...",
                 menu = {
+                    buffer = "[Buf]",
+                    nvim_lsp = "[LSP]",
+                    nvim_lua = "[Lua]",
                     neopyter = "[Neopyter]",
                 },
                 symbol_map = {
@@ -279,8 +277,8 @@ NVIM-CMP                                       *neopyter-integration-nvim-cmp*
                     ["Magic"] = "🪄",
                     ["Path"] = "📁",
                     ["Dict key"] = "🔑",
-                    ["Instance"]="󱃻",
-                    ["Statement"]="󱇯",
+                    ["Instance"] = "󱃻",
+                    ["Statement"] = "󱇯",
                 },
             }),
         },
@@ -296,6 +294,29 @@ NVIM-CMP                                       *neopyter-integration-nvim-cmp*
 
 More information, see nvim-cmp wiki
 <https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance>
+
+
+BLINK.CMP                                     *neopyter-integration-blink.cmp*
+
+- `blink.cmp`
+
+>lua
+    require("blink-cmp").setup({
+        sources = {
+            default = {
+                "neopyter",
+            },
+            providers = {
+                neopyter = {
+                    name = "Neopyter",
+                    module = "neopyter.blink",
+                    ---@type neopyter.CompleterOption
+                    opts = {},
+                },
+            },
+        },
+    })
+<
 
 
 TEXTOBJECTS                                 *neopyter-integration-textobjects*
@@ -499,6 +520,38 @@ Configuration Types                             *neopyter-configuration-types*
 
     Fields: ~
       • {enable}  (`boolean`)
+
+
+
+
+
+*neopyter.CompleterOption*
+
+    Fields: ~
+      • {source}?  (`("CompletionProvider:kernel"|"CompletionProvider:context"|"LSP"|string)[]`)
+                   default is all
+
+*neopyter.CompletionItem*
+
+    Fields: ~
+      • {label}       (`string`)
+      • {type}        (`string`)
+      • {insertText}  (`string`)
+      • {source}      (`string`) Completion source of `JupyterLab` , one of:
+                      • `CompletionProvider:kernel` jupynium provider
+                      • `CompletionProvider:context`
+                      • `LSP` if jupyterlab-lsp is installed
+                      • others if some lab extension installed
+
+*neopyter.CompletionParams*
+
+    Fields: ~
+      • {source}     (`string`) code before cursor
+      • {cellIndex}  (`number`) the cell index of cursor
+      • {offset}     (`number`) offset of cursor in source
+      • {trigger}    (`neopyter.CompletionTriggerKind`)
+      • {line}       (`number`) The cursor line number.
+      • {column}     (`number`) The cursor column number.
 
 
 

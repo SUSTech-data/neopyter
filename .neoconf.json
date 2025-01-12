@@ -2,6 +2,7 @@
   "lspconfig": {
     "lua_ls": {
       "Lua.addonManager.addons": [
+        "lazy.nvim",
         "neopyter",
         "pathlib.nvim",
         "nvim",
@@ -9,6 +10,7 @@
         "plenary.nvim",
         "websocket.nvim",
         "nvim-treesitter",
+        "blink.cmp",
         "luassert",
         "busted"
       ]

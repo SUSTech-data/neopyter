@@ -1,4 +1,4 @@
-local root = vim.fn.fnamemodify(".repro", ":p")
+local root = vim.fn.fnamemodify(".minimal", ":p")
 
 for _, name in ipairs({ "config", "data", "state", "cache" }) do
     vim.env[("XDG_%s_HOME"):format(name:upper())] = root .. "/" .. name
@@ -46,7 +46,6 @@ require("nvim-treesitter.configs").setup({
         "lua",
         "python",
         "markdown",
-        "html",
     },
     ignore_install = {},
     modules = {},

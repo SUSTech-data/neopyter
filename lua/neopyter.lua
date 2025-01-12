@@ -36,8 +36,9 @@ local default_config = {
         local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
         return ipynb_path
     end,
-
+    --- auto attach to buffer
     auto_attach = true,
+    --- auto connect with remote jupyterlab
     auto_connect = true,
     mode = "direct",
     ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
@@ -45,7 +46,7 @@ local default_config = {
         auto_activate_file = true,
         -- Always scroll to the current cell.
         scroll = {
-            ets = true,
+            enable = true,
             align = "center",
         },
     },
@@ -57,7 +58,6 @@ local default_config = {
     },
     ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
     textobject = {
-        ---@see neopyter.TextObjectOption
         enable = true,
         queries = { "cellseparator" },
     },
@@ -65,8 +65,8 @@ local default_config = {
     injection = {
         enable = true,
     },
+    ---@type neopyter.ParserOption  # ref `:h neopyter.ParserOption`
     parser = {
-        ---@see neopyter.ParserOption
         trim_whitespace = false,
         python = {},
     },

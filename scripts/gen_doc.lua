@@ -19,12 +19,14 @@ local config = {
             "highlight.lua",
             "textobject.lua",
             "injection.lua",
+            "completer.lua",
         },
         files = {
             "lua/neopyter.lua",
             "lua/neopyter/highlight.lua",
             "lua/neopyter/textobject.lua",
             "lua/neopyter/injection.lua",
+            "lua/neopyter/completer.lua",
         },
         fn_xform = function(fun)
             if fun.classvar then
@@ -43,6 +45,7 @@ local config = {
             "highlight.lua",
             "textobject.lua",
             "injection.lua",
+            "completer.lua",
         },
     },
     api = {

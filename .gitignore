@@ -135,3 +135,5 @@ yarn.lock
 pyrightconfig.json
 .repro
 doc/bigfile.ju.py
+doc/test.ju.py
+.minimal
