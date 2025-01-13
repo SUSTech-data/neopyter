@@ -65,7 +65,7 @@ JupyterLab:execute_command({command}, {args})
       • {args}     (`table<string, any>?`)
 
     Return: ~
-        (`nil`)                                               *View documents*
+        (`any`)                                               *View documents*
 
                                *JupyterLab:get_jupyterlab_extension_version()*
 JupyterLab:get_jupyterlab_extension_version()
@@ -120,14 +120,14 @@ Notebook:activate_cell()                            *Notebook:activate_cell()*
 Notebook:attach()                                          *Notebook:attach()*
     attach autocmd. While connecting with jupyterlab, will full sync
 
-Notebook:complete({params})                              *Notebook:complete()*
+Notebook:complete({options})                             *Notebook:complete()*
     code completion
 
     Parameters: ~
-      • {params}  (`{source: string, offset: number, cellIndex: number}`)
+      • {options}  (`neopyter.CompletionParams`)
 
     Return: ~
-        (`{label: string, type: string, insertText:string, source: string}[]`)
+        (`neopyter.CompletionItem[]`)
 
 Notebook:detach()                                          *Notebook:detach()*
     detach autocmd
@@ -142,6 +142,15 @@ Notebook:get_cell({row}, {col})                          *Notebook:get_cell()*
       • {col}  (`integer?`)
 
 Notebook:get_cell_num()                              *Notebook:get_cell_num()*
+
+Notebook:get_cell_source({index})                 *Notebook:get_cell_source()*
+    get cell source code
+
+    Parameters: ~
+      • {index}  (`integer`)
+
+    Return: ~
+        (`string?`)
 
 Notebook:get_cursor_cell_pos()                *Notebook:get_cursor_cell_pos()*
     get current cell of cursor position, start from 1

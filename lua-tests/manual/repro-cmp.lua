@@ -1,24 +1,51 @@
 vim.env.LAZY_STDPATH = ".repro"
 load(vim.fn.system("curl -s https://raw.githubusercontent.com/folke/lazy.nvim/main/bootstrap.lua"))()
 
+vim.opt.number = true
+
+local has_words_before = function()
+    unpack = unpack or table.unpack
+    local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+    return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+end
+
 require("lazy.minit").repro({
     spec = {
+
+        {
+            "folke/neoconf.nvim",
+            config = true,
+            keys = {
+                { "<leader>,,", "<cmd>Neoconf local<cr>", desc = "local settings" },
+            },
+            lazy = false,
+        },
         {
             "nvim-treesitter/nvim-treesitter",
             config = function()
                 require("nvim-treesitter.configs").setup({
+                    sync_install = true,
                     auto_install = true,
+                    ensure_installed = {
+                        "python",
+                    },
                 })
             end,
+            lazy = false,
         },
         {
             "neovim/nvim-lspconfig",
+
+            dependencies = {
+                "neoconf.nvim",
+            },
             config = function()
                 local capabilities = require("cmp_nvim_lsp").default_capabilities()
                 require("lspconfig").pyright.setup({
                     capabilities = capabilities,
                 })
             end,
+            lazy = false,
         },
         {
             "hrsh7th/nvim-cmp",
@@ -38,6 +65,7 @@ require("lazy.minit").repro({
                             vim.snippet.expand(args.body) -- For native neovim snippets (Neovim v0.10+)
                         end,
                     },
+
                     sources = cmp.config.sources({
                         { name = "nvim_lsp" },
                         { name = "path" },
@@ -48,9 +76,10 @@ require("lazy.minit").repro({
                     formatting = {
                         format = lspkind.cmp_format({
                             mode = "symbol_text",
-                            maxwidth = 50,
-                            ellipsis_char = "...",
                             menu = {
+                                buffer = "[Buf]",
+                                nvim_lsp = "[LSP]",
+                                nvim_lua = "[Lua]",
                                 neopyter = "[Neopyter]",
                             },
                             symbol_map = {
@@ -69,6 +98,7 @@ require("lazy.minit").repro({
         },
         {
             "SUSTech-data/neopyter",
+            dev = true,
             dependencies = {
                 "nvim-lua/plenary.nvim",
                 "AbaoFromCUG/websocket.nvim",
@@ -78,31 +108,9 @@ require("lazy.minit").repro({
                 mode = "direct",
                 remote_address = "127.0.0.1:9001",
                 file_pattern = { "*.ju.*" },
-                on_attach = function(buf)
-                    -- Keymaps --------------------------------------------
-                    local function map(mode, lhs, rhs, desc)
-                        vim.keymap.set(mode, lhs, rhs, { desc = desc, buffer = buf })
-                    end
-                    -- same, recommend the former
-                    map("n", "<localleader>nc", "<cmd>Neopyter execute notebook:run-cell<cr>", "run selected")
-                    -- map("n", "<C-Enter>", "<cmd>Neopyter run current<cr>", "run selected")
-
-                    -- same, recommend the former
-                    map("n", "<localleader>nA", "<cmd>Neopyter execute notebook:run-all-above<cr>", "run all above cell")
-                    -- map("n", "<space>X", "<cmd>Neopyter run allAbove<cr>", "run all above cell")
-
-                    -- same, recommend the former, but the latter is silent
-                    map("n", "<localleader>nr", "<cmd>Neopyter execute kernelmenu:restart<cr>", "restart kernel")
-                    -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
-
-                    map("n", "<localleader>nn", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
-                    map("n", "<localleader>nN", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
-
-                    map("n", "<localleader>nR", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
-                end,
                 highlight = {
                     enable = true,
-                    shortsighted = false,
+                    mode = "zen",
                 },
                 parser = {
                     -- trim leading/tailing whitespace of cell
@@ -111,5 +119,10 @@ require("lazy.minit").repro({
             },
         },
         lazy = false,
+    },
+
+    dev = {
+        path = "..",
+        fallback = true,
     },
 })

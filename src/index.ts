@@ -1,5 +1,5 @@
 import type { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
-import type { CompletionHandler, CompletionProviderManager, KernelCompleterProvider } from '@jupyterlab/completer';
+import type { CompletionHandler, CompletionProviderManager, CompletionTriggerKind, KernelCompleterProvider } from '@jupyterlab/completer';
 import type { Notebook, NotebookPanel } from '@jupyterlab/notebook';
 import type { Kernel } from '@jupyterlab/services';
 import type { WindowedList } from '@jupyterlab/ui-components';
@@ -19,15 +19,18 @@ import logger from './logger';
 import { StatusSidePanel } from './statusidepanel';
 import { settingStore } from './store';
 
-function convertCompleteSource(completeSource: string) {
-  return (item: CompletionHandler.ICompletionItem) => ({
+function convertCompleteSource(_item: CompletionHandler.ICompletionItem) {
+  const item = _item as CompletionHandler.ICompletionItem & { [key: string]: any };
+  return {
     label: item.label,
-    type: item.type,
+    type: item.type ?? item.options?.type,
     insertText: item.insertText,
     document: item.documentation,
+    deprecated: item.deprecated,
 
-    source: completeSource,
-  });
+    source: item?.source,
+    sortText: item?.sortText,
+  };
 }
 
 function triggerFocus(element: HTMLElement) {
@@ -71,8 +74,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension neopyter is activated!');
 
     const completionProviderManager = iCompletionProviderManager as CompletionProviderManager;
-    const completerProvider = completionProviderManager.getProviders();
-    logger.info(completerProvider);
+    const completerProviders = completionProviderManager.getProviders();
 
     const sidebar = new StatusSidePanel();
     sidebar.title.caption = 'Neopyter';
@@ -352,7 +354,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         }
         const cell = notebook.widgets[cellIndex];
         const completionItems: CompletionItem[] = [];
-        for (const [completeSource, completer] of completerProvider) {
+        for (const [completeSource, completer] of completerProviders) {
           try {
             const reply = await completer.fetch(
               {
@@ -365,7 +367,11 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
                 session: notebookPanel.sessionContext.session,
               },
             );
-            completionItems.push(...reply.items.map(convertCompleteSource(completeSource)));
+            completionItems.push(...reply.items.map(item => ({
+              ...convertCompleteSource(item),
+              source: completer.identifier,
+
+            })));
           }
           catch (e) {
             logger.error(`Completer [${completeSource}] error, please your other jupyterlab extensions:`, e);
@@ -374,11 +380,66 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
         logger.info(completionItems);
         return completionItems;
       },
+      /**
+       * @param path notebook file path
+       */
+      reconciliatorComplete: async (path: string, { source, offset, cellIndex, trigger }: CompletionParams) => {
+        const { notebookPanel, notebook } = getNotebookModel(path);
+
+        console.log(completionProviderManager);
+        console.log(notebookPanel.id, notebook.id);
+
+        if (cellIndex >= notebook.widgets.length) {
+          logger.error(`Cell ${cellIndex} out of notebook range`);
+          return [];
+        }
+
+        /**
+         * editor: `os.<cursor>`
+         * input:
+         * {
+         *  "text": "os.",
+         *  "offset": 3,
+         *  "mimeType": "text/x-ipython"
+         * }
+         */
+
+        /**
+         * editor: `foo(os.<cursor>, 1)`
+         * input:
+         * {
+         *  "text": "foo(os., 1)",
+         *  "offset": 7,
+         *  "mimeType": "text/x-ipython"
+         * }
+         */
+        const requestCompletion = async (request: CompletionHandler.IRequest, trigger?: CompletionTriggerKind): Promise<CompletionHandler.ICompletionItemsReply> => {
+        // @ts-expect-error use private fields
+          const handler: CompletionHandler = completionProviderManager._panelHandlers.get(notebookPanel.id);
+          // @ts-expect-error use private fields
+          return await handler._reconciliator.fetch(request, trigger);
+        };
+
+        try {
+          const reply = await requestCompletion({ text: source, offset }, trigger);
+          if (!reply) {
+            logger.info('complete return null: ', { source, offset, trigger });
+            return [];
+          }
+          logger.info('complete return', { source, offset, trigger }, reply.items);
+          const completionItems = reply.items.map(convertCompleteSource);
+          return completionItems;
+        }
+        catch (e) {
+          logger.error(`complete failed:`, e);
+        }
+        return [];
+      },
       kernelComplete: async (path: string, source: string, offset: number) => {
         const { notebookPanel } = getNotebookModel(path);
         const kernelCompleteSource = 'CompletionProvider:kernel';
 
-        const kernelCompleterProvider = completerProvider.get(kernelCompleteSource) as KernelCompleterProvider;
+        const kernelCompleterProvider = completerProviders.get(kernelCompleteSource) as KernelCompleterProvider;
         const reply = await kernelCompleterProvider.fetch(
           {
             text: source,
@@ -389,7 +450,7 @@ const neopyterPlugin: JupyterFrontEndPlugin<void> = {
             session: notebookPanel.sessionContext.session,
           },
         );
-        const completionItems = reply.items.map(convertCompleteSource(kernelCompleteSource));
+        const completionItems = reply.items.map(convertCompleteSource);
         logger.info(completionItems);
 
         return completionItems;

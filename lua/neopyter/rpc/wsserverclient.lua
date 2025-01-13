@@ -61,6 +61,7 @@ function WSServerClient:connect(address, on_connected)
             })
             if on_connected then
                 on_connected()
+                on_connected = nil
             end
         end,
         on_disconnect = function()

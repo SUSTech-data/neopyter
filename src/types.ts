@@ -1,4 +1,4 @@
-import type { CompletionHandler } from '@jupyterlab/completer';
+import type { CompletionHandler, CompletionTriggerKind } from '@jupyterlab/completer';
 
 export enum WorkMode {
   direct = 'direct',
@@ -12,12 +12,30 @@ export enum LogLevel {
 }
 
 export interface CompletionParams {
-  /** code before cursor, provided by nvim-cmp */
+  /**
+   * cell code
+   */
   source: string
-  /** the cell index of cursor */
+  /**
+   * the cell index of cursor
+   */
   cellIndex: number
-  /** offset of cursor in source, provided by nvim-cmp */
+  /**
+   * offset of cursor in source, 0-based
+   */
   offset: number
+  /**
+   * completion kind
+   */
+  trigger: CompletionTriggerKind
+  /**
+   * The cursor line number.
+   */
+  readonly line: number
+  /**
+   * The cursor column number.
+   */
+  readonly column: number
 }
 
 export type CompletionItem = CompletionHandler.ICompletionItem & {

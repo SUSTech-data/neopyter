@@ -1,93 +1,78 @@
 local jupyter = require("neopyter.jupyter")
-local utils = require("neopyter.utils")
-local a = require("plenary.async")
+local a = require("neopyter.async")
+local Completer = require("neopyter.completer")
 local cmp = require("cmp")
-local source = {}
 
-local jupyter_complete_spec_types = {
-    ["magic"] = "Magic",
-    ["path"] = "Path",
-    ["dict key"] = "Dictkey",
-    ["instance"] = "Instance",
-    ["statement"] = "Statement",
+---@class neopyter.CmpCompleter
+---@field completer neopyter.Completer
+local neopyter = {
+    completer = Completer.new(),
 }
 
-source.new = function()
-    local self = setmetatable({}, { __index = source })
+neopyter.new = function()
+    local self = setmetatable({}, { __index = neopyter })
     return self
 end
 
 ---Return whether this source is available in the current context or not (optional).
 ---@return boolean
-function source:is_available()
-    return jupyter.notebook ~= nil and jupyter.jupyterlab.client:is_connecting()
+function neopyter.is_available()
+    return neopyter.completer:is_available()
 end
 
-function source:get_debug_name()
-    return "neopyter"
+function neopyter:get_debug_name()
+    return neopyter.completer:get_name()
 end
 
 ---Return trigger characters for triggering completion (optional).
-function source:get_trigger_characters()
-    return { "%%", ".", "/", "%" }
+function neopyter:get_trigger_characters()
+    return self.completer:get_trigger_characters()
 end
 
 ---Invoke completion (required).
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
-function source:complete(params, callback)
-    local notebook = jupyter.notebook
-    if notebook == nil or params.context.bufnr ~= notebook.bufnr then
-        callback()
-        return
-    end
-
+function neopyter:complete(params, callback)
     a.run(function()
-        if not jupyter.notebook:is_connecting() then
-            callback({})
+        local notebook = jupyter.notebook
+        if self:is_available() then
+            callback()
             return
         end
+        ---@cast notebook -nil
 
         local code = params.context.cursor_before_line
         local offset = math.min(params.offset, #code)
-        notebook:partial_sync(params.context.cursor.row, params.context.cursor.row, params.context.cursor.row)
-        local cell_idx = notebook:get_cursor_cell_pos()
 
-        local items = jupyter.notebook:complete({
+        local cell_idx, line, column = notebook:get_cursor_cell_pos()
+
+        local items = neopyter.completer:get_completions({
             source = code,
-            offset = offset - 1,
+            offset = offset,
             cellIndex = cell_idx - 1,
             params = params,
+            trigger = Completer.CompletionTriggerKind.Invoked,
+            line = line,
+            column = column,
         })
         items = vim.iter(items)
-            :filter(function(item)
-                if params.option.completers then
-                    ---@type string[]
-                    local completers = params.option.completers
-                    return vim.tbl_contains(completers, item.source)
-                end
-                return true
-            end)
             :map(function(item)
-                local type = item.type
-                local kind = utils.first_upper(type)
-
-                if jupyter_complete_spec_types[type] ~= nil then
+                local kind = item.type
+                if vim.tbl_contains(Completer.jupyter_spec_kind, kind) then
                     return {
                         label = item.label,
                         -- Text
                         kind = 1,
                         insertText = item.insertText,
+                        document = item.document,
                         cmp = {
-                            kind_hl_group = "CmpItemKind" .. jupyter_complete_spec_types[type],
+                            kind_hl_group = "CmpItemKind" .. kind,
                             kind_text = kind,
                         },
-                        document = item.document,
                     }
                 else
                     return {
                         label = item.label,
-                        -- Text
                         kind = cmp.lsp.CompletionItemKind[kind],
                         insertText = item.insertText,
                         document = item.document,
@@ -99,19 +84,4 @@ function source:complete(params, callback)
     end, function() end)
 end
 
----Resolve completion item (optional). This is called right before the completion is about to be displayed.
----Useful for setting the text shown in the documentation window (`completion_item.documentation`).
----@param completion_item lsp.CompletionItem
----@param callback fun(completion_item: lsp.CompletionItem|nil)
-function source:resolve(completion_item, callback)
-    callback(completion_item)
-end
-
----Executed after the item was selected.
----@param completion_item lsp.CompletionItem
----@param callback fun(completion_item: lsp.CompletionItem|nil)
-function source:execute(completion_item, callback)
-    callback(completion_item)
-end
-
-return source
+return neopyter
