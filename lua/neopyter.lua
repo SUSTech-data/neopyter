@@ -59,7 +59,8 @@ local default_config = {
     ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
     textobject = {
         enable = true,
-        queries = { "cellseparator" },
+        -- more capture, poorer performance
+        queries = { "cellseparator", "cellcontent", "cell" },
     },
     ---@type neopyter.InjectionOption  # ref `:h neopyter.InjectionOption`
     injection = {

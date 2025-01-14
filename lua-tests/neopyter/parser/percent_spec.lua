@@ -68,6 +68,20 @@ describe("parse percent", function()
         )
     end)
 end)
+describe("line magic", function()
+    ---@type neopyter.PercentParser
+    local parser
+    before_each(function()
+        parser = PercentParser:new({
+            trim_whitespace = false,
+        })
+    end)
+
+    it("register", function()
+        local ret = vim.iter(vim.treesitter.query.list_predicates()):find("match-line-magic?")
+        assert.not_nil(ret)
+    end)
+end)
 
 describe("cells parse", function()
     ---@type neopyter.PercentParser
@@ -309,13 +323,13 @@ describe("cells parse", function()
             }, cells)
             assert.equal("%%coo\nimport foo", parser:parse_source(code, cells[1]))
         end)
-it("multiple lines cell", function()
+        it("multiple lines cell", function()
             local code = common.load_buffer({
                 "# %%",
                 "# %%coo",
                 "import foo",
                 "",
-                "# bar"
+                "# bar",
             })
             local cells = parser:parse_notebook(code).cells
             assert.are.same({

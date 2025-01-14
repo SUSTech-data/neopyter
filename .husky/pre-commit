@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 
+make test
+make document
 pnpm lint-staged
 pnpm run test

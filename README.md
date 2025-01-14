@@ -179,7 +179,8 @@ local default_config = {
     ---@type neopyter.TextObjectOption  # ref `:h neopyter.TextObjectOption`
     textobject = {
         enable = true,
-        queries = { "cellseparator" },
+        -- more capture, poorer performance
+        queries = { "cellseparator", "cellcontent", "cell" },
     },
     ---@type neopyter.InjectionOption  # ref `:h neopyter.InjectionOption`
     injection = {
@@ -344,40 +345,40 @@ require("blink-cmp").setup({
 
 ## textobjects
 
-Supported captures in `textobjects` query group
+Neopyter load `textobjects.scm` dynamic according `config.textobject.queries`:
 
-- `@cell`
-  - `@cell.code`
-  - `@cell.magic`
-  - `@cell.markdown`
-  - `@cell.raw`
-- `@cellseparator`
-  - `@cellseparator.code`
-  - `@cellseparator.magic`
-  - `@cellseparator.markdown`
-  - `@cellseparator.raw`
-- `@cellbody`
-  - `@cellbody.code`
-  - `@cellbody.magic`
-  - `@cellbody.markdown`
-  - `@cellbody.raw`
-- `@cellcontent`
-  - `@cellcontent.code`
-  - `@cellcontent.magic`
-  - `@cellcontent.markdown`
-  - `@cellcontent.raw`
-- `@cellborder`
-  - `@cellborder.start`
-    - `@cellborder.start.markdown`
-    - `@cellborder.start.raw`
-  - `@cellborder.end`
-    - `@cellborder.end.markdown`
-    - `@cellborder.end.raw`
-- `@linemagic`
+```lua
+{
+    "SUSTech-data/neopyter",
+    ---@type neopyter.Option
+    opts = {
+        textobject = {
+            enable = true,
+            queries = {
+                "linemagic",
+                "cellseparator",
+                "cellcontent",
+                "cell"
+            },
+        },
+    },
+}
+```
+
+The more queries you added, the poorer performance to capture, so only add what you need.
+Then you can config you `nvim-treesitter-textobjects` as usually:
 
 ```lua
 require'nvim-treesitter.configs'.setup {
     textobjects = {
+        select = {
+            enable = true,
+            lookahead = true,
+            keymaps = {
+                ["aj"] = { query = "@cell", desc = "Select cell" },
+                ["ij"] = { query = "@cellcontent", desc = "Select cell content" },
+            },
+        },
         move = {
             enable = true,
             goto_next_start = {
@@ -391,6 +392,16 @@ require'nvim-treesitter.configs'.setup {
 }
 
 ```
+
+Supported queries:
+
+- `@linemagic`
+- `@cellseparator`
+  - `@cellseparator.code`
+  - `@cellseparator.markdown`
+  - `@cellseparator.raw`
+- `@cellcontent`
+- `@cell`
 
 # API
 

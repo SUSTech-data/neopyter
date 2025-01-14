@@ -40,7 +40,7 @@ function PercentParser:new(opt)
             )
         ]]
     )
-
+    vim.treesitter.query.add_predicate("match-line-magic?", PercentParser.match_line_magic, { force = true, all = true })
     vim.treesitter.query.add_predicate("match-percent-separator?", PercentParser.match_percent_separator, { force = true, all = true })
     vim.treesitter.query.add_predicate("match-cell-content?", PercentParser.match_cell_content, { force = true, all = true })
     vim.treesitter.query.add_directive("set-percent-metadata!", PercentParser.set_percent_metadata, { force = true, all = true })
@@ -87,6 +87,27 @@ function PercentParser.parse_percent(line)
     end
 
     return "code", vim.trim(line:sub(6))
+end
+
+--- match line magic
+---@param match table<integer, TSNode[]>
+---@param pattern integer
+---@param source integer|string
+---@param predicate any[]
+---@return boolean?
+function PercentParser.match_line_magic(match, pattern, source, predicate)
+    local cap = match[predicate[2]]
+    local node = type(cap) == "table" and cap[1] or cap
+    if not node then
+        return false
+    end
+    local _, start_col = node:start()
+    if start_col ~= 0 then
+        return false
+    end
+
+    local line = vim.treesitter.get_node_text(node, source)
+    return not not line:match("# %%%w+")
 end
 
 --- (all) match cell separator
