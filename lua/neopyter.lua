@@ -1,10 +1,10 @@
 local highlight = require("neopyter.highlight")
-local treesitter = require("neopyter.treesitter")
 local textobject = require("neopyter.textobject")
 local injection = require("neopyter.injection")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
-local utils = require("neopyter.utils")
+local a = require("neopyter.async")
+local api = a.api
 
 ---@class neopyter.Option
 ---@field remote_address? string
@@ -94,7 +94,7 @@ function neopyter.setup(config)
 
     if neopyter.config.auto_attach then
         local augroup = vim.api.nvim_create_augroup("neopyter", { clear = true })
-        utils.nvim_create_autocmd({ "BufReadPost" }, {
+        api.nvim_create_autocmd({ "BufReadPost" }, {
             group = augroup,
             pattern = neopyter.config.file_pattern,
             callback = function()

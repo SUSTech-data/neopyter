@@ -96,10 +96,10 @@ local function highlight_node(node, hl_group, mode, include_whitespace, priority
 
     if mode == "linewise" then
         api.nvim_buf_set_extmark(0, ns_highlight, start_row, 0, {
-            end_line = end_row + 1,
-            end_col = 0,
-            hl_group = hl_group,
-            hl_eol = true,
+            -- end_line = end_row + 1,
+            -- end_col = 0,
+            line_hl_group = hl_group,
+            -- hl_eol = true,
             priority = priority,
         })
     else
@@ -118,8 +118,6 @@ local function update_separator_highlight(buf)
 
     api.nvim_set_hl(ns_highlight, "NeopyterSeparator", { link = "CursorLine" })
 
-    -- print(vim.inspect(M.query))
-    -- print(vim.inspect(ts.get_buf_lang(buf)))
     local query = M.query[ts.get_buf_lang(buf)]
     ts.iter_captures(query, 0, "cellseparator"):each(function(node)
         highlight_node(node, "CursorLine", "linewise", true, 9001)
@@ -133,37 +131,17 @@ function M.attach(buf, augroup)
     if not config or not config.enable then
         return
     end
-
+    local update_highlight
     if config.mode == "zen" then
-        utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinScrolled" }, {
-            buffer = buf,
-            callback = function()
-                updated = false
-                -- throttling
-                a.defer_fn(function()
-                    if updated == false then
-                        updated = true
-                        update_zen_highlight(buf)
-                    end
-                end, 50)
-            end,
-            group = augroup,
-        })
+        update_highlight = utils.throttle(update_zen_highlight, nil, buf)
     else
-        utils.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
-            buffer = buf,
-            callback = function()
-                updated = false
-                a.defer_fn(function()
-                    if updated == false then
-                        updated = true
-                        update_separator_highlight(buf)
-                    end
-                end, 50)
-            end,
-            group = augroup,
-        })
+        update_highlight = utils.throttle(update_separator_highlight, nil, buf)
     end
+    api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "CursorMoved", "CursorMovedI", "WinScrolled" }, {
+        buffer = buf,
+        callback = update_highlight,
+        group = augroup,
+    })
 end
 
 return M

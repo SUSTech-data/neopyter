@@ -22,22 +22,50 @@ local async = {
         end, 100)
         callback(success, msg)
     end,
+
+    safe_async = function()
+        if vim.in_fast_event() then
+            require("plenary.async.util").scheduler()
+        end
+    end,
 }
 
 async.uv = vim.uv
 async.api = a.uv
 
 async.api = vim.api
-async.api = a.api
+async.api = setmetatable({}, {
+    __index = function(_, k)
+        return a.api[k]
+    end,
+})
+
+---same with nvim.api.nvim_create_autocmd
+---@param event any
+---@param opts any
+---@see vim.api.nvim_create_autocmd
+async.api.nvim_create_autocmd = function(event, opts)
+    if opts ~= nil and vim.is_callable(opts.callback) then
+        local callback = opts.callback
+        opts.callback = function(...)
+            local args = { ... }
+            a.run(function()
+                callback(unpack(args))
+            end, function() end)
+        end
+    end
+    -- vim.print(event)
+    -- vim.print(opts)
+
+    return a.api.nvim_create_autocmd(event, opts)
+end
 
 async.fn = vim.fn
 async.fn = setmetatable({}, {
     __index = function(_, k)
         return function(...)
             -- if we are in a fast event await the scheduler
-            if vim.in_fast_event() then
-                require("plenary.async.util").scheduler()
-            end
+            async.safe_async()
             return vim.fn[k](...)
         end
     end,
@@ -71,7 +99,7 @@ async.health = setmetatable({}, {
 ---User could call `lua =require("neopyter.jupyter").notebook:run_selected_cell()` in main thread directly
 ---@param cls table
 ---@param ignored_methods? string[]
-function async.safe(cls, ignored_methods)
+function async.safe_wrap(cls, ignored_methods)
     local logger = require("neopyter.logger")
     ignored_methods = ignored_methods or {}
     table.insert(ignored_methods, "new")

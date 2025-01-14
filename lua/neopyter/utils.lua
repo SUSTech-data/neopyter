@@ -1,5 +1,5 @@
 local Path = require("plenary.path")
-local a = require("plenary.async")
+local a = require("neopyter.async")
 local api = a.api
 local M = {}
 
@@ -66,143 +66,6 @@ function M.relative_to(file_path, parent_path)
     return path:make_relative(parent_path)
 end
 
-function M.is_absolute(file_path)
-    return Path:new(file_path):is_absolute()
-end
-
----same with nvim.api.nvim_create_autocmd
----@param event any
----@param opts any
----@see vim.api.nvim_create_autocmd
-function M.nvim_create_autocmd(event, opts)
-    if opts ~= nil and type(opts.callback) == "function" then
-        local old_callback = opts.callback
-        opts.callback = function(...)
-            local args = { ... }
-            a.run(function()
-                old_callback(unpack(args))
-            end, function() end)
-        end
-    end
-    a.api.nvim_create_autocmd(event, opts)
-end
-
----parse lines
----@param lines string[]
----@param filetype? string default python
----@return neopyter.Cell[]
-function M.parse_content(lines, filetype)
-    local option = require("neopyter").config.parser
-    ---@cast option -nil
-
-    filetype = filetype or "python"
-    ---@type neopyter.Cell []
-    local cells = {}
-    for i, line in ipairs(lines) do
-        if vim.startswith(line, "# %%") then
-            local cell_magic, magic_param = line:match("^# %%%%(%w+)(.*)")
-            if cell_magic ~= nil then
-                -- table.insert(cells, {
-                --     lines = { line },
-                --     start_line = i,
-                --     cell_type = "code",
-                --     cell_magic = "%%" .. cell_magic .. magic_param,
-                -- })
-                cells[#cells].cell_magic = "%%" .. cell_magic .. magic_param
-                table.insert(cells[#cells].lines, line:sub(2))
-            else
-                local titleornil, cell_type = line:match("^# %%%%(.*)%[(%w+)%]")
-                if titleornil == nil then
-                    titleornil = line:match("^# %%%%(.*)$")
-                end
-                if titleornil ~= nil then
-                    titleornil = vim.trim(titleornil)
-                    if titleornil == "" then
-                        titleornil = nil
-                    end
-                end
-
-                if cell_type == "md" then
-                    cell_type = "markdown"
-                end
-
-                table.insert(cells, {
-                    lines = { line },
-                    start_line = i,
-                    cell_type = cell_type or "code",
-
-                    title = titleornil,
-                })
-            end
-        elseif #cells == 0 then
-            table.insert(cells, {
-                lines = { line },
-                start_line = i,
-                cell_type = "code",
-                no_separator = true,
-            })
-        else
-            if vim.startswith(line, "# !") or vim.startswith(line, "# %") then
-                table.insert(cells[#cells].lines, line:sub(3))
-            else
-                table.insert(cells[#cells].lines, line)
-            end
-        end
-    end
-    local function concat_code(code_lines, i, j)
-        code_lines = vim.tbl_map(function(line)
-            if option.line_magic then
-                local line_magic = line:match("# (%%%w+.*)")
-                if line_magic ~= nil then
-                    return line_magic
-                end
-            end
-            return line
-        end, code_lines)
-        return table.concat(code_lines, "\n", i, j)
-    end
-
-    for _, cell in ipairs(cells) do
-        if cell then
-            cell.end_line = cell.start_line + #cell.lines
-        end
-
-        if cell.cell_magic ~= nil then
-            local source = table.concat(cell.lines, "\n", 3)
-            cell.source = cell.cell_magic .. "\n" .. source
-        elseif cell.cell_type == "markdown" or cell.cell_type == "raw" then
-            cell.source = table.concat(cell.lines, "\n", 2)
-            if filetype == "python" then
-                local comment_source = vim.trim(cell.source):match('^"""\n(.*)\n"""$')
-                if comment_source ~= nil then
-                    cell.source = comment_source
-                end
-                cell.source = cell.source:gsub('\\"\\"\\"', '"""')
-            end
-        elseif cell.no_separator == true then
-            cell.source = concat_code(cell.lines)
-        else
-            cell.source = concat_code(cell.lines, 2)
-        end
-        if option.trim_whitespace then
-            cell.source = vim.trim(cell.source)
-        end
-    end
-    return cells
-end
-
-function M.read_file(path)
-    local err, fd = a.uv.fs_open(path, "r", 438)
-    assert(not err, err)
-    local err1, stat = a.uv.fs_fstat(fd)
-    assert(not err1, err1)
-    local err2, data = a.uv.fs_read(fd, stat.size, 0)
-    assert(not err2, err2)
-    local err3 = a.uv.fs_close(fd)
-    assert(not err3, err3)
-    return data
-end
-
 function M.buf2winid(bufnr)
     for _, win in ipairs(api.nvim_list_wins()) do
         if api.nvim_win_get_buf(win) == bufnr then
@@ -251,6 +114,25 @@ function M.validate_config(path, tbl, source)
     end
 end
 
---- ===== end ============
+---@generic T
+---@param fn T callable
+---@param timeout integer? # milliseconds
+---@return T
+function M.throttle(fn, timeout, ...)
+    timeout = timeout or 20
+    ---@cast timeout -nil
+    local timer = assert(a.uv.new_timer())
+    local args = { ... }
+    return function()
+        if timer:is_active() then
+            return
+        end
+        timer:start(timeout, 0, function()
+            a.run(function()
+                fn(unpack(args))
+            end, function() end)
+        end)
+    end
+end
 
 return M

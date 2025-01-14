@@ -3,6 +3,7 @@ local utils = require("neopyter.utils")
 local a = require("neopyter.async")
 local Path = require("plenary.path")
 local api = a.api
+local fn = a.fn
 
 --- @brief Neopyter provide a global `jupyterlab` represent remote `JupyterLab` instance,
 --- which provides some RPC-based API to control remote `JupyterLab` instance.
@@ -72,14 +73,14 @@ function JupyterLab:attach()
     local config = require("neopyter").config
     self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
     assert(self.augroup ~= nil, "autogroup failed")
-    utils.nvim_create_autocmd({ "BufWinEnter" }, {
+    api.nvim_create_autocmd({ "BufWinEnter" }, {
         group = self.augroup,
         pattern = config.file_pattern,
         callback = function(event)
             self:_on_bufwinenter(event.buf)
         end,
     })
-    utils.nvim_create_autocmd({ "BufUnload" }, {
+    api.nvim_create_autocmd({ "BufUnload" }, {
         group = self.augroup,
         pattern = config.file_pattern,
         callback = function(event)
@@ -155,13 +156,17 @@ function JupyterLab:is_connecting()
     return self.client:is_connecting()
 end
 
+---get buf local path
+---@param buf integer
+---@return string
 function JupyterLab:_get_buf_local_path(buf)
-    local file_path = api.nvim_buf_get_name(buf)
+    ---@type Path
+    local file_path = Path:new(api.nvim_buf_get_name(buf))
 
-    if utils.is_absolute(file_path) then
-        file_path = utils.relative_to(file_path, vim.fn.getcwd())
+    if file_path:is_absolute() then
+        file_path = Path:new(file_path:make_relative(fn.getcwd()))
     end
-    return file_path
+    return tostring(file_path)
 end
 
 ---if not exists, create with buf
@@ -216,8 +221,10 @@ end
 ---get neopyter (nvim plugin) version
 ---@return string
 function JupyterLab:get_nvim_plugin_version()
-    local path = utils.get_plugin_path():joinpath("package.json")
-    local content = utils.read_file(tostring(path))
+    ---@type Path
+    local path = utils.get_plugin_path() / "package.json"
+    local content = path:read()
+    ---@cast content -nil
     local packageJson = vim.json.decode(content)
     return packageJson["version"]
 end
@@ -263,6 +270,6 @@ function JupyterLab:get_notebook(buf)
 end
 
 ---@nodoc
-JupyterLab = a.safe(JupyterLab)
+JupyterLab = a.safe_wrap(JupyterLab)
 
 return JupyterLab

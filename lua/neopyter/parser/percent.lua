@@ -41,7 +41,8 @@ function PercentParser:new(opt)
         ]]
     )
 
-    vim.treesitter.query.add_predicate("match-percent-separator?", PercentParser.match_cellseparator, { force = true, all = true })
+    vim.treesitter.query.add_predicate("match-percent-separator?", PercentParser.match_percent_separator, { force = true, all = true })
+    vim.treesitter.query.add_predicate("match-cell-content?", PercentParser.match_cell_content, { force = true, all = true })
     vim.treesitter.query.add_directive("set-percent-metadata!", PercentParser.set_percent_metadata, { force = true, all = true })
     return obj
 end
@@ -88,14 +89,40 @@ function PercentParser.parse_percent(line)
     return "code", vim.trim(line:sub(6))
 end
 
---- match cell separator
+--- (all) match cell separator
 ---@param match table<integer, TSNode[]>
 ---@param pattern integer
 ---@param source integer|string
 ---@param predicate any[]
 ---@return boolean?
-function PercentParser.match_cellseparator(match, pattern, source, predicate)
+function PercentParser.match_percent_separator(match, pattern, source, predicate)
     return vim.iter(match[predicate[2]] or {}):all(function(node)
+        local _, start_col = node:start()
+        if start_col ~= 0 then
+            return false
+        end
+
+        local text = vim.treesitter.get_node_text(node, source)
+        local type, title = PercentParser.parse_percent(text)
+        if not type then
+            return false
+        end
+        if predicate[3] then
+            local types = { unpack(predicate, 3) }
+            return vim.tbl_contains(types, type)
+        end
+        return true
+    end)
+end
+
+--- any match cell separator
+---@param match table<integer, TSNode[]>
+---@param pattern integer
+---@param source integer|string
+---@param predicate any[]
+---@return boolean?
+function PercentParser.match_cell_content(match, pattern, source, predicate)
+    return not vim.iter(match[predicate[2]] or {}):any(function(node)
         local _, start_col = node:start()
         if start_col ~= 0 then
             return false

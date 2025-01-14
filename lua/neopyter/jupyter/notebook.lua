@@ -47,7 +47,7 @@ function Notebook:attach()
     if self.augroup == nil then
         self.augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
         if config.jupyter.scroll.enable then
-            utils.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
                 buffer = self.bufnr,
                 callback = function()
                     if not self:safe_sync() then
@@ -65,7 +65,7 @@ function Notebook:attach()
             })
         end
 
-        utils.nvim_create_autocmd({ "BufWritePre" }, {
+        api.nvim_create_autocmd({ "BufWritePre" }, {
             buffer = self.bufnr,
             callback = function()
                 if self:safe_sync() then
@@ -383,7 +383,7 @@ function Notebook:kernel_complete(source, offset)
 end
 
 ---@nodoc
-Notebook = a.safe(Notebook, {
+Notebook = a.safe_wrap(Notebook, {
     "is_connecting",
 })
 
