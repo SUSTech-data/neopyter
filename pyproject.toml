@@ -30,6 +30,7 @@ dynamic = ["version", "description", "authors", "urls", "keywords"]
 dev = [
     # build
     "hatch",
+    "hatch-nodejs-version",
     # formatter
     "ruff",
     # test
