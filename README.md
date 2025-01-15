@@ -131,6 +131,12 @@ Configure `JupyterLab` in side panel
 ```lua
 {
     "SUSTech-data/neopyter",
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'AbaoFromCUG/websocket.nvim',  -- for mode='direct'
+      'nvim-treesitter',
+    },
+
     ---@type neopyter.Option
     opts = {
         mode="direct",
