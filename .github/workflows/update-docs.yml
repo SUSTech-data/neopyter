@@ -1,0 +1,23 @@
+name: Update docs
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+jobs:
+  update-docs:
+    name: Update README and doc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Make document
+        run: |
+          make document
+      - name: Push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "auto-generate document"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"

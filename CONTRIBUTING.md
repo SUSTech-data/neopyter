@@ -1,10 +1,11 @@
 # Contributing
 
-## Install Dependencies
+## Dependencies
 
-```shell
-pip install hatch hatch-nodejs-version pytest pytest_jupyter ruff
-```
+* Node.js
+* pnpm
+* python
+
 
 ## JupyterLab Extension
 
@@ -16,6 +17,7 @@ Note: You will need `NodeJS` to build the extension package. Recommend use `pnpm
 # Clone the repo to your local environment
 # Change directory to the current project directory
 # Install package in development mode
+# This step will some additional tools, e.g. ruff
 pip install -e ".[dev]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
