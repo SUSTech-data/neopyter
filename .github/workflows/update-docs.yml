@@ -14,6 +14,10 @@ jobs:
       - name: Make document
         run: |
           make document
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
       - name: Push changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
