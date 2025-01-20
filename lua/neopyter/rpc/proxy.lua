@@ -9,12 +9,12 @@ local a = require("plenary.async")
 ---@field private msg_count number
 ---@field private request_pool table<number, fun(...):any>
 ---@field private decoder neopyter.MsgpackDecoder
-local AsyncRpcClient = RpcClient:new({}) --[[@as neopyter.AsyncRpcClient]]
+local ProxyRpcClient = RpcClient:new({}) --[[@as neopyter.AsyncRpcClient]]
 
 ---RpcClient constructor
 ---@param opt neopyter.NewRpcClientOption
 ---@return neopyter.AsyncRpcClient
-function AsyncRpcClient:new(opt)
+function ProxyRpcClient:new(opt)
     opt = opt or {}
     local o = setmetatable(opt, self)
     self.__index = self
@@ -29,7 +29,7 @@ end
 ---@param address? string
 ---@param on_connected? fun() # call while connected
 ---@async
-function AsyncRpcClient:connect(address, on_connected)
+function ProxyRpcClient:connect(address, on_connected)
     self.address = address or self.address
     assert(self.tcp_client == nil, "current connection exists, can't call connect, please disconnect first")
     assert(self.address, "Rpc client address is empty")
@@ -59,7 +59,7 @@ function AsyncRpcClient:connect(address, on_connected)
 end
 
 ---disconnect connect
-function AsyncRpcClient:disconnect()
+function ProxyRpcClient:disconnect()
     if self.tcp_client then
         self.tcp_client:close()
         self.tcp_client = nil
@@ -72,11 +72,11 @@ end
 
 ---check client is connecting
 ---@return boolean
-function AsyncRpcClient:is_connecting()
+function ProxyRpcClient:is_connecting()
     return self.tcp_client ~= nil
 end
 
-function AsyncRpcClient:gen_id()
+function ProxyRpcClient:gen_id()
     self.msg_count = self.msg_count + 1
     return self.msg_count
 end
@@ -85,7 +85,7 @@ end
 ---@param method string
 ---@param ... unknown # name
 ---@return unknown|nil
-function AsyncRpcClient:request(method, ...)
+function ProxyRpcClient:request(method, ...)
     if not self:is_connecting() then
         utils.notify_error(string.format("RPC tcp client is disconnected, can't request [%s]", method))
         return
@@ -116,7 +116,7 @@ end
 ---handle rpc response
 ---@param data string
 ---@package
-function AsyncRpcClient:handle_response(data)
+function ProxyRpcClient:handle_response(data)
     self.decoder:feed(data)
     while true do
         local msg = self.decoder:next()
@@ -141,6 +141,6 @@ function AsyncRpcClient:handle_response(data)
     end
 end
 
-function AsyncRpcClient:notify(event, ...) end
+function ProxyRpcClient:notify(event, ...) end
 
-return AsyncRpcClient
+return ProxyRpcClient

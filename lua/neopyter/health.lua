@@ -19,7 +19,7 @@ function M.check()
         local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
         if status then
             health.info(string.format("neovim plugin(neopyter@%s) status: active", nvim_plugin_ver))
-            local is_connecting = jupyter.jupyterlab.client:is_connecting()
+            local is_connecting = jupyter.jupyterlab:is_connecting()
             if is_connecting then
                 local jupyterlab_extension_ver = jupyter.jupyterlab:get_jupyterlab_extension_version()
                 health.info(string.format("jupyter lab extension(neopyter@%s): active", jupyterlab_extension_ver))

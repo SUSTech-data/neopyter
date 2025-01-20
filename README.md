@@ -133,8 +133,8 @@ Configure `JupyterLab` in side panel
     "SUSTech-data/neopyter",
     dependencies = {
       'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter', -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
       'AbaoFromCUG/websocket.nvim',  -- for mode='direct'
-      'nvim-treesitter',
     },
 
     ---@type neopyter.Option

@@ -5,18 +5,18 @@ local logger = require("neopyter.logger")
 local websocket = require("websocket")
 local a = require("plenary.async")
 
----@class neopyter.WSServerClient:neopyter.RpcClient
+---@class neopyter.DirectRpcClient:neopyter.RpcClient
 ---@field server? websocket.Server # nil means not connect
 ---@field single_connection? websocket.Connection
 ---@field private msg_count number
 ---@field private request_pool table<number, fun(...):any>
-local WSServerClient = RpcClient:new({}) --[[@as neopyter.WSServerClient]]
+local DirectRpcClient = RpcClient:new({}) --[[@as neopyter.DirectRpcClient]]
 
 ---RpcClient constructor
 ---@param opt neopyter.NewRpcClientOption
----@return neopyter.WSServerClient
-function WSServerClient:new(opt)
-    local o = setmetatable(opt or {}, { __index = self }) --[[@as neopyter.WSServerClient]]
+---@return neopyter.DirectRpcClient
+function DirectRpcClient:new(opt)
+    local o = setmetatable(opt or {}, { __index = self }) --[[@as neopyter.DirectRpcClient]]
     o.msg_count = 0
     o.request_pool = {}
     return o
@@ -26,7 +26,7 @@ end
 ---@param address? string
 ---@param on_connected? fun() # call while connected
 ---@async
-function WSServerClient:connect(address, on_connected)
+function DirectRpcClient:connect(address, on_connected)
     local restart_server = address ~= nil and self.address ~= address
     for _, fun in pairs(self.request_pool) do
         fun(false, "cancel")
@@ -75,7 +75,7 @@ function WSServerClient:connect(address, on_connected)
 end
 
 ---disconnect connect
-function WSServerClient:disconnect()
+function DirectRpcClient:disconnect()
     if self.single_connection then
         self.single_connection:close()
         self.single_connection = nil
@@ -92,11 +92,11 @@ end
 
 ---check client is connecting
 ---@return boolean
-function WSServerClient:is_connecting()
+function DirectRpcClient:is_connecting()
     return self.single_connection ~= nil
 end
 
-function WSServerClient:gen_id()
+function DirectRpcClient:gen_id()
     self.msg_count = self.msg_count + 1
     return self.msg_count
 end
@@ -105,7 +105,7 @@ end
 ---@param method string
 ---@param ... unknown # name
 ---@return unknown|nil
-function WSServerClient:request(method, ...)
+function DirectRpcClient:request(method, ...)
     if self.server == nil then
         utils.notify_error(string.format("RPC websocket server is stop, can't request [%s]", method))
         return
@@ -139,7 +139,7 @@ end
 ---handle rpc response
 ---@param data string
 ---@package
-function WSServerClient:handle_response(data)
+function DirectRpcClient:handle_response(data)
     local mpack = vim.base64.decode(data)
     local status, msg = pcall(vim.mpack.decode, mpack)
     if not status then
@@ -174,13 +174,13 @@ function WSServerClient:handle_response(data)
     end
 end
 
-function WSServerClient:notify(event, ...) end
+function DirectRpcClient:notify(event, ...) end
 
-function WSServerClient:reset_request()
+function DirectRpcClient:reset_request()
     for _, fun in pairs(self.request_pool) do
         fun(false, "reset")
     end
     self.request_pool = {}
 end
 
-return WSServerClient
+return DirectRpcClient

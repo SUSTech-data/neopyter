@@ -50,16 +50,12 @@ function JupyterLab:new(opts)
     local config = require("neopyter").config
     local RpcClient
     if config["rpc_client"] ~= nil then
-        vim.notify(
-            "`rpc_client` is deprecated, please reference to https://github.com/SUSTech-data/neopyter/issues/4",
-            vim.log.levels.ERROR,
-            { title = "Neopyter" }
-        )
+        utils.notify_error("`rpc_client` is deprecated, please reference to https://github.com/SUSTech-data/neopyter/issues/4")
     end
     if config.mode == "direct" then
-        RpcClient = require("neopyter.rpc.wsserverclient")
+        RpcClient = require("neopyter.rpc.direct")
     else
-        RpcClient = require("neopyter.rpc.asyncclient")
+        RpcClient = require("neopyter.rpc.proxy")
     end
     o.client = RpcClient:new({
         address = opts.address,

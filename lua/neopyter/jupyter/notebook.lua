@@ -78,10 +78,6 @@ function Notebook:attach()
             on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
                 a.run(function()
                     local syncable = self:safe_sync()
-                    -- local connecting = self.client:is_connecting()
-                    -- local line = api.nvim_buf_get_lines(self.bufnr, a.fn.line(".") - 1, a.fn.line("."), true)[1]
-                    -- vim.notify(line.. "/" .. vim.inspect(connecting) .. "/" .. vim.inspect(syncable), nil, { id = "current line" })
-
                     if syncable then
                         self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
                     else
