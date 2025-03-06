@@ -1,0 +1,49 @@
+{
+  "cell magic": {
+    "prefix": "#cell",
+    "body": [
+      "# %% ${1:title}",
+      "${2}"
+    ],
+    "description": "Cell magic with title"
+  },
+  "line magic": {
+    "prefix": "#line",
+    "body": [
+      "# %${1:cmd}"
+    ],
+    "description": "Line magic"
+  },
+  "markdown cell": {
+    "prefix": "#md",
+    "body": [
+      "# %% [md]",
+      "'''",
+      "${1}",
+      "'''"
+    ],
+    "description": "Add a new markdown cell"
+  },
+  "bash cell": {
+    "prefix": "#bash",
+    "body": [
+      "# %%",
+      "# %%bash",
+      "'''",
+      "${1:echo hello}",
+      "'''"
+    ],
+    "description": "Add a new magic cell of bash"
+  },
+  "html cell": {
+    "prefix": "#html",
+    "body": [
+      "# %%",
+      "# %%html",
+      "'''",
+      "${1:<h1>Hello</h1>}",
+      "'''"
+    ],
+    "description": "Add a new magic cell of html"
+  }
+}

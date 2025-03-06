@@ -34,6 +34,16 @@
     "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
   ],
   "style": "style/index.css",
+  "contributes": {
+    "snippets": [
+      {
+        "language": [
+          "python"
+        ],
+        "path": "./snippets/python.json"
+      }
+    ]
+  },
   "scripts": {
     "build": "pnpm build:lib && pnpm build:labextension:dev",
     "build:prod": "run-s clean build:lib:prod build:labextension",
