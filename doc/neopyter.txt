@@ -1,4 +1,4 @@
-*neopyter.txt*                For                 Last change: 2025 January 14
+*neopyter.txt*                 For                  Last change: 2025 March 06
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -102,6 +102,12 @@ NEOVIM PLUGIN                            *neopyter-installation-neovim-plugin*
 >lua
     {
         "SUSTech-data/neopyter",
+        dependencies = {
+          'nvim-lua/plenary.nvim',
+          'nvim-treesitter/nvim-treesitter', -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
+          'AbaoFromCUG/websocket.nvim',  -- for mode='direct'
+        },
+    
         ---@type neopyter.Option
         opts = {
             mode="direct",
@@ -133,6 +139,7 @@ Default configuration ~
         ---@type neopyter.JupyterOption  # ref `:h neopyter.JupyterOption`
         jupyter = {
             auto_activate_file = true,
+            partial_sync = false,
             -- Always scroll to the current cell.
             scroll = {
                 enable = true,

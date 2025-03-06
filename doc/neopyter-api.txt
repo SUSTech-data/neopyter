@@ -23,6 +23,7 @@ context automatically
 
     Fields: ~
       • {auto_activate_file}?  (`boolean`)
+      • {partial_sync}?        (`boolean`) support partial sync notebook
       • {scroll}?              (`{enable?: boolean, align?: neopyter.ScrollToAlign}`)
 
 

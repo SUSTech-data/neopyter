@@ -79,7 +79,12 @@ function Notebook:attach()
                 a.run(function()
                     local syncable = self:safe_sync()
                     if syncable then
-                        self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
+                        if config.jupyter.partial_sync then
+                            self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
+                        else
+                            self:parse()
+                            self:full_sync()
+                        end
                     else
                         self:parse()
                     end

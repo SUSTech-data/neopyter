@@ -4,7 +4,7 @@ local fmt = string.format
 
 local Path = require("pathlib")
 
-local nvim_scripts_files = {
+local nvim_gen_files = {
     "gen_vimdoc.lua",
     "util.lua",
     "luacats_grammar.lua",
@@ -124,23 +124,23 @@ local panvimdoc_path = Path.stdpath("config") / "plugin/panvimdoc/panvimdoc.sh"
 local neopyter_entry = Path("lua/neopyter.lua"):absolute()
 local readme_entry = Path("README.md"):absolute()
 
-local function download_nvim_scripts()
+local function download_nvim_gen()
     local cache_path = Path.stdpath("cache", "gen_doc")
     vim.opt.rtp:append(tostring(cache_path))
-    local script_path = cache_path / "lua/scripts"
+    local script_path = cache_path / "lua/gen"
     script_path:mkdir(Path.permission("rwxr-xr-x"), true)
     local entry_script = script_path / "gen_vimdoc.lua"
 
-    for i, file in pairs(nvim_scripts_files) do
+    for i, file in pairs(nvim_gen_files) do
         local cmd =
-            string.format("curl -s https://raw.githubusercontent.com/neovim/neovim/refs/heads/master/scripts/%s -o %s", file, script_path / file)
+            string.format("curl -s https://raw.githubusercontent.com/neovim/neovim/refs/heads/master/src/gen/%s -o %s", file, script_path / file)
         vim.fn.system(cmd)
     end
     local entry = entry_script:fs_read()
     ---@cast entry -nil
     local doc_path = Path("."):absolute() / "doc"
 
-    entry = entry:gsub([[local cdoc_parser = require%('scripts.cdoc_parser'%)]], "")
+    entry = entry:gsub([[local cdoc_parser = require%('gen.cdoc_parser'%)]], "")
     entry = entry:gsub([[c = cdoc_parser.parse,]], "")
     entry = entry:gsub([[h = cdoc_parser.parse,]], "")
     entry = entry:gsub([[local function run%(%)]], [[local function run(config)]])
@@ -155,9 +155,6 @@ local function download_nvim_scripts()
 end
 
 local function inject_markdown()
-    -- local parser = require("scripts/luacats_parser")
-    -- local classes, funs, briefs = parser.parse("lua/neopyter.lua")
-    -- print(vim.inspect(briefs))
     local query = vim.treesitter.query.parse(
         "lua",
         [[
@@ -210,7 +207,7 @@ local function inject_markdown()
 end
 
 local function generate_doc()
-    download_nvim_scripts()
+    download_nvim_gen()
     inject_markdown()
     local out = vim.system({
         tostring(panvimdoc_path),
@@ -226,7 +223,7 @@ local function generate_doc()
 
     assert(out.code == 0, vim.inspect(out))
 
-    require("scripts/gen_vimdoc")(config)
+    require("gen/gen_vimdoc")(config)
 end
 
 generate_doc()

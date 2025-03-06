@@ -25,6 +25,7 @@ local fn = a.fn
 
 ---@class neopyter.JupyterOption
 ---@field auto_activate_file? boolean
+---@field partial_sync? boolean # support partial sync notebook
 ---@field scroll? {enable?: boolean, align?: neopyter.ScrollToAlign}
 
 ---@nodoc
