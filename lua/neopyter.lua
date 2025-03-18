@@ -26,6 +26,8 @@ local api = a.api
 ---@field parser {[string]: neopyter.Parser} Parser of language
 local neopyter = {}
 
+local is_windows = vim.loop.os_uname().version:match("Windows")
+
 ---@nodoc
 ---@doc-capture default-config
 ---@type neopyter.Option
@@ -34,6 +36,9 @@ local default_config = {
     file_pattern = { "*.ju.*" },
     filename_mapper = function(ju_path)
         local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
+        if is_windows then
+            ipynb_path = ipynb_path:gsub("\\", "/")
+        end
         return ipynb_path
     end,
     --- auto attach to buffer

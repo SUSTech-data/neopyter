@@ -158,7 +158,7 @@ end
 ---@return string
 function JupyterLab:_get_buf_local_path(buf)
     ---@type Path
-    local file_path = Path:new(api.nvim_buf_get_name(buf))
+    local file_path = utils.get_buf_path(buf)
 
     if file_path:is_absolute() then
         file_path = Path:new(file_path:make_relative(fn.getcwd()))

@@ -4,12 +4,30 @@ local api = a.api
 local M = {}
 
 local source = debug.getinfo(1).source
-local __dirname__ = source:match("@(.*/)") or source:match("@(.*\\)")
+-- local __dirname__ = source:match("@(.*/)") or source:match("@(.*\\)")
+
+local __root__ = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
+local is_windows = vim.loop.os_uname().version:match("Windows")
+
+if is_windows then
+    __root__ = __root__:gsub("/", "\\")
+end
 
 ---get plugin root
 ---@return Path
 function M.get_plugin_path()
-    return Path:new(__dirname__):parent():parent()
+    return Path:new(__root__)
+end
+
+---@param buf number
+---@return Path
+function M.get_buf_path(buf)
+    local file_path = api.nvim_buf_get_name(buf)
+    file_path = vim.fs.normalize(file_path)
+    if is_windows then
+        file_path = file_path:gsub("/", "\\")
+    end
+    return Path:new(file_path)
 end
 
 ---
