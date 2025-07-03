@@ -30,8 +30,11 @@ def get_all_ip():
     hostname = socket.gethostname()
     ip_addresses = set()
     ip_addresses.add("127.0.0.1")
-    for info in socket.getaddrinfo(hostname, None, family=socket.AF_INET):
-        ip_addresses.add(info[4][0])
+    try:
+        for info in socket.getaddrinfo(hostname, None, family=socket.AF_INET):
+            ip_addresses.add(info[4][0])
+    except socket.gaierror:
+        print("Are you use MacOS? Can't get ip")
     return ip_addresses
 
 
