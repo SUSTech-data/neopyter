@@ -1,7 +1,7 @@
 {
   "name": "neopyter",
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A JupyterLab extension. Integrate JupyterLab and Neovim",
   "author": {
     "name": "Abao Zhang",
