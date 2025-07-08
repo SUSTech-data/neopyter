@@ -1,3 +1,30 @@
+#!/usr/bin/env -S nvim -l
+vim.env.LAZY_STDPATH = ".docs"
+load(vim.fn.system("curl -s https://raw.githubusercontent.com/folke/lazy.nvim/main/bootstrap.lua"))()
+
+
+local __project_root__ = vim.fs.dirname(vim.fs.dirname(vim.fs.abspath(debug.getinfo(1).source:sub(2))))
+
+-- Setup lazy.nvim
+require("lazy.minit").repro({
+    spec = {
+        {
+            "SUSTech-data/neopyter",
+            dir = __project_root__
+        },
+
+        "nvim-lua/plenary.nvim",
+        "pysan3/pathlib.nvim",
+        "kdheepak/panvimdoc",
+        {
+            "nvim-treesitter/nvim-treesitter",
+            branch = "main",
+            opts = {}
+        },
+    },
+})
+
+
 local ts = require("neopyter.treesitter")
 
 local fmt = string.format
@@ -119,7 +146,7 @@ local config = {
     },
 }
 
-local panvimdoc_path = Path.stdpath("config") / "plugin/panvimdoc/panvimdoc.sh"
+local panvimdoc_path = Path.stdpath("data") / "lazy/panvimdoc/panvimdoc.sh"
 
 local neopyter_entry = Path("lua/neopyter.lua"):absolute()
 local readme_entry = Path("README.md"):absolute()

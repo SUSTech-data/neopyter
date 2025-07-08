@@ -113,7 +113,7 @@ Obtain notebook refer to `neopyter-jupyterlab-api`
 
 
 Notebook:activate()                                      *Notebook:activate()*
-    active notebook in jupyterlab @async
+    active notebook in jupyterlab
 
 Notebook:activate_cell()                            *Notebook:activate_cell()*
     active cell

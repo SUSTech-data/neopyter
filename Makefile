@@ -14,11 +14,12 @@ test:
 document:
 	@nvim \
 		--headless \
+		--clean \
 		--noplugin \
-		-u ${MINI_INIT} \
 		-l ${GEN_DOC}
 	@nvim \
 		--headless\
+		--clean \
 		--noplugin \
 		-c "helptags ./doc" \
 		-c "qall!"

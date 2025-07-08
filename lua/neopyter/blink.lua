@@ -24,11 +24,28 @@ local a = require("neopyter.async")
 ---@field completer neopyter.Completer
 local neopyter = {}
 
-function neopyter.new(opts)
-    local self = setmetatable({}, { __index = neopyter })
-    self.completer = Completer.new(opts)
 
-    return self
+
+---@class neopyter.BlinkCompleterOption: neopyter.CompleterOption
+---@field symbol_map table<string, string>
+
+---comment
+---@param opts neopyter.BlinkCompleterOption
+---@return table|blink.cmp.Source
+function neopyter.new(opts)
+    opts = vim.tbl_deep_extend("force", {
+        symbol_map = {
+            -- specific complete item kind icon
+            ["Magic"] = "",
+            ["Path"] = "",
+            ["Dict key"] = "󱏅",
+            ["Instance"] = "",
+            ["Statement"] = "󰵪",
+        }
+    }, opts or {}) --[[@as neopyter.BlinkCompleterOption]]
+    local obj = setmetatable({}, { __index = neopyter })
+    obj.completer = Completer.new(opts)
+    return obj
 end
 
 function neopyter:get_trigger_characters()
@@ -42,7 +59,7 @@ end
 function neopyter:get_completions(context, callback)
     -- we use libuv, but the rest of the library expects to be synchronous
     callback = vim.schedule_wrap(callback)
-    local opts = self.opts
+    local opts = self.completer.opts --[[@as neopyter.BlinkCompleterOption]]
     local CompletionItemKind = require("blink.cmp.types").CompletionItemKind
     a.run(function()
         local notebook = jupyter.notebook
@@ -66,26 +83,24 @@ function neopyter:get_completions(context, callback)
 
         items = vim.iter(items)
             :map(function(item)
-                ---@cast item neopyter.CompletionItem
-                local kind
-                if vim.tbl_contains(Completer.jupyter_spec_kind, item.type) then
-                    kind = 1
-                else
-                    kind = CompletionItemKind[kind]
-                end
-
                 ---@type blink.cmp.CompletionItem
                 ---@diagnostic disable-next-line: missing-fields
-                return {
-                    -- source_id = "neopyter",
-                    -- source_name = "Neopyter",
+                local completeItem = {
                     insertText = item.insertText,
-                    kind = kind,
                     label = item.label,
                     documentation = {
                         value = "",
                     },
                 }
+
+                if vim.tbl_contains(Completer.jupyter_spec_kind, item.type) then
+                    completeItem.kind = 1
+                    completeItem.kind_name = item.type
+                    completeItem.kind_icon = opts.symbol_map[item.type]
+                else
+                    completeItem.kind = CompletionItemKind[item.kind]
+                end
+                return completeItem
             end)
             :totable()
 

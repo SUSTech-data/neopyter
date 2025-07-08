@@ -1,4 +1,4 @@
-*neopyter.txt*                 For                  Last change: 2025 March 06
+*neopyter.txt*            For NVIM v0.12.0           Last change: 2025 July 08
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -129,6 +129,9 @@ Default configuration ~
         file_pattern = { "*.ju.*" },
         filename_mapper = function(ju_path)
             local ipynb_path = vim.fn.fnamemodify(ju_path, ":r:r:r") .. ".ipynb"
+            if is_windows then
+                ipynb_path = ipynb_path:gsub("\\", "/")
+            end
             return ipynb_path
         end,
         --- auto attach to buffer
@@ -318,7 +321,7 @@ BLINK.CMP                                     *neopyter-integration-blink.cmp*
                 neopyter = {
                     name = "Neopyter",
                     module = "neopyter.blink",
-                    ---@type neopyter.CompleterOption
+                    ---@type neopyter.BlinkCompleterOption
                     opts = {},
                 },
             },
@@ -511,15 +514,11 @@ Configuration Types                             *neopyter-configuration-types*
 
 
 
-
-
 *neopyter.HighlightOption*
 
     Fields: ~
       • {enable}  (`boolean`)
       • {mode}    (`"zen"|"separator"`)
-
-
 
 
 
@@ -532,14 +531,10 @@ Configuration Types                             *neopyter-configuration-types*
 
 
 
-
-
 *neopyter.InjectionOption*
 
     Fields: ~
       • {enable}  (`boolean`)
-
-
 
 
 
@@ -570,7 +565,5 @@ Configuration Types                             *neopyter-configuration-types*
       • {trigger}    (`neopyter.CompletionTriggerKind`)
       • {line}       (`number`) The cursor line number.
       • {column}     (`number`) The cursor column number.
-
-
 
  vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

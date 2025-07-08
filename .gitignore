@@ -137,3 +137,5 @@ pyrightconfig.json
 doc/bigfile.ju.py
 doc/test.ju.py
 .minimal
+.tests
+.docs

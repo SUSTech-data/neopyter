@@ -1,20 +1,18 @@
 {
-  "lspconfig": {
-    "lua_ls": {
-      "Lua.addonManager.addons": [
-        "lazy.nvim",
-        "neopyter",
-        "pathlib.nvim",
-        "nvim",
-        "nvim-cmp",
-        "plenary.nvim",
-        "websocket.nvim",
-        "nvim-treesitter",
-        "blink.cmp",
-        "luassert",
-        "busted"
-      ]
-    }
+  "lua_ls": {
+    "addons": [
+      "lazy.nvim",
+      "neopyter",
+      "pathlib.nvim",
+      "nvim",
+      "nvim-cmp",
+      "plenary.nvim",
+      "websocket.nvim",
+      "nvim-treesitter",
+      "blink.cmp",
+      "luassert",
+      "busted"
+    ]
   },
   "neopyter": {
     "mode": "direct",
