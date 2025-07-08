@@ -1,29 +1,26 @@
 #!/usr/bin/env -S nvim -l
-vim.env.LAZY_STDPATH = ".docs"
-load(vim.fn.system("curl -s https://raw.githubusercontent.com/folke/lazy.nvim/main/bootstrap.lua"))()
+local root = vim.fn.fnamemodify(".docs", ":p")
 
+for _, name in ipairs({ "config", "data", "state", "cache" }) do
+    vim.env[("XDG_%s_HOME"):format(name:upper())] = root .. "/" .. name
+end
+vim.opt.packpath:append(vim.fs.joinpath(vim.fn.stdpath("data"), "site"))
 
 local __project_root__ = vim.fs.dirname(vim.fs.dirname(vim.fs.abspath(debug.getinfo(1).source:sub(2))))
 
--- Setup lazy.nvim
-require("lazy.minit").repro({
-    spec = {
-        {
-            "SUSTech-data/neopyter",
-            dir = __project_root__
-        },
-
-        "nvim-lua/plenary.nvim",
-        "pysan3/pathlib.nvim",
-        "kdheepak/panvimdoc",
-        {
-            "nvim-treesitter/nvim-treesitter",
-            branch = "main",
-            opts = {}
-        },
-    },
+vim.pack.add({
+    "https://github.com/nvim-lua/plenary.nvim",
+    "https://github.com/pysan3/pathlib.nvim",
+    "https://github.com/nvim-neotest/nvim-nio",
+    "https://github.com/kdheepak/panvimdoc",
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 })
 
+vim.opt.rtp:append(__project_root__)
+vim.opt.rtp:append(vim.fs.joinpath(__project_root__, "after"))
+
+require("nvim-treesitter").setup({})
+require 'nvim-treesitter'.install { "lua", "python", "markdown" }:wait(300000)
 
 local ts = require("neopyter.treesitter")
 
@@ -146,7 +143,7 @@ local config = {
     },
 }
 
-local panvimdoc_path = Path.stdpath("data") / "lazy/panvimdoc/panvimdoc.sh"
+local panvimdoc_path = Path.stdpath("data") / "site/pack/core/opt/panvimdoc/panvimdoc.sh"
 
 local neopyter_entry = Path("lua/neopyter.lua"):absolute()
 local readme_entry = Path("README.md"):absolute()

@@ -24,6 +24,5 @@ vim.opt.rtp:append(vim.fs.joinpath(__project_root__, "after"))
 vim.cmd("runtime plugin/plenary.vim")
 require("plenary.busted")
 require("nvim-treesitter").setup({})
-
 require 'nvim-treesitter'.install { "lua", "python", "markdown" }:wait(300000)
 
