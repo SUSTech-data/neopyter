@@ -16,6 +16,9 @@ jobs:
         with:
           neovim: true
           version: nightly
+
+      - name: Install pandoc
+        uses: pandoc/actions/setup@v1
       - name: Make document
         run: |
           make document
