@@ -246,6 +246,10 @@ local function generate_doc()
         "neopyter",
         "--input-file",
         "README.md",
+    }, {
+        env = {
+            GITHUB_ACTIONS = "false"
+        }
     }):wait()
 
     assert(out.code == 0, vim.inspect(out))
