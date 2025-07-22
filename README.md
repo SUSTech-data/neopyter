@@ -337,8 +337,8 @@ More information, see [nvim-cmp wiki](https://github.com/hrsh7th/nvim-cmp/wiki/M
 ```lua
 require("blink-cmp").setup({
     sources = {
-        default = {
-            "neopyter",
+        per_filetype = {
+            python = { inherit_defaults = true, "neopyter" },
         },
         providers = {
             neopyter = {
