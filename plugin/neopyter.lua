@@ -46,6 +46,16 @@ local cmds = {
                 assert(status, data)
                 args = data
             end
+            local notebook_method = command:match("notebook:(.*)")
+
+            if notebook_method and jupyter.notebook then
+                local method = jupyter.notebook[notebook_method:gsub("-", "_")]
+                if method then
+                    method(jupyter.notebook, args)
+                    return
+                end
+            end
+
             jupyter.jupyterlab:execute_command(command, args)
         end,
     },

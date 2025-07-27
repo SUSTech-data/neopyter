@@ -223,6 +223,9 @@ Notebook:run_all_above()                            *Notebook:run_all_above()*
 
 Notebook:run_all_below()                            *Notebook:run_all_below()*
 
+                                        *Notebook:run_cell_and_insert_below()*
+Notebook:run_cell_and_insert_below()
+
 Notebook:run_selected_cell()                    *Notebook:run_selected_cell()*
 
 Notebook:safe_sync()                                    *Notebook:safe_sync()*

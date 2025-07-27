@@ -383,6 +383,18 @@ function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
 
+function Notebook:run_cell_and_insert_below()
+    self:run_selected_cell()
+    local idx, row, col = self:get_cursor_cell_pos()
+    local cell = self.cells[idx]
+    if not cell then
+        return
+    end
+    local new_row = cell.end_row + 1
+    a.api.nvim_buf_set_lines(self.bufnr, new_row, new_row, false, { "# %%", "" })
+    self:set_cursor_pos({ new_row + 2, 1 })
+end
+
 ---@nodoc
 Notebook = a.safe_wrap(Notebook, {
     "is_connecting",
