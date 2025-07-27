@@ -228,7 +228,7 @@ on_attach = function(buf)
     -- map("n", "<space>nt", "<cmd>Neopyter kernel restart<cr>", "restart kernel")
 
     map("n", "<S-Enter>", "<cmd>Neopyter execute runmenu:run<cr>", "run selected and select next")
-    map("n", "<M-Enter>", "<cmd>Neopyter execute run-cell-and-insert-below<cr>", "run selected and insert below")
+    map("n", "<M-Enter>", "<cmd>Neopyter execute notebook:run-cell-and-insert-below<cr>", "run selected and insert below")
 
     map("n", "<F5>", "<cmd>Neopyter execute notebook:restart-run-all<cr>", "restart kernel and run all")
 end
