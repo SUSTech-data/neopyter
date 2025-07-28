@@ -139,3 +139,4 @@ doc/test.ju.py
 .minimal
 .tests
 .docs
+.repro-cmp

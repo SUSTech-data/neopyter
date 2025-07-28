@@ -65,28 +65,41 @@ others, you must use direct mode
 
 Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abilities like [jupynium.nvim](https://github.com/kiyoon/jupynium.nvim).
 
-## Specifications
-
-Please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/specification.ju.py](doc/specification.ju.py)
-
 <!-- panvimdoc-ignore-start -->
 ## Screenshots
 
 <table>
     <tr>
-        <th></th>
-        <th>[Completion](#blinkcmp)</th>
-        <th>Cell Magic</th>
-        <th>Line Magic</th>
+        <th>Completion (blink.cmp)</th>
+        <th>Completion (nvim-cmp)</th>
     </tr>
     <tr>
         <th>
+            <img alt="Completion" width="100%" src="./doc/screenshot_complete_blink.png">
         </th>
         <th>
-            <img alt="Completion" width="100%" src="./doc/complete_blink.png">
+            <img alt="Completion nvim-cmp" width="100%" src="./doc/screenshot_complete_cmp.png">
+        </th>
+    </tr>
+    <tr>
+        <th>Code Cell</th>
+        <th>Markdown Cell</th>
+    </tr>
+        <tr>
+        <th>
+            <img alt="Cell Magic" src="./doc/screenshot_code_cell.png">
         </th>
         <th>
-            <img alt="Cell Magic" src="./doc/cell_magic_js.png">
+            <img alt="Line Magic" src="./doc/screenshot_markdown_cell.png">
+        </th>
+    </tr>
+    <tr>
+        <th>Cell Magic</th>
+        <th>Line Magic</th>
+    </tr>
+        <tr>
+        <th>
+            <img alt="Cell Magic" src="./doc/screenshot_magic_cell.png">
         </th>
         <th>
             <img alt="Line Magic" src="./doc/line_magic.png">
@@ -94,6 +107,12 @@ Please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/spec
     </tr>
 </table>
 <!-- panvimdoc-ignore-end -->
+
+## Specifications
+
+> [!NOTE]
+> More screenshots and spec, please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/specification.ju.py](doc/specification.ju.py)
+
 
 # Requirements
 

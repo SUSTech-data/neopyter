@@ -93,12 +93,12 @@ function neopyter:get_completions(context, callback)
                     },
                 }
 
+                -- reference https://github.com/Saghen/blink.cmp/issues/590
                 if vim.tbl_contains(Completer.jupyter_spec_kind, item.type) then
-                    completeItem.kind = 1
                     completeItem.kind_name = item.type
                     completeItem.kind_icon = opts.symbol_map[item.type]
                 else
-                    completeItem.kind = CompletionItemKind[item.kind]
+                    completeItem.kind = CompletionItemKind[item.type]
                 end
                 return completeItem
             end)

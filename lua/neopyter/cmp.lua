@@ -35,7 +35,7 @@ end
 function neopyter:complete(params, callback)
     a.run(function()
         local notebook = jupyter.notebook
-        if self:is_available() then
+        if not self:is_available() then
             callback()
             return
         end
