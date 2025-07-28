@@ -8,6 +8,8 @@ jobs:
   update-docs:
     name: Update README and doc
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4

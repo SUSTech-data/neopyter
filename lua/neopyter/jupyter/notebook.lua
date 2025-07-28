@@ -385,7 +385,7 @@ end
 
 function Notebook:run_cell_and_insert_below()
     self:run_selected_cell()
-    local idx, row, col = self:get_cursor_cell_pos()
+    local idx = self:get_cursor_cell_pos()
     local cell = self.cells[idx]
     if not cell then
         return
@@ -393,6 +393,21 @@ function Notebook:run_cell_and_insert_below()
     local new_row = cell.end_row + 1
     a.api.nvim_buf_set_lines(self.bufnr, new_row, new_row, false, { "# %%", "" })
     self:set_cursor_pos({ new_row + 2, 1 })
+end
+
+---run selected cell and select next
+---fallback to run_cell_and_insert_below if selecting last cell (the behavior is same with `notebook:run-cell-and-select-next`)
+function Notebook:run_cell_and_select_next()
+    local idx = self:get_cursor_cell_pos()
+    if idx == #self.cells then
+        -- fallback to run and insert
+        self:run_cell_and_insert_below()
+        return
+    end
+    self:run_selected_cell()
+    local cell = self.cells[idx + 1]
+    local line_count = a.api.nvim_buf_line_count(self.bufnr)
+    self:set_cursor_pos({ math.min(cell.start_row + 2, line_count), 1 })
 end
 
 ---@nodoc
