@@ -58,9 +58,9 @@ abilities like jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>.
 
 SPECIFICATIONS                          *neopyter-introduction-specifications*
 
-Please refer to doc/specification.ipynb <doc/specification.ipynb> and
-doc/specification.ju.py <doc/specification.ju.py>
 
+  [!NOTE] More screenshots and spec, please refer to doc/specification.ipynb
+  <doc/specification.ipynb> and doc/specification.ju.py <doc/specification.ju.py>
 
 ==============================================================================
 2. Requirements                                        *neopyter-requirements*
