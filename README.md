@@ -70,7 +70,6 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
 
 <div align="center">
   <p>
-    <h3><a href="https://github.com/user-attachments/assets/b30275ed-ca91-456d-8edf-42093c5918a0">Simple show case</a></h3>
     <video controls src="https://github.com/user-attachments/assets/b30275ed-ca91-456d-8edf-42093c5918a0"></video>
   </p>
 </div>
