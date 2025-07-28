@@ -226,6 +226,12 @@ Notebook:run_all_below()                            *Notebook:run_all_below()*
                                         *Notebook:run_cell_and_insert_below()*
 Notebook:run_cell_and_insert_below()
 
+                                         *Notebook:run_cell_and_select_next()*
+Notebook:run_cell_and_select_next()
+    run selected cell and select next fallback to run_cell_and_insert_below if
+    selecting last cell (the behavior is same with
+    `notebook:run-cell-and-select-next`)
+
 Notebook:run_selected_cell()                    *Notebook:run_selected_cell()*
 
 Notebook:safe_sync()                                    *Notebook:safe_sync()*
