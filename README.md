@@ -224,6 +224,7 @@ local default_config = {
     parser = {
         trim_whitespace = false,
         python = {},
+        r = {},
     },
 }
 ```

@@ -36,13 +36,20 @@ Neopyter module: Parser                                      *neopyter-parser*
       • {parse_source}       (`fun(self: neopyter.Parser, source: number|string|string[], cell: neopyter.ICell)`)
                              See |Parser:parse_source()|.
 
-*neopyter.ParserOption*
+*neopyter.ParserCommonOption*
 
     Fields: ~
       • {trim_whitespace}?  (`boolean`) Whether trim leading/trailing
                             whitespace, but keep 1 line each cell at least,
                             default false
-      • {python}?           (`neopyter.PercentParserOption`)
+
+*neopyter.ParserOption*
+    Extends: |neopyter.ParserCommonOption|
+
+
+    Fields: ~
+      • {python}?  (`neopyter.PercentParserOption`)
+      • {r}?       (`neopyter.PercentParserOption`)
 
 
 Parser:iter_cell({source}, {start_row}, {end_row})        *Parser:iter_cell()*
