@@ -142,7 +142,7 @@ function Notebook:get_parser()
     local ft = a.api.nvim_get_option_value("ft", { buf = self.bufnr })
     local lang = vim.treesitter.language.get_lang(ft) --[[@as string]]
     ---@type neopyter.Parser
-    local parser = require("neopyter").parser[lang]
+    local parser = require("neopyter").parser["python"]
     return parser
 end
 
