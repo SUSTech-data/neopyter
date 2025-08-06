@@ -1,8 +1,11 @@
 local ts = require("neopyter.treesitter")
 
----@class neopyter.ParserOption
+---@class neopyter.ParserCommonOption
 ---@field trim_whitespace? boolean Whether trim leading/trailing whitespace, but keep 1 line each cell at least, default false
+
+---@class neopyter.ParserOption: neopyter.ParserCommonOption
 ---@field python? neopyter.PercentParserOption
+---@field r? neopyter.PercentParserOption
 
 ---@class neopyter.ICell
 ---@field start_row number include, 0-based

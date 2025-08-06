@@ -131,6 +131,7 @@ doc/tags
 yarn.lock
 *.ipynb
 !/doc/specification.ipynb
+!/doc/r_specification.ipynb
 
 pyrightconfig.json
 .repro

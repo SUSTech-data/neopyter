@@ -47,6 +47,14 @@ function M.setup()
                 )
             ]]
         ),
+        r = vim.treesitter.query.parse(
+            "r",
+            [[
+            (program
+              (comment) @cellseparator
+              (#match-percent-separator? @cellseparator)
+            )
+        ]]),
     }
 end
 
@@ -118,7 +126,9 @@ local function update_separator_highlight(buf)
 
     api.nvim_set_hl(ns_highlight, "NeopyterSeparator", { link = "CursorLine" })
 
-    local query = M.query[ts.get_buf_lang(buf)]
+    local lang = ts.get_buf_lang(buf)
+    local query = M.query[lang]
+    assert(query, string.format("can't find %s's highlight query", lang))
     ts.iter_captures(query, 0, "cellseparator"):each(function(node)
         highlight_node(node, "CursorLine", "linewise", true, 9001)
     end)

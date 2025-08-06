@@ -7,39 +7,20 @@ local Parser = require("neopyter.parser.parser")
 local PercentParser = Parser:new()
 PercentParser.__index = PercentParser
 
----@class neopyter.PercentParserOption: neopyter.ParserOption
+
+---@class neopyter.PercentParserOption: neopyter.ParserCommonOption
+---@field separator_query vim.treesitter.Query
+---@field extract_string_query vim.treesitter.Query
+---@field extract_string_capture string
 
 ---constructor of PercentParser
 ---@param opt neopyter.PercentParserOption
 ---@return neopyter.PercentParser
 function PercentParser:new(opt)
     local obj = vim.tbl_deep_extend("force", {}, opt or {}) --[[@as neopyter.PercentParser]]
+    assert(obj.separator_query)
+    assert(obj.extract_string_query)
     obj = setmetatable(obj, self)
-    obj.separator_query = vim.treesitter.query.parse(
-        "python",
-        [[
-            (module
-              (comment) @cellseparator
-              (#match-percent-separator? @cellseparator)
-              (#set-percent-metadata! @cellseparator)
-            )
-        ]]
-    )
-    obj.extract_string_capture = "cellcontent"
-    obj.extract_string_query = vim.treesitter.query.parse(
-        "python",
-        [[
-            (module
-                (expression_statement
-                    (string
-                        (string_start) 
-                        (string_content) @cellcontent
-                        (string_end)
-                    )
-                )
-            )
-        ]]
-    )
     vim.treesitter.query.add_predicate("match-line-magic?", PercentParser.match_line_magic, { force = true, all = true })
     vim.treesitter.query.add_predicate("match-percent-separator?", PercentParser.match_percent_separator, { force = true, all = true })
     vim.treesitter.query.add_predicate("match-cell-content?", PercentParser.match_cell_content, { force = true, all = true })
