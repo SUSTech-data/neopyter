@@ -1,4 +1,4 @@
-*neopyter.txt*           For NVIM v0.12.0          Last change: 2025 August 06
+*neopyter.txt*           For NVIM v0.12.0          Last change: 2025 August 30
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -411,7 +411,7 @@ Supported queries:
 <
 
 - Notebook API: |neopyter-notebook-api|
-- JupyterLab API|neopyter-jupyterlab-api-api|
+- JupyterLab API |neopyter-jupyterlab-api-api|
 
 
 ASYNC                                                     *neopyter-api-async*
