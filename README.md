@@ -458,7 +458,7 @@ current_notebook:run_all_below()
 ```
 
 - Notebook API: `:h neopyter-notebook-api`
-- JupyterLab API`:h neopyter-jupyterlab-api-api`
+- JupyterLab API `:h neopyter-jupyterlab-api-api`
 
 ## Async
 

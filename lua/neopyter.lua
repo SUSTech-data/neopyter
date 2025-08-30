@@ -158,8 +158,6 @@ function neopyter.load_parser()
     }, option, python_spec_option) --[[@as neopyter.PercentParserOption ]]
     neopyter.parser["python"] = PercentParser:new(python_option)
 
-  -- (string ; [56, 0] - [59, 1]
-  --   content: (string_content))) ; [56, 1] - [59, 0]
     local r_option = vim.tbl_deep_extend("force", {
         separator_query = vim.treesitter.query.parse(
             "r",

@@ -141,3 +141,4 @@ doc/test.ju.py
 .tests
 .docs
 .repro-cmp
+uv.lock
