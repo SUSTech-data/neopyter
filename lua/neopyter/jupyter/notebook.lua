@@ -76,19 +76,21 @@ function Notebook:attach()
         })
         api.nvim_buf_attach(self.bufnr, false, {
             on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
-                a.run(function()
-                    local syncable = self:safe_sync()
-                    if syncable then
-                        if config.jupyter.partial_sync then
-                            self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
+                vim.schedule(function()
+                    a.run(function()
+                        local syncable = self:safe_sync()
+                        if syncable then
+                            if config.jupyter.partial_sync then
+                                self:partial_sync(start_row, old_end_row - 1, new_end_row - 1)
+                            else
+                                self:parse()
+                                self:full_sync()
+                            end
                         else
                             self:parse()
-                            self:full_sync()
                         end
-                    else
-                        self:parse()
-                    end
-                end, function() end)
+                    end, function() end)
+                end)
             end,
         })
     end
