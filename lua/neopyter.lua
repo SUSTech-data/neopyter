@@ -3,6 +3,7 @@ local textobject = require("neopyter.textobject")
 local injection = require("neopyter.injection")
 local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
+local PercentParser = require("neopyter.parser.percent")
 local a = require("neopyter.async")
 local api = a.api
 
@@ -121,15 +122,23 @@ end
 function neopyter.load_parser()
     neopyter.parser = {}
     local option = vim.deepcopy(neopyter.config.parser)
-    ---@cast option any
-    local PercentParser = require("neopyter.parser.percent")
 
     local python_spec_option = option.python
     local r_spec_option = option.r
     option.python = nil
     option.r = nil
 
+    if vim.treesitter.language.add("python") then
+        python_spec_option = vim.tbl_deep_extend("force", option, python_spec_option)
+        neopyter.setup_python_parser(python_spec_option)
+    end
+    if vim.treesitter.language.add("r") then
+        r_spec_option = vim.tbl_deep_extend("force", option, r_spec_option)
+        neopyter.setup_r_parser(r_spec_option)
+    end
+end
 
+function neopyter.setup_python_parser(spec_option)
     local python_option = vim.tbl_deep_extend("force", {
         separator_query = vim.treesitter.query.parse(
             "python",
@@ -154,10 +163,13 @@ function neopyter.load_parser()
                     )
                 )
             )
-        ]])
-    }, option, python_spec_option) --[[@as neopyter.PercentParserOption ]]
+        ]]
+        ),
+    }, spec_option) --[[@as neopyter.PercentParserOption ]]
     neopyter.parser["python"] = PercentParser:new(python_option)
+end
 
+function neopyter.setup_r_parser(spec_option)
     local r_option = vim.tbl_deep_extend("force", {
         separator_query = vim.treesitter.query.parse(
             "r",
@@ -167,7 +179,8 @@ function neopyter.load_parser()
               (#match-percent-separator? @cellseparator)
               (#set-percent-metadata! @cellseparator)
             )
-        ]]),
+        ]]
+        ),
         extract_string_capture = "cellcontent",
         extract_string_query = vim.treesitter.query.parse(
             "r",
@@ -177,9 +190,9 @@ function neopyter.load_parser()
                     content: (string_content) @cellcontent
                 )
             )
-        ]])
-
-    }, option, r_spec_option) --[[@as neopyter.PercentParserOption ]]
+        ]]
+        ),
+    }, spec_option) --[[@as neopyter.PercentParserOption ]]
     neopyter.parser["r"] = PercentParser:new(r_option)
 end
 

@@ -15,6 +15,17 @@ function M.check()
         health.start("neopyter: config")
         health.info(vim.inspect(neopyter.config))
         local status = jupyter.jupyterlab:is_attached()
+
+        health.start("neopyter: treesitter")
+        local languages = { "python", "r", "markdown" }
+        vim.iter(languages):each(function(lang)
+            if vim.treesitter.language.add(lang) then
+                health.ok(string.format("parser: %s parser is installed", lang))
+            else
+                health.warn(string.format("parser: %s parser is not installed, please install via `:TSInstall %s`", lang, lang))
+            end
+        end)
+
         health.start("neopyter: version")
         local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
         if status then
