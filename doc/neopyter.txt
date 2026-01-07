@@ -1,4 +1,4 @@
-*neopyter.txt*          For NVIM v0.12.0         Last change: 2025 December 25
+*neopyter.txt*          For NVIM v0.12.0          Last change: 2026 January 07
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -6,22 +6,23 @@ Table of Contents                                 *neopyter-table-of-contents*
 1. Introduction                                        |neopyter-introduction|
   - How does it work?                |neopyter-introduction-how-does-it-work?|
   - Specifications                      |neopyter-introduction-specifications|
-2. Requirements                                        |neopyter-requirements|
-3. Installation                                        |neopyter-installation|
+2. Installation                                        |neopyter-installation|
+  - Requirements                          |neopyter-installation-requirements|
   - JupyterLab Extension          |neopyter-installation-jupyterlab-extension|
   - Neovim Plugin                        |neopyter-installation-neovim-plugin|
-4. Usage                                                      |neopyter-usage|
-5. Available Vim Commands                    |neopyter-available-vim-commands|
-6. Integration                                          |neopyter-integration|
+3. Usage                                                      |neopyter-usage|
+  - Available Vim Commands             |neopyter-usage-available-vim-commands|
+  - Troubleshooting                           |neopyter-usage-troubleshooting|
+  - API                                                   |neopyter-usage-api|
+4. Integration                                          |neopyter-integration|
   - neoconf.nvim                           |neopyter-integration-neoconf.nvim|
   - nvim-cmp                                   |neopyter-integration-nvim-cmp|
   - blink.cmp                                 |neopyter-integration-blink.cmp|
   - textobjects                             |neopyter-integration-textobjects|
-7. API                                                          |neopyter-api|
-  - Async                                                 |neopyter-api-async|
-8. Features                                                |neopyter-features|
-9. Acknowledges                                        |neopyter-acknowledges|
-10. Configuration Types                         |neopyter-configuration-types|
+5. Features                                                |neopyter-features|
+6. Acknowledges                                        |neopyter-acknowledges|
+7. Configuration Types                          |neopyter-configuration-types|
+8. Links                                                      |neopyter-links|
 
 ==============================================================================
 1. Introduction                                        *neopyter-introduction*
@@ -63,18 +64,17 @@ SPECIFICATIONS                          *neopyter-introduction-specifications*
   <doc/specification.ipynb> and doc/specification.ju.py <doc/specification.ju.py>
 
 ==============================================================================
-2. Requirements                                        *neopyter-requirements*
+2. Installation                                        *neopyter-installation*
+
+`Neopyter` support two parts, so we need to install them separately.
+
+
+REQUIREMENTS                              *neopyter-installation-requirements*
 
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim latest
     - 👍`nvim-lua/plenary.nvim`
     - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
-
-
-==============================================================================
-3. Installation                                        *neopyter-installation*
-
-`Neopyter` support two parts, so we need to install them separately.
 
 
 JUPYTERLAB EXTENSION              *neopyter-installation-jupyterlab-extension*
@@ -204,7 +204,7 @@ Suggest keymaps(`neopyter` don’t provide default keymap):
 
 
 ==============================================================================
-4. Usage                                                      *neopyter-usage*
+3. Usage                                                      *neopyter-usage*
 
 - Open JupyterLab `jupyter lab`, there is a sidebar named `Neopyter`, which display neopyter ip+port
 - Open a `*.ju.py` file in neovim
@@ -212,8 +212,7 @@ Suggest keymaps(`neopyter` don’t provide default keymap):
     - You’ll see everything you type below that will be synchronised in the browser
 
 
-==============================================================================
-5. Available Vim Commands                    *neopyter-available-vim-commands*
+AVAILABLE VIM COMMANDS                 *neopyter-usage-available-vim-commands*
 
 - Status
     - `:Neopyter status` alias to `:checkhealth neopyter` currently
@@ -237,8 +236,91 @@ Suggest keymaps(`neopyter` don’t provide default keymap):
         directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
 
+TROUBLESHOOTING                               *neopyter-usage-troubleshooting*
+
+As `Neopyter` includes two parts, if you meet any issues, please check both
+`JupyterLab extension` and `Neovim plugin`:
+
+- For `JupyterLab extension`, please check the sidebar and the console log of the browser.
+    - If `mode=proxy`, please check whether the port is listening on the host where jupyter server is located, e.g. `lsof -i :9001` on Linux/MacOS or
+        `netstat -an | findstr 9001` on Windows
+- For `Neovim plugin`, please run `:Neopyter status`.
+    - If `mode=direct`, you could check port listening status on the host where neovim is located, e.g. `lsof -i :9001` on Linux/MacOS or `netstat -an | findstr 9001` on Windows
+
+We provide minimize reproduction example in `./example`:
+
+- In one terminal, start jupyter lab
+
+>
+    cd example
+    uv run jupyter lab --ip=0.0.0.0 --port=7088
+<
+
+In another terminal, start neovim
+
+>bash
+    cd example
+    nvim -u repro.lua main.ju.py
+<
+
+Feel free to open an issue if you still cannot solve your problem, and provide
+the following information:
+
+- repro.lua
+- The command you used to start `Jupyter lab`
+- main.ju.py
+- `:Neopyter status` output
+- The console log of the browser, e.g.:
+
+
+API                                                       *neopyter-usage-api*
+
+`Neopyter` provides rich lua APIs, you could use below code as initialization:
+
+>lua
+    
+    -- Reference to `:h neopyter-jupyterlab-api` for all api document
+    local current_lab = require("neopyter.jupyter").jupyterlab
+    current_lab:execute_command("notebook:export-to-format", {format="html"})
+    
+    -- Reference to `:h neopyter-notebook-api` for all api document
+    local current_notebook = require("neopyter.jupyter").notebook
+    
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+<
+
+- Notebook API: |neopyter-notebook-api|
+- JupyterLab API |neopyter-jupyterlab-api-api|
+
+
+ASYNC ~
+
+`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
+
+- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
+- A single API call always works
+
+>lua
+    vim.defer_fn(function()
+        -- non-async context, API response may be unordered
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end, 0)
+    
+    require("neopyter.async").run(function()
+        -- async context, so which will call and return in order
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end)
+<
+
+
 ==============================================================================
-6. Integration                                          *neopyter-integration*
+4. Integration                                          *neopyter-integration*
 
 
 NEOCONF.NVIM                               *neopyter-integration-neoconf.nvim*
@@ -392,54 +474,7 @@ Supported queries:
 
 
 ==============================================================================
-7. API                                                          *neopyter-api*
-
-`Neopyter` provides rich lua APIs, you could use below code as initialization:
-
->lua
-    
-    -- Reference to `:h neopyter-jupyterlab-api` for all api document
-    local current_lab = require("neopyter.jupyter").jupyterlab
-    current_lab:execute_command("notebook:export-to-format", {format="html"})
-    
-    -- Reference to `:h neopyter-notebook-api` for all api document
-    local current_notebook = require("neopyter.jupyter").notebook
-    
-    current_notebook:run_selected_cell()
-    current_notebook:run_all_above()
-    current_notebook:run_all_below()
-<
-
-- Notebook API: |neopyter-notebook-api|
-- JupyterLab API |neopyter-jupyterlab-api-api|
-
-
-ASYNC                                                     *neopyter-api-async*
-
-`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
-
-- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
-- A single API call always works
-
->lua
-    vim.defer_fn(function()
-        -- non-async context, API response may be unordered
-        current_notebook:run_selected_cell()
-        current_notebook:run_all_above()
-        current_notebook:run_all_below()
-    end, 0)
-    
-    require("neopyter.async").run(function()
-        -- async context, so which will call and return in order
-        current_notebook:run_selected_cell()
-        current_notebook:run_all_above()
-        current_notebook:run_all_below()
-    end)
-<
-
-
-==============================================================================
-8. Features                                                *neopyter-features*
+5. Features                                                *neopyter-features*
 
 - Neovim
     - ☒ Full sync
@@ -487,7 +522,7 @@ ASYNC                                                     *neopyter-api-async*
 
 
 ==============================================================================
-9. Acknowledges                                        *neopyter-acknowledges*
+6. Acknowledges                                        *neopyter-acknowledges*
 
 - jupynium.nvim <https://github.com/kiyoon/jupynium.nvim>: Selenium-automated Jupyter Notebook that is synchronised with Neovim in real-time.
 - snacks.nvim <https://github.com/folke/snacks.nvim>: The `zen` highlight is inspired by `snacks.zen`
