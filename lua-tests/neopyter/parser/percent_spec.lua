@@ -1,21 +1,49 @@
 local PercentParser = require("neopyter.parser.percent")
 local common = require("lua-tests.neopyter.common")
 
+local python_option = {
+    separator_query = vim.treesitter.query.parse(
+        "python",
+        [[
+            (module
+              (comment) @cellseparator
+              (#match-percent-separator? @cellseparator)
+              (#set-percent-metadata! @cellseparator)
+            )
+        ]]
+    ),
+    extract_string_capture = "cellcontent",
+    extract_string_query = vim.treesitter.query.parse(
+        "python",
+        [[
+            (module
+                (expression_statement
+                    (string
+                        (string_start)
+                        (string_content) @cellcontent
+                        (string_end)
+                    )
+                )
+            )
+        ]]
+    ),
+}
+
 describe("parse percent", function()
     describe("metadata", function()
         it("pair", function()
             local pattern = vim.re.compile(
                 [[
                 pair <- {| <key> "="  <value> |}
-                space <- %s*  
+                space <- %s*
                 key <- {%w+}
                 value <- number/string
-                 
+
                 number <- {<mpm> <digits> ("." <digits>)? (<exp> <mpm> <digits>)?} -> tonumber
                 mpm <- ("+"/"-")?
                 digits <- %d+
                 exp <- "e"/"E"
-                
+
                 string <- '"' {%w+} '"'
             ]],
                 {
@@ -31,15 +59,15 @@ describe("parse percent", function()
                 [[
                 pairs <- {| (pair space)* |}
                 pair <- {| <key> "="  <value> |}
-                space <- %s*  
+                space <- %s*
                 key <- {%w+}
                 value <- number/string
-                 
+
                 number <- {<mpm> <digits> ("." <digits>)? (<exp> <mpm> <digits>)?} -> tonumber
                 mpm <- ("+"/"-")?
                 digits <- %d+
                 exp <- "e"/"E"
-                
+
                 string <- '"' {%w+} '"'
             ]],
                 {
@@ -72,9 +100,9 @@ describe("line magic", function()
     ---@type neopyter.PercentParser
     local parser
     before_each(function()
-        parser = PercentParser:new({
+        parser = PercentParser:new(vim.tbl_deep_extend("force", python_option, {
             trim_whitespace = false,
-        })
+        }))
     end)
 
     it("register", function()
@@ -87,9 +115,9 @@ describe("cells parse", function()
     ---@type neopyter.PercentParser
     local parser
     before_each(function()
-        parser = PercentParser:new({
+        parser = PercentParser:new(vim.tbl_deep_extend("force", python_option, {
             trim_whitespace = false,
-        })
+        }))
     end)
 
     describe("register", function()
@@ -662,9 +690,9 @@ describe("parse option", function()
     ---@type neopyter.PercentParser
     local parser
     before_each(function()
-        parser = PercentParser:new({
+        parser = PercentParser:new(vim.tbl_deep_extend("force", python_option, {
             trim_whitespace = true,
-        })
+        }))
     end)
     describe("trim_whitespace", function()
         describe("code", function()

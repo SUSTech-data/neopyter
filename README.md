@@ -2,6 +2,35 @@
 
 The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jupyter Lab.
 
+<!-- panvimdoc-ignore-start -->
+
+
+<!--toc:start-->
+- [Introduction](#introduction)
+  - [How does it work?](#how-does-it-work)
+  - [Screenshots](#screenshots)
+  - [Specifications](#specifications)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+  - [JupyterLab Extension](#jupyterlab-extension)
+  - [Neovim Plugin](#neovim-plugin)
+- [Usage](#usage)
+  - [Available Vim Commands](#available-vim-commands)
+  - [Troubleshooting](#troubleshooting)
+  - [API](#api)
+    - [Async](#async)
+- [Integration](#integration)
+  - [neoconf.nvim](#neoconfnvim)
+  - [nvim-cmp](#nvim-cmp)
+  - [blink.cmp](#blinkcmp)
+  - [textobjects](#textobjects)
+- [Features](#features)
+- [Acknowledges](#acknowledges)
+<!--toc:end-->
+
+
+<!-- panvimdoc-ignore-end -->
+
 ## How does it work?
 
 This project includes two parts: a [`JupyterLab extension`](https://jupyterlab.readthedocs.io/en/stable/user/extensions.html) and a Neovim plugin
@@ -119,16 +148,17 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
 > More screenshots and spec, please refer to [doc/specification.ipynb](doc/specification.ipynb) and [doc/specification.ju.py](doc/specification.ju.py)
 
 
-# Requirements
+
+# Installation
+
+`Neopyter` support two parts, so we need to install them separately.
+
+## Requirements
 
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim latest
   - 👍`nvim-lua/plenary.nvim`
   - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
-
-# Installation
-
-`Neopyter` support two parts, so we need to install them separately.
 
 ## JupyterLab Extension
 
@@ -266,7 +296,7 @@ end
 - Now you can type `# %%` in Neovim to create a code cell.
   - You'll see everything you type below that will be synchronised in the browser
 
-# Available Vim Commands
+## Available Vim Commands
 
 - Status
   - `:Neopyter status` alias to `:checkhealth neopyter` currently
@@ -288,6 +318,90 @@ end
   - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`'s
     [command](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
     directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
+
+## Troubleshooting
+
+As `Neopyter` includes two parts, if you meet any issues, please check both `JupyterLab extension` and `Neovim plugin`: 
+
+- For `JupyterLab extension`, please check the sidebar and the console log of the browser.
+  - If `mode=proxy`, please check whether the port is listening on the host where jupyter server is located, e.g. `lsof -i :9001` on Linux/MacOS or
+    `netstat -an | findstr 9001` on Windows
+- For `Neovim plugin`, please run `:Neopyter status`.
+  - If `mode=direct`, you could check port listening status on the host where neovim is located, e.g. `lsof -i :9001` on Linux/MacOS or `netstat -an | findstr 9001` on Windows
+
+We provide minimize reproduction example in `./example`:
+
+- In one terminal, start jupyter lab
+
+```
+cd example
+uv run jupyter lab --ip=0.0.0.0 --port=7088
+```
+
+In another terminal, start neovim
+
+```bash
+cd example
+nvim -u repro.lua main.ju.py
+```
+
+Feel free to open an issue if you still cannot solve your problem, and provide the following information:
+
+- repro.lua
+- The command you used to start `Jupyter lab`
+- main.ju.py
+- `:Neopyter status` output
+- The console log of the browser, e.g.:
+
+![Chrome console log](./doc/chrome_console.png)
+
+
+
+## API
+
+`Neopyter` provides rich lua APIs, you could use below code as initialization:
+
+```lua
+
+-- Reference to `:h neopyter-jupyterlab-api` for all api document
+local current_lab = require("neopyter.jupyter").jupyterlab
+current_lab:execute_command("notebook:export-to-format", {format="html"})
+
+-- Reference to `:h neopyter-notebook-api` for all api document
+local current_notebook = require("neopyter.jupyter").notebook
+
+current_notebook:run_selected_cell()
+current_notebook:run_all_above()
+current_notebook:run_all_below()
+
+```
+
+- Notebook API: `:h neopyter-notebook-api`
+- JupyterLab API `:h neopyter-jupyterlab-api-api`
+
+### Async
+
+`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
+
+- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
+- A single API call always works
+
+```lua
+vim.defer_fn(function()
+    -- non-async context, API response may be unordered
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+end, 0)
+
+require("neopyter.async").run(function()
+    -- async context, so which will call and return in order
+    current_notebook:run_selected_cell()
+    current_notebook:run_all_above()
+    current_notebook:run_all_below()
+end)
+
+```
 
 # Integration
 
@@ -438,51 +552,6 @@ Supported queries:
 - `@cellcontent`
 - `@cell`
 
-# API
-
-`Neopyter` provides rich lua APIs, you could use below code as initialization:
-
-```lua
-
--- Reference to `:h neopyter-jupyterlab-api` for all api document
-local current_lab = require("neopyter.jupyter").jupyterlab
-current_lab:execute_command("notebook:export-to-format", {format="html"})
-
--- Reference to `:h neopyter-notebook-api` for all api document
-local current_notebook = require("neopyter.jupyter").notebook
-
-current_notebook:run_selected_cell()
-current_notebook:run_all_above()
-current_notebook:run_all_below()
-
-```
-
-- Notebook API: `:h neopyter-notebook-api`
-- JupyterLab API `:h neopyter-jupyterlab-api-api`
-
-## Async
-
-`Notebook` and `JupyterLab` APIs are wrapped by async context automatically.
-
-- If you call api from async context, anything is OK. Otherwise, the calling order cannot be guaranteed
-- A single API call always works
-
-```lua
-vim.defer_fn(function()
-    -- non-async context, API response may be unordered
-    current_notebook:run_selected_cell()
-    current_notebook:run_all_above()
-    current_notebook:run_all_below()
-end, 0)
-
-require("neopyter.async").run(function()
-    -- async context, so which will call and return in order
-    current_notebook:run_selected_cell()
-    current_notebook:run_all_above()
-    current_notebook:run_all_below()
-end)
-
-```
 
 # Features
 
