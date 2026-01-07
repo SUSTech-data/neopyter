@@ -13,10 +13,10 @@ importers:
         version: 18.3.1
     devDependencies:
       '@jupyterlab/galata':
-        specifier: ^5.0.0
+        specifier: ^5.0.5
         version: 5.3.4(react@18.3.1)
       '@playwright/test':
-        specifier: ^1.32.0
+        specifier: ^1.37.0
         version: 1.49.1
 
 packages:

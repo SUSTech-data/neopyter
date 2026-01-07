@@ -1,11 +1,10 @@
 name: CI
 on:
-  push:
-    branches: master
   pull_request:
-    branches: "*"
+    branches:
+      - "master"
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
   cancel-in-progress: true
 jobs:
   lint:
@@ -27,15 +26,21 @@ jobs:
           pnpm i
           pnpm run lint:check
   unit_test:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        rev: [nightly, stable, v0.10.4]
+        cc: [gcc]
+        rev: [nightly, stable]
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+      - name: Install tree-sitter CLI
+        run: npm i -g tree-sitter-cli
       - name: Install neovim
         uses: rhysd/action-setup-vim@v1
         with:
@@ -44,9 +49,6 @@ jobs:
       - name: Test the extension with Neovim
         run: |
           set -eux
-          rm -rf .tests
-          ls -lah
-          cat scripts/minimal_init.lua
           make test
   build:
     runs-on: ubuntu-latest

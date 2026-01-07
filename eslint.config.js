@@ -9,15 +9,10 @@ export default antfu({
   yaml: false,
   markdown: false,
   typescript: true,
+  gitignore: true,
 }, {
   rules: {
     'no-console': 'off',
     'style/semi': ['error', 'always'],
   },
-  ignores: [
-    'node_modules',
-    'dist',
-    'coverage',
-    '**/*.d.ts',
-  ],
 });
