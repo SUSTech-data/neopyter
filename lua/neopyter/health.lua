@@ -28,6 +28,8 @@ function M.check()
 
         health.start("neopyter: version")
         local nvim_plugin_ver = jupyter.jupyterlab:get_nvim_plugin_version()
+        health.info(string.format("os platform of neovim: %s", vim.uv.os_uname().sysname))
+        health.info(string.format("neovim version: %s", vim.version()))
         if status then
             health.info(string.format("neovim plugin(neopyter@%s) status: active", nvim_plugin_ver))
             local is_connecting = jupyter.jupyterlab:is_connecting()
@@ -48,31 +50,31 @@ function M.check()
             end
 
             health.start("neopyter: status")
-            health.info("attach=ready, connect=syncing\n")
-            health.info(string.format("  %-30s %-10s %-10s %s", "file", "attach", "connect", "remote_path"))
+            health.info("attach: tracking with neopyter\nconnect: synchronizing with jupyter lab\n")
+            local msg = string.format("  %-30s %-10s %-10s %s", "file", "attach", "connect", "remote_path")
             for _, notebook in pairs(jupyter.jupyterlab.notebook_map) do
                 local select_mark = " "
                 if jupyter.notebook == notebook then
                     select_mark = "*"
                 end
-                local msg = ""
                 local nbconnect = notebook:is_connecting()
 
                 if nbconnect then
-                    msg = string.format(
-                        "%s %-30s %-10s %-10s %s",
-                        select_mark,
-                        notebook.local_path,
-                        notebook:is_attached(),
-                        nbconnect,
-                        notebook.remote_path
-                    )
+                    msg = msg
+                        .. "\n"
+                        .. string.format(
+                            "%s %-30s %-10s %-10s %s",
+                            select_mark,
+                            notebook.local_path,
+                            notebook:is_attached(),
+                            nbconnect,
+                            notebook.remote_path
+                        )
                 else
-                    msg = string.format("%s %-30s %-10s false", select_mark, notebook.local_path, notebook:is_attached(), nbconnect)
+                    msg = msg .. "\n" .. string.format("%s %-30s %-10s false", select_mark, notebook.local_path, notebook:is_attached(), nbconnect)
                 end
-
-                health.info(msg)
             end
+            health.info(msg)
         else
             health.info(string.format("neovim plugin(neopyter@%s) status: inactive", nvim_plugin_ver))
         end

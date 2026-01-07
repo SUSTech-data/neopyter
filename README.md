@@ -156,7 +156,7 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
 ## Requirements
 
 - 📔JupyterLab >= 4.0.0
-- ✌️ Neovim latest
+- ✌️ Neovim latest stable version or nightly version
   - 👍`nvim-lua/plenary.nvim`
   - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
