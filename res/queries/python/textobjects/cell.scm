@@ -1,52 +1,44 @@
+
 ;; inherits: python
 ;; extends
 
 ; vanilla script, without separator
 (module
   .
-  (_) @_nonseparator @_start @_end
+  (_)+ @cell
   .
-  (_)* @_nonseparator @_end
-  .
-  (#match-cell-content? @_nonseparator)
-  (#make-range! "cell" @_start @_end)
+  (#match-cell-content? @cell)
 )
 
 ; first cell, follow a separator
 (module
   .
-  (_) @_nonseparator @_start @_end
-  .
-  (_)* @_nonseparator @_end
+  _+ @cell
   .
   (comment) @_cellseparator
-  (#match-cell-content? @_nonseparator)
+  (#match-cell-content? @cell)
   (#match-percent-separator? @_cellseparator)
-  (#make-range! "cell" @_start @_end)
 )
 
 ; cell between two separator
 (module
-  (comment) @_cellseparator @_start 
-  .
-  (_)+ @_nonseparator @_end
-  .
-  (comment) @_cellseparator
-  (#match-cell-content? @_nonseparator)
-  (#match-percent-separator? @_cellseparator)
-  (#make-range! "cell" @_start @_end)
+    (comment) @_cellseparator @cell
+    (_)* @_cellcontent @cell
+    (comment) @_cellseparator
+    (#match-cell-content? @_cellcontent)
+    (#match-percent-separator? @_cellseparator)
 )
 
 
 ; latest cell after separator
 (module
-  (comment) @_cellseparator @_start
-  .
-  (_) @_nonseparator @_end
-  (_)* @_nonseparator @_end
-  .
-  (#match-cell-content? @_nonseparator)
-  (#match-percent-separator? @_cellseparator)
-  (#make-range! "cell" @_start @_end)
+  (
+    (comment) @_cellseparator @cell
+    (_)* @_cellcontent @cell
+    .
+    (#match-cell-content? @_cellcontent)
+    (#match-percent-separator? @_cellseparator)
+  )
 )
+
 
