@@ -4,38 +4,30 @@
 ; vanilla script, without separator
 (module
   .
-  (_) @_nonseparator @_start @_end
+  (_)+ @cellcontent
   .
-  (_)* @_nonseparator @_end
-  .
-  (#match-cell-content? @_nonseparator)
-  (#make-range! "cellcontent" @_start @_end)
+  (#match-cell-content? @cellcontent)
 )
 
 ; first cell, follow a separator
 (module
   .
-  (_) @_nonseparator @_start @_end
-  .
-  (_)* @_nonseparator @_end
+  _+ @cellcontent
   .
   (comment) @_cellseparator
-  (#match-cell-content? @_nonseparator)
+  (#match-cell-content? @cellcontent)
   (#match-percent-separator? @_cellseparator)
-  (#make-range! "cellcontent" @_start @_end)
 )
 
 ; cell between two separator
 (module
   (comment) @_cellseparator
   .
-  (_) @_nonseparator @_start @_end
-  (_)* @_nonseparator @_end
+  (_)+ @cellcontent
   .
   (comment) @_cellseparator
-  (#match-cell-content? @_nonseparator)
+  (#match-cell-content? @cellcontent)
   (#match-percent-separator? @_cellseparator)
-  (#make-range! "cellcontent" @_start @_end)
 )
 
 
@@ -43,11 +35,9 @@
 (module
   (comment) @_cellseparator
   .
-  (_) @_nonseparator @_start @_end
-  (_)* @_nonseparator @_end
+  _+ @cellcontent
   .
-  (#match-cell-content? @_nonseparator)
+  (#match-cell-content? @cellcontent)
   (#match-percent-separator? @_cellseparator)
-  (#make-range! "cellcontent" @_start @_end)
 )
 
