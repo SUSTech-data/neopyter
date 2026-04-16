@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   update-snapshots:
+    name: Update Playwright Snapshots
     if: >
       (
         github.event.issue.author_association == 'OWNER' ||
@@ -19,18 +20,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: React to the triggering comment
+      - name: Add Reaction to Trigger Comment
         run: |
           gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions --raw-field 'content=+1'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get PR Info
+      - name: Fetch PR Metadata
         id: pr
         env:
           PR_NUMBER: ${{ github.event.issue.number }}
@@ -49,12 +50,12 @@ jobs:
 
           echo "head_sha=$head_sha" >> $GITHUB_OUTPUT
 
-      - name: Checkout the branch from the PR that triggered the job
+      - name: Checkout PR Branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.issue.number }}
 
-      - name: Validate the fetched branch HEAD revision
+      - name: Validate Checked Out HEAD
         env:
           EXPECTED_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
@@ -65,22 +66,23 @@ jobs:
               exit 1
           fi
 
-      - name: Base Setup
+      - name: Setup JupyterLab Maintainer Tools
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - name: Install dependencies
-        run: python -m pip install -U "jupyterlab>=4.0.0,<5"
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
         with:
-          version: 9
-      - name: Install extension
+          python_version: "3.11"
+          pnpm_version: "10"
+          python_package_manager: "uv pip"
+
+      - name: Install Python Dependencies
+        run: python -m pip install -U "jupyterlab>=4.0.0,<5"
+      - name: Install Extension Dependencies
         run: |
           set -eux
           pnpm install
           python -m pip install .
 
-      - uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@v1
+      - name: Run Snapshot Update
+        uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Playwright knows how to start JupyterLab server

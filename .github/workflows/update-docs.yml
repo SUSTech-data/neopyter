@@ -1,4 +1,4 @@
-name: Update docs
+name: Update Docs
 on:
   push:
     branches:
@@ -6,25 +6,25 @@ on:
   workflow_dispatch:
 jobs:
   update-docs:
-    name: Update README and doc
+    name: Update README and Docs
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install neovim
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+      - name: Setup Neovim
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
           version: nightly
 
-      - name: Install pandoc
+      - name: Setup Pandoc
         uses: pandoc/actions/setup@v1
-      - name: Make document
+      - name: Generate Documentation
         run: |
           make document
-      - name: Push changes
+      - name: Commit and Push Documentation
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "auto-generate document"

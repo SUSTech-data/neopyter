@@ -1,4 +1,4 @@
-name: 'Step 2: Publish Release'
+name: Publish Release
 on:
   workflow_dispatch:
     inputs:
@@ -14,20 +14,27 @@ on:
 
 jobs:
   publish_release:
+    name: Publish Release
     runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write
     steps:
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Setup JupyterLab Maintainer Tools
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        with:
+          python_version: "3.11"
+          pnpm_version: "10"
+          python_package_manager: "uv pip"
 
-      - uses: actions/create-github-app-token@v1
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
         id: app-token
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Populate Release
+      - name: Populate Release Assets
         id: populate-release
         uses: jupyter-server/jupyter_releaser/.github/actions/populate-release@v2
         with:
@@ -45,13 +52,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           release_url: ${{ steps.populate-release.outputs.release_url }}
 
-      - name: '** Next Step **'
+      - name: Show Release URL
         if: ${{ success() }}
         run: |
           echo "Verify the final release"
           echo ${{ steps.finalize-release.outputs.release_url }}
 
-      - name: '** Failure Message **'
+      - name: Show Failure Context
         if: ${{ failure() }}
         run: |
           echo "Failed to Publish the Draft Release Url:"

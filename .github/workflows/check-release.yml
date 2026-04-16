@@ -1,4 +1,4 @@
-name: Check Release
+name: Release Checks
 on:
   push:
     branches: [master]
@@ -9,24 +9,25 @@ concurrency:
   cancel-in-progress: true
 jobs:
   check_release:
+    name: Check Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Base Setup
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+      - name: Setup JupyterLab Maintainer Tools
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Install ruff
+        with:
+          python_version: "3.11"
+          pnpm_version: "10"
+          python_package_manager: "uv pip"
+      - name: Install Ruff
         run: |
           pip install ruff
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Check Release
+      - name: Run Release Checks
         uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload Distributions
+      - name: Upload Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: neopyter-releaser-dist-${{ github.run_number }}
