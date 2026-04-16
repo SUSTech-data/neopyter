@@ -1,4 +1,5 @@
-*neopyter.txt*          For NVIM v0.12.0          Last change: 2026 January 07
+*neopyter.txt*
+                                For NVIM v0.13.0    Last change: 2026 April 16
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -217,11 +218,11 @@ AVAILABLE VIM COMMANDS                 *neopyter-usage-available-vim-commands*
 - Status
     - `:Neopyter status` alias to `:checkhealth neopyter` currently
 - Server
-    - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
+    - `:Neopyter connect [remote 'ip:port']`, e.g. `:Neopyter command 127.0.0.1:9001`, connect `Jupyter lab` manually
     - `:Neopyter disconnect`
 - Sync
     - `:Neopyter sync current`, make sync current `*.ju.*` file with the currently open `*.ipynb`
-    - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
+    - `:Neopyter sync [filename]`, e.g. `:Neopyter sync main.ipynb`
 - Run
     - `:Neopyter run current`, same as `Run`>`Run Selected Cell and Do not Advance` menu in `Jupyter lab`
     - `:Neopyter run allAbove`, same as `Run`>`Run All Above Selected Cell` menu in `Jupyter lab`
@@ -233,7 +234,7 @@ AVAILABLE VIM COMMANDS                 *neopyter-usage-available-vim-commands*
 - Jupyter
     - `:Neopyter execute [command_id] [args]`, execute `Jupyter lab`’s
         command <https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list>
-        directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
+        directly, e.g. `:Neopyter execute notebook:export-to-format {"format":"html"}`
 
 
 TROUBLESHOOTING                               *neopyter-usage-troubleshooting*
@@ -242,10 +243,10 @@ As `Neopyter` includes two parts, if you meet any issues, please check both
 `JupyterLab extension` and `Neovim plugin`:
 
 - For `JupyterLab extension`, please check the sidebar and the console log of the browser.
-    - If `mode=proxy`, please check whether the port is listening on the host where jupyter server is located, e.g. `lsof -i :9001` on Linux/MacOS or
+    - If `mode=proxy`, please check whether the port is listening on the host where jupyter server is located, e.g. `lsof -i :9001` on Linux/MacOS or
         `netstat -an | findstr 9001` on Windows
 - For `Neovim plugin`, please run `:Neopyter status`.
-    - If `mode=direct`, you could check port listening status on the host where neovim is located, e.g. `lsof -i :9001` on Linux/MacOS or `netstat -an | findstr 9001` on Windows
+    - If `mode=direct`, you could check port listening status on the host where neovim is located, e.g. `lsof -i :9001` on Linux/MacOS or `netstat -an | findstr 9001` on Windows
 
 We provide minimize reproduction example in `./example`:
 
