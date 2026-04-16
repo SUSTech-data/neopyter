@@ -1,4 +1,4 @@
-name: 'Step 1: Prep Release'
+name: Prepare Release
 on:
   workflow_dispatch:
     inputs:
@@ -25,13 +25,19 @@ on:
         type: boolean
 jobs:
   prep_release:
+    name: Prepare Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Setup JupyterLab Maintainer Tools
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        with:
+          python_version: "3.11"
+          pnpm_version: "10"
+          python_package_manager: "uv pip"
 
-      - name: Prep Release
+      - name: Prepare Release Draft
         id: prep-release
         uses: jupyter-server/jupyter_releaser/.github/actions/prep-release@v2
         with:
@@ -43,6 +49,6 @@ jobs:
           since: ${{ github.event.inputs.since }}
           since_last_stable: ${{ github.event.inputs.since_last_stable }}
 
-      - name: '** Next Step **'
+      - name: Show Draft Release URL
         run: |
           echo "Optional): Review Draft Release: ${{ steps.prep-release.outputs.release_url }}"
