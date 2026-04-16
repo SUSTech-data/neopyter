@@ -27,7 +27,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "jupyterlab>=4.0.0,<5" hatch
+          python -m pip install "jupyterlab>=4.0.0,<5" hatch jupyter_builder
       - name: Build Distribution
         run: hatch build
       - name: Publish to TestPyPI
