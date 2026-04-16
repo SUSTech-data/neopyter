@@ -86,6 +86,8 @@ describe("parse percent", function()
         assert.is_same({ "code" }, { PercentParser.parse_percent("# %%") })
         assert.is_same({ "code", "foo" }, { PercentParser.parse_percent("# %% foo") })
         assert.is_same({ "markdown" }, { PercentParser.parse_percent("# %% [md]") })
+        assert.is_same({ "code", "[markdwn]" }, { PercentParser.parse_percent("# %% [markdwn]") })
+        assert.is_same({ "code", "[markdwn]" }, { PercentParser.parse_percent("# %% [markdwn] ") })
         assert.is_same({ "markdown" }, { PercentParser.parse_percent("# %% [markdown] ") })
         assert.is_same({ "markdown", nil, "key=12" }, { PercentParser.parse_percent("# %% [markdown] key=12") })
         assert.is_same({ "markdown", nil, "key=12 12" }, { PercentParser.parse_percent("# %% [markdown] key=12 12") })
@@ -514,6 +516,25 @@ describe("cells parse", function()
             }, cells)
             assert.equal("this is markdown content", parser:parse_source(code, cells[1]))
         end)
+        it("[invalid markdown]", function()
+            local code = common.load_buffer({
+                "# %% [markdwn]",
+                '"""',
+                "this is markdown content",
+                '"""',
+            })
+            local cells = parser:parse_notebook(code).cells
+            assert.are.same({
+                {
+                    start_row = 0,
+                    end_row = 3,
+                    type = "code",
+                    title = "[markdwn]",
+                },
+            }, cells)
+            assert.equal('"""\nthis is markdown content\n"""', parser:parse_source(code, cells[1]))
+        end)
+
         it("[markdown]", function()
             local code = common.load_buffer({
                 "# %% [markdown]",

@@ -28,46 +28,53 @@ function PercentParser:new(opt)
     return obj
 end
 
-local cell_type_shorthands = {
-    md = "markdown",
-}
-
 ---@param line string
 ---@return string? type
 ---@return string? title
 ---@return string? metadata
 function PercentParser.parse_percent(line)
-    local function to_type(type)
-        return cell_type_shorthands[type] or type
-    end
-    if string.sub(line, 1, 4) ~= "# %%" then
-        return
-    end
-    local title, type, metadata
-    if line == "# %%" then
+    local body = line:match("^# %%%%$")
+    if body then
         return "code"
     end
-    if not line:match("^# %%%%%s") then
+
+    body = line:match("^# %%%% (.+)$")
+    if not body then
         return
     end
-    type = line:match("^# %%%%%s+%[(%w+)%]%s*$")
-    if type then
-        return to_type(type)
-    end
-    title, type = line:match("^# %%%%%s+(%w+)%s+%[(%w+)%]%s*$")
-    if title then
-        return to_type(type), vim.trim(title)
-    end
-    type, metadata = line:match("^# %%%%%s+%[(%w+)%]%s+(.+)%s*$")
-    if type then
-        return to_type(type), nil, vim.trim(metadata)
-    end
-    title, type, metadata = line:match("^# %%%%%s+([%w%s]*)%s+%[(%w+)%]%s+(.*)$")
-    if title then
-        return to_type(type), vim.trim(title), vim.trim(metadata)
+
+    local function normalize_cell_type(cell_type)
+        if cell_type == "md" then
+            return "markdown"
+        end
+        return cell_type
     end
 
-    return "code", vim.trim(line:sub(6))
+    local function non_empty(text)
+        local trimmed = vim.trim(text)
+        if trimmed == "" then
+            return nil
+        end
+        return trimmed
+    end
+
+    -- jupytext-style: # %% [markdown] [metadata]
+    local start_cell_type, start_rest = body:match("^%[(%w+)%]%s*(.-)%s*$")
+    if start_cell_type then
+        local cell_type = normalize_cell_type(start_cell_type)
+        if cell_type ~= "code" and cell_type ~= "markdown" and cell_type ~= "raw" then
+            return "code", non_empty(body)
+        end
+        return cell_type, nil, non_empty(start_rest)
+    end
+
+    -- jupytext-style with title: # %% [title] [celltype] [metadata]
+    local title, tail_cell_type, tail_rest = body:match("^(.-)%s+%[(%w+)%]%s*(.-)%s*$")
+    if tail_cell_type then
+        return normalize_cell_type(tail_cell_type), non_empty(title), non_empty(tail_rest)
+    end
+
+    return "code", non_empty(body)
 end
 
 --- match line magic
