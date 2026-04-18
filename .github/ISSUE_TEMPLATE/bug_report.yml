@@ -1,0 +1,57 @@
+name: Bug Report
+description: Report a bug in neopyter
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened and what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Run '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: checkhealth
+    attributes:
+      label: ":checkhealth neopyter output"
+      description: |
+        Please run `:checkhealth neopyter` in Neovim and paste the full output.
+      render: shell
+      placeholder: Paste the complete `:checkhealth neopyter` output here.
+    validations:
+      required: true
+
+  - type: input
+    id: neovim-version
+    attributes:
+      label: Neovim version
+      description: Output of `nvim --version | head -n 1`
+      placeholder: NVIM v0.x.x
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context, logs, screenshots, or config snippets.
