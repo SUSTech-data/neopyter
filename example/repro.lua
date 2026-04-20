@@ -5,11 +5,12 @@ require("lazy.minit").repro({
     spec = {
         {
             "SUSTech-data/neopyter",
+            priority = 1000,
+            lazy = false,
             dir = "../",
             dependencies = {
                 "nvim-lua/plenary.nvim",
-                "nvim-treesitter/nvim-treesitter", -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
-                "AbaoFromCUG/websocket.nvim",      -- for mode='direct'
+                "AbaoFromCUG/websocket.nvim", -- for mode='direct'
             },
             ---@type neopyter.Option
             opts = {
@@ -21,7 +22,19 @@ require("lazy.minit").repro({
                 end,
             },
         },
+        {
+            "nvim-treesitter/nvim-treesitter",
+            branch = "master",
+            priority = 1001, -- make sure `nvim-treesitter` is loaded before `neopyter`
+            lazy = false,
+            config = function()
+                require('nvim-treesitter.configs').setup {
+                    ensure_installed = { "python", "r", "markdown", "markdown_inline" },
+                    sync_install = true,
+                    auto_install = true,
+                }
+            end,
+
+        }, -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
     },
 })
-require("nvim-treesitter").install("python"):wait()
-require("nvim-treesitter").install("r"):wait()
