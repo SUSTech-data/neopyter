@@ -3,6 +3,7 @@ on:
   pull_request:
     branches:
       - "master"
+      - "v*-compat"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
   cancel-in-progress: true
@@ -33,7 +34,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         cc: [gcc]
-        rev: [nightly, stable]
+        rev: [nightly, stable, "v0.11.7"]
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.cc }}

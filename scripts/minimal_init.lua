@@ -25,8 +25,8 @@ local function add_dependence(url, name, ...)
 end
 
 add_dependence("https://github.com/nvim-lua/plenary.nvim", "plenary.nvim")
-add_dependence("https://github.com/nvim-treesitter/nvim-treesitter", "nvim-treesitter", "--branch", "main")
-add_dependence("https://github.com/nvim-treesitter/nvim-treesitter-textobjects", "nvim-treesitter-textobjects", "--branch", "main")
+add_dependence("https://github.com/nvim-treesitter/nvim-treesitter", "nvim-treesitter", "--branch", "master")
+add_dependence("https://github.com/nvim-treesitter/nvim-treesitter-textobjects", "nvim-treesitter-textobjects", "--branch", "master")
 add_dependence("https://github.com/AbaoFromCUG/websocket.nvim", "websocket.nvim")
 add_dependence("https://github.com/nvim-neotest/nvim-nio", "nvim-nio")
 add_dependence("https://github.com/pysan3/pathlib.nvim", "pathlib.nvim")
@@ -38,6 +38,10 @@ vim.opt.rtp:append(vim.fs.joinpath(__project_root__, "after"))
 vim.cmd("runtime plugin/plenary.vim")
 require("plenary.busted")
 
-require("nvim-treesitter").setup({})
-require("nvim-treesitter").install({ "lua", "python", "markdown" }):wait()
+
+require('nvim-treesitter.configs').setup {
+    ensure_installed = { "python", "r", "markdown", "markdown_inline" },
+    sync_install = true,
+    auto_install = true,
+}
 vim.opt.rtp:append(vim.fs.joinpath(vim.fn.stdpath("data"), "site"))
