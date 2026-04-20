@@ -16,7 +16,7 @@ Example: >lua
 <
 
 NOTICE: Most API is need a async context, but neopyter provide a wrapped async
-context automatically
+context automatically. Check `neopyter-async-api` for more details.
 
 
 *neopyter.JupyterOption*
@@ -57,16 +57,19 @@ JupyterLab:echo({msg})                                     *JupyterLab:echo()*
     Return: ~
         (`string?`)
 
-                                                *JupyterLab:execute_command()*
-JupyterLab:execute_command({command}, {args})
-    execute jupyter lab's commands
+JupyterLab:execute_cmd({cmd}, {args})               *JupyterLab:execute_cmd()*
+    execute jupyter lab's commands                            *View documents*
+
+    Example: >lua
+        require("neopyter.jupyter").jupyterlab:execute_cmd("notebook:export-to-format", { format = "html" })
+<
 
     Parameters: ~
-      • {command}  (`string`)
-      • {args}     (`table<string, any>?`)
+      • {cmd}   (`string`)
+      • {args}  (`table<string, any>?`)
 
     Return: ~
-        (`any`)                                               *View documents*
+        (`any`)
 
                                *JupyterLab:get_jupyterlab_extension_version()*
 JupyterLab:get_jupyterlab_extension_version()
@@ -119,7 +122,9 @@ Notebook:activate_cell()                            *Notebook:activate_cell()*
     active cell
 
 Notebook:attach()                                          *Notebook:attach()*
-    attach autocmd. While connecting with jupyterlab, will full sync
+    attach autocmd. While connecting with jupyterlab, will full sync which
+    means parsing whole notebook and there is a remote associated notebook in
+    jupyterlab
 
 Notebook:complete({options})                             *Notebook:complete()*
     code completion
@@ -330,6 +335,77 @@ load_query({query}, {lang}, {name})           *neopyter-treesitter-load_query*
       • {query}  (`string`)
       • {lang}   (`string?`) language (default python)
       • {name}   (`string?`) the prefix name
+
+
+==============================================================================
+Neopyter module: Async                                    *neopyter-async-api*
+
+Neopyter's async module, which provides async functions and utilities for
+Neopyter. Which is built on top of native async support (`vim._async`) in
+Neovim, and provides a more convenient API for users to use async functions in
+Neopyter. The API of neopyter are mostly async, and users could call them in a
+sync context, neopyter will automatically wrap them in an async context, so
+that users could call them directly without worrying about async context, but
+the order of execution is not guaranteed, if you want to guarantee the order
+of execution, you should use `require("neopyter.async").run(...)` to run them
+in an async context.
+
+Example1: Call API in sync context, but the order of execution is not
+guaranteed >lua
+    vim.defer_fn(function()
+        -- non-async context, API response may be unordered
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end, 0)
+    Example2: Call API in async context, the order of execution is guaranteed
+    require("neopyter.async").run(function()
+        -- async context, so which will call and return in order
+        current_notebook:run_selected_cell()
+        current_notebook:run_all_above()
+        current_notebook:run_all_below()
+    end)
+<
+
+
+run({func}, {on_finish})                                  *neopyter-async-run*
+    Use this to either run a future concurrently and then do something else or
+    use it to run a future with a callback in a non async context
+
+    Parameters: ~
+      • {func}       (`async fun(): ...:any`)
+      • {on_finish}  (`fun(err: string?, ...:any)?`)
+
+                                                 *neopyter-async-run_blocking*
+run_blocking({suspend_fn}, {on_finish}, {timeout})
+    run function in async context, until timeout or complete
+
+    Parameters: ~
+      • {suspend_fn}  (`fun()`)
+      • {on_finish}   (`fun(err: string?, ...:any)?`)
+      • {timeout}     (`number?`)
+
+safe_async()                                       *neopyter-async-safe_async*
+
+safe_wrap({cls}, {ignored_methods})                 *neopyter-async-safe_wrap*
+    Wrap a class's member function, User could call
+    `lua =require("neopyter.jupyter").notebook:run_selected_cell()` in main
+    thread directly
+
+    Parameters: ~
+      • {cls}              (`table`)
+      • {ignored_methods}  (`string[]?`)
+
+wrap({func}, {argc})                                     *neopyter-async-wrap*
+    Creates an async function with a callback style function.
+
+    Parameters: ~
+      • {func}  (`function`) A callback style function to be converted. The
+                last argument must be the callback.
+      • {argc}  (`number`) The number of arguments of func. Must be included.
+
+    Return: ~
+        (`async`) fun Returns an async function
 
 
  vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

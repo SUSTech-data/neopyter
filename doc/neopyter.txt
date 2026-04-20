@@ -1,5 +1,5 @@
 *neopyter.txt*
-                                For NVIM v0.13.0    Last change: 2026 April 16
+                                For NVIM v0.13.0    Last change: 2026 April 20
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -74,7 +74,7 @@ REQUIREMENTS                              *neopyter-installation-requirements*
 
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim latest stable version or nightly version
-    - 👍`nvim-lua/plenary.nvim`
+    - 🌲`tree-sitter` parser of `python` and `r`
     - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
 
@@ -104,8 +104,6 @@ NEOVIM PLUGIN                            *neopyter-installation-neovim-plugin*
     {
         "SUSTech-data/neopyter",
         dependencies = {
-          'nvim-lua/plenary.nvim',
-          'nvim-treesitter/nvim-treesitter', -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
           'AbaoFromCUG/websocket.nvim',  -- for mode='direct'
         },
     
@@ -549,6 +547,8 @@ Configuration Types                             *neopyter-configuration-types*
       • {injection}?        (`neopyter.InjectionOption`)
       • {parser}?           (`neopyter.ParserOption`)
 
+
+neopyter:delay_setup()                                *neopyter:delay_setup()*
 
 neopyter:setup_python_parser()                *neopyter:setup_python_parser()*
 
