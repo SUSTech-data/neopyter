@@ -86,10 +86,9 @@ function M.check()
         else
             health.info(string.format("neovim plugin(neopyter@%s) status: inactive", nvim_plugin_ver))
         end
-    end, function(success)
-        if not success then
-            health.error(string.format("return code:%s", code))
-            health.error("Call async function without return in a long time!!")
+    end, function(err)
+        if err then
+            health.error(string.format("error with:%s", err))
         end
     end)
 end

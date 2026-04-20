@@ -1,33 +1,32 @@
-local Path = require("plenary.path")
 local a = require("neopyter.async")
-local api = a.api
+local api = vim.api
 local M = {}
 
 local source = debug.getinfo(1).source
 -- local __dirname__ = source:match("@(.*/)") or source:match("@(.*\\)")
 
 local __root__ = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
-local is_windows = vim.loop.os_uname().version:match("Windows")
+local is_windows = vim.uv.os_uname().version:match("Windows")
 
 if is_windows then
     __root__ = __root__:gsub("/", "\\")
 end
 
 ---get plugin root
----@return Path
+---@return string
 function M.get_plugin_path()
-    return Path:new(__root__)
+    return __root__
 end
 
 ---@param buf number
----@return Path
+---@return string
 function M.get_buf_path(buf)
     local file_path = api.nvim_buf_get_name(buf)
     file_path = vim.fs.normalize(file_path)
     if is_windows then
         file_path = file_path:gsub("/", "\\")
     end
-    return Path:new(file_path)
+    return file_path
 end
 
 ---
@@ -75,15 +74,6 @@ function M.notify_error(msg)
     end)
 end
 
----get relative path
----@param parent_path string
----@param file_path string
----@return string
-function M.relative_to(file_path, parent_path)
-    local path = Path:new(file_path)
-    return path:make_relative(parent_path)
-end
-
 function M.buf2winid(bufnr)
     for _, win in ipairs(api.nvim_list_wins()) do
         if api.nvim_win_get_buf(win) == bufnr then
@@ -98,7 +88,7 @@ end
 ---@return number port
 function M.parse_address(address)
     local host, port = address:match("^(.-):(%d+)$")
-    return host, tonumber(port)--[[@as number]]
+    return host, tonumber(port) --[[@as number]]
 end
 
 -- ======= Code mostly based on Saghen/blink.cmp ===
@@ -132,6 +122,7 @@ function M.validate_config(path, tbl, source)
     end
 end
 
+---@async
 ---@generic T
 ---@param fn T callable
 ---@param timeout integer? # milliseconds
@@ -148,7 +139,7 @@ function M.throttle(fn, timeout, ...)
         timer:start(timeout, 0, function()
             a.run(function()
                 fn(unpack(args))
-            end, function() end)
+            end)
         end)
     end
 end

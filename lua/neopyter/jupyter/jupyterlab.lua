@@ -1,9 +1,6 @@
 local Notebook = require("neopyter.jupyter.notebook")
 local utils = require("neopyter.utils")
 local a = require("neopyter.async")
-local Path = require("plenary.path")
-local api = a.api
-local fn = a.fn
 
 --- @brief Neopyter provide a global `jupyterlab` represent remote `JupyterLab` instance,
 --- which provides some RPC-based API to control remote `JupyterLab` instance.
@@ -21,7 +18,7 @@ local fn = a.fn
 ---
 --- ```
 --- NOTICE: Most API is need a async context, but neopyter provide a wrapped async context
---- automatically
+--- automatically. Check `neopyter-async-api` for more details.
 
 ---@class neopyter.JupyterOption
 ---@field auto_activate_file? boolean
@@ -68,23 +65,23 @@ end
 ---attach autocmd
 function JupyterLab:attach()
     local config = require("neopyter").config
-    self.augroup = api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
+    self.augroup = a.api.nvim_create_augroup("neopyter-jupyterlab", { clear = true })
     assert(self.augroup ~= nil, "autogroup failed")
-    api.nvim_create_autocmd({ "BufWinEnter" }, {
+    a.api.nvim_create_autocmd({ "BufWinEnter" }, {
         group = self.augroup,
         pattern = config.file_pattern,
         callback = function(event)
             self:_on_bufwinenter(event.buf)
         end,
     })
-    api.nvim_create_autocmd({ "BufUnload" }, {
+    a.api.nvim_create_autocmd({ "BufUnload" }, {
         group = self.augroup,
         pattern = config.file_pattern,
         callback = function(event)
             self:_on_buf_unloaded(event.buf)
         end,
     })
-    api.nvim_exec_autocmds("BufWinEnter", {
+    a.api.nvim_exec_autocmds("BufWinEnter", {
         group = self.augroup,
         pattern = config.file_pattern,
     })
@@ -119,8 +116,8 @@ function JupyterLab:connect(address)
             utils.notify_warn(
                 string.format(
                     "Neovim plugin(neopyter==%s) but Jupyterlab extension(neopyter==%s)\n"
-                        .. "The version do not match!\n"
-                        .. "Please update your neopyter of JupyterLab via `pip install -U neopyter`",
+                    .. "The version do not match!\n"
+                    .. "Please update your neopyter of JupyterLab via `pip install -U neopyter`",
                     nvim_version,
                     jupyterlab_version
                 )
@@ -133,10 +130,10 @@ function JupyterLab:connect(address)
         end
     end
     self.client:connect(address, function()
-        a.run(on_connected, function() end)
+        a.run(on_connected)
     end)
 
-    api.nvim_exec_autocmds("BufWinEnter", {
+    a.api.nvim_exec_autocmds("BufWinEnter", {
         group = self.augroup,
         pattern = config.file_pattern,
     })
@@ -157,16 +154,15 @@ end
 ---@param buf integer
 ---@return string
 function JupyterLab:_get_buf_local_path(buf)
-    ---@type Path
     local file_path = utils.get_buf_path(buf)
-
-    if file_path:is_absolute() then
-        file_path = Path:new(file_path:make_relative(fn.getcwd()))
+    if vim.fn.isabsolutepath(file_path) == 1 then
+        file_path = vim.fs.relpath(a.fn.getcwd(), file_path)
     end
-    return tostring(file_path)
+    return file_path
 end
 
 ---if not exists, create with buf
+---@async
 ---@param buf number
 function JupyterLab:_on_bufwinenter(buf)
     local jupyter = require("neopyter.jupyter")
@@ -210,23 +206,25 @@ function JupyterLab:_on_buf_unloaded(buf)
 end
 
 ---get neopyter (jupyterlab extension) version
+---@async
 ---@return string
 function JupyterLab:get_jupyterlab_extension_version()
     return self.client:request("getVersion")
 end
 
 ---get neopyter (nvim plugin) version
+---@async
 ---@return string
 function JupyterLab:get_nvim_plugin_version()
-    ---@type Path
-    local path = utils.get_plugin_path() / "package.json"
-    local content = path:read()
+    local path = vim.fs.joinpath(utils.get_plugin_path(), "package.json")
+    local content = a.fn.readblob(path)
     ---@cast content -nil
     local packageJson = vim.json.decode(content)
     return packageJson["version"]
 end
 
 ---test connection will return `hello: {msg}` as response
+---@async
 ---@param msg string
 ---@return string|nil
 function JupyterLab:echo(msg)
@@ -234,22 +232,41 @@ function JupyterLab:echo(msg)
 end
 
 ---execute jupyter lab's commands
+---[View documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
+---
+---Example:
+---```lua
+---require("neopyter.jupyter").jupyterlab:execute_cmd("notebook:export-to-format", { format = "html" })
+---```
+---@async
+---@param cmd string
+---@param args? table<string, any>
+---@return any
+function JupyterLab:execute_cmd(cmd, args)
+    return self.client:request("executeCommand", cmd, args)
+end
+
+---execute jupyter lab's commands
+---@async
+---@deprecated use execute_cmd instead
+---@nodoc
 ---@param command string
 ---@param args? table<string, any>
 ---@return any
----[View documents](https://jupyterlab.readthedocs.io/en/stable/user/commands.html#commands-list)
 function JupyterLab:execute_command(command, args)
-    return self.client:request("executeCommand", command, args)
+    return self:execute_cmd(command, args)
 end
 
 ---create new notebook, and selected it
 ---@nodoc
 ---@deprecated
+---@async
 function JupyterLab:create_new(ipynb_path, widget_name, kernel)
     return self.client:request("createNew", ipynb_path, widget_name, kernel)
 end
 
 ---get current notebook of jupyter lab
+---@async
 ---@return string
 function JupyterLab:current_ipynb()
     return self.client:request("getCurrentNotebook")

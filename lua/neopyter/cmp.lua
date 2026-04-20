@@ -81,7 +81,7 @@ function neopyter:complete(params, callback)
             end)
             :totable()
         callback(items)
-    end, function() end)
+    end)
 end
 
 return neopyter

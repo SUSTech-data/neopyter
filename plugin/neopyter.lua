@@ -1,6 +1,6 @@
 local jupyter = require("neopyter.jupyter")
 local utils = require("neopyter.utils")
-local a = require("plenary.async")
+local a = require("neopyter.async")
 
 local cmds = {
     connect = {
@@ -109,7 +109,7 @@ vim.api.nvim_create_user_command("Neopyter", function(opts)
         table.remove(opts.fargs, 1)
         a.run(function()
             cmd.execute(unpack(opts.fargs))
-        end, function() end)
+        end)
     end
 end, {
     desc = "Neopyter manager",

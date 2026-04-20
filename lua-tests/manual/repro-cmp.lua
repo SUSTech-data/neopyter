@@ -8,7 +8,6 @@ vim.opt.packpath:append(vim.fs.joinpath(vim.fn.stdpath("data"), "site"))
 local __project_root__ = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(debug.getinfo(1).source:sub(2))))
 
 vim.pack.add {
-    "https://github.com/nvim-lua/plenary.nvim",
     "https://github.com/AbaoFromCUG/websocket.nvim",
 
     "https://github.com/mason-org/mason.nvim",
