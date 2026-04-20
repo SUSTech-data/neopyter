@@ -19,7 +19,6 @@ end
 ---start connect
 ---@param address? string
 ---@param on_connected? fun() # call while connected
----@async
 function RpcClient:connect(address, on_connected)
     assert(false, "not implement")
 end

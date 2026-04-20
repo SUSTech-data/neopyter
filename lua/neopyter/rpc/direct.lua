@@ -3,7 +3,7 @@ local RpcClient = require("neopyter.rpc.baseclient")
 local msgpack = require("neopyter.rpc.msgpack")
 local logger = require("neopyter.logger")
 local websocket = require("websocket")
-local a = require("plenary.async")
+local a = require("neopyter.async")
 
 ---@class neopyter.DirectRpcClient:neopyter.RpcClient
 ---@field server? websocket.Server # nil means not connect

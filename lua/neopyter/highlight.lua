@@ -1,8 +1,6 @@
 local utils = require("neopyter.utils")
 local ts = require("neopyter.treesitter")
 local a = require("neopyter.async")
-local api = a.api
-local fn = a.fn
 
 ---@class neopyter.HighlightOption
 ---@field enable boolean
@@ -38,9 +36,10 @@ function M.setup()
     end
 end
 
+---@async
 local function update_zen_highlight(buf)
-    api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
-    api.nvim_set_hl(ns_highlight, "NeopyterDim", { link = "DiagnosticUnnecessary", default = true })
+    a.api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
+    a.api.nvim_set_hl(ns_highlight, "NeopyterDim", { link = "DiagnosticUnnecessary", default = true })
     local notebook = require("neopyter.jupyter.jupyterlab"):get_notebook(buf)
     if not notebook then
         utils.notify_warn("Can't highlight buffer: cann't find notebook")
@@ -56,7 +55,7 @@ local function update_zen_highlight(buf)
     local start_row = cell.start_row
     local end_row = cell.end_row
 
-    for i = fn.line("w0") - 1, fn.line("w$") - 1 do
+    for i = a.fn.line("w0") - 1, a.fn.line("w$") - 1 do
         if i < start_row or i > end_row then
             api.nvim_buf_set_extmark(0, ns_highlight, i, 0, {
                 end_row = i + 1,
@@ -83,7 +82,7 @@ local function highlight_node(node, hl_group, mode, include_whitespace, priority
     local start_row, start_col, end_row, end_col = unpack(range)
 
     if mode == "linewise" then
-        api.nvim_buf_set_extmark(0, ns_highlight, start_row, 0, {
+        a.api.nvim_buf_set_extmark(0, ns_highlight, start_row, 0, {
             -- end_line = end_row + 1,
             -- end_col = 0,
             line_hl_group = hl_group,
@@ -91,7 +90,7 @@ local function highlight_node(node, hl_group, mode, include_whitespace, priority
             priority = priority,
         })
     else
-        api.nvim_buf_set_extmark(0, ns_highlight, start_row, start_col, {
+        a.api.nvim_buf_set_extmark(0, ns_highlight, start_row, start_col, {
             end_line = end_row,
             end_col = end_col,
             hl_group = hl_group,
@@ -115,6 +114,7 @@ local function update_separator_highlight(buf)
 end
 
 ---@nodoc
+---@async
 function M.attach(buf, augroup)
     local config = require("neopyter").config.highlight
     local updated = false
@@ -127,7 +127,7 @@ function M.attach(buf, augroup)
     else
         update_highlight = utils.throttle(update_separator_highlight, nil, buf)
     end
-    api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "CursorMoved", "CursorMovedI", "WinScrolled" }, {
+    a.api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "CursorMoved", "CursorMovedI", "WinScrolled" }, {
         buffer = buf,
         callback = update_highlight,
         group = augroup,

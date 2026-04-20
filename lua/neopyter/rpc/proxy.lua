@@ -2,7 +2,7 @@ local utils = require("neopyter.utils")
 local RpcClient = require("neopyter.rpc.baseclient")
 local msgpack = require("neopyter.rpc.msgpack")
 local logger = require("neopyter.logger")
-local a = require("plenary.async")
+local a = require("neopyter.async")
 
 ---@class neopyter.AsyncRpcClient:neopyter.RpcClient
 ---@field tcp_client? uv_tcp_t # nil means not connect
@@ -33,7 +33,7 @@ function ProxyRpcClient:connect(address, on_connected)
     self.address = address or self.address
     assert(self.tcp_client == nil, "current connection exists, can't call connect, please disconnect first")
     assert(self.address, "Rpc client address is empty")
-    self.tcp_client = vim.loop.new_tcp()
+    self.tcp_client = vim.uv.new_tcp()
     local host, port = utils.parse_address(self.address)
     local err = a.uv.tcp_connect(self.tcp_client, host, port)
     if err ~= nil then
@@ -82,6 +82,7 @@ function ProxyRpcClient:gen_id()
 end
 
 ---send request to server
+---@async
 ---@param method string
 ---@param ... unknown # name
 ---@return unknown|nil

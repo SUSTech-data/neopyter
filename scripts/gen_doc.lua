@@ -9,7 +9,6 @@ vim.opt.packpath:append(vim.fs.joinpath(vim.fn.stdpath("data"), "site"))
 local __project_root__ = vim.fs.dirname(vim.fs.dirname(vim.fs.abspath(debug.getinfo(1).source:sub(2))))
 
 vim.pack.add({
-    "https://github.com/nvim-lua/plenary.nvim",
     "https://github.com/pysan3/pathlib.nvim",
     "https://github.com/nvim-neotest/nvim-nio",
     "https://github.com/kdheepak/panvimdoc",
@@ -30,6 +29,7 @@ local Path = require("pathlib")
 
 local nvim_gen_files = {
     "gen_vimdoc.lua",
+    "lint.lua",
     "util.lua",
     "luacats_grammar.lua",
     "luacats_parser.lua",
@@ -78,14 +78,19 @@ local config = {
             "jupyterlab.lua",
             "notebook.lua",
             "treesitter.lua",
+            "async.lua",
         },
         files = {
             "lua/neopyter/jupyter/jupyterlab.lua",
             "lua/neopyter/jupyter/notebook.lua",
             "lua/neopyter/treesitter.lua",
+            "lua/neopyter/async.lua",
         },
         fn_xform = function(fun)
             if fun.module and vim.endswith(fun.module, "treesitter.lua") then
+                return
+            end
+            if fun.module and vim.endswith(fun.module, "async.lua") then
                 return
             end
             if vim.startswith(fun.name, "treesitter") then
@@ -93,6 +98,13 @@ local config = {
                 fun.module = "lua.neopyter.jupyter.treesitter.lua"
                 return
             end
+
+            if vim.startswith(fun.name, "async") then
+                fun.name = vim.split(fun.name, "%.")[2]
+                fun.module = "lua.neopyter.jupyter.async.lua"
+                return
+            end
+
             if fun.classvar then
                 return
             end
@@ -109,6 +121,11 @@ local config = {
             if fun.module and vim.endswith(fun.module, "treesitter.lua") then
                 return "neopyter-treesitter-" .. fun.name
             end
+
+            if fun.module and vim.endswith(fun.module, "async.lua") then
+                return "neopyter-async-" .. fun.name
+            end
+
             local fn_sfx = fun.table and "" or "()"
             if fun.classvar then
                 return fmt("%s:%s%s", fun.classvar, fun.name, fn_sfx)
@@ -157,7 +174,7 @@ local function download_nvim_gen()
 
     for i, file in pairs(nvim_gen_files) do
         local cmd =
-            string.format("curl -s https://raw.githubusercontent.com/neovim/neovim/refs/heads/master/src/gen/%s -o %s", file, script_path / file)
+            string.format("curl -s https://raw.githubusercontent.com/neovim/neovim/refs/heads/release-0.12/src/gen/%s -o %s", file, script_path / file)
         vim.fn.system(cmd)
     end
     local entry = entry_script:fs_read()

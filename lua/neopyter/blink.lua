@@ -110,7 +110,7 @@ function neopyter:get_completions(context, callback)
             items = items,
             context = context,
         })
-    end, function() end)
+    end)
 end
 
 return neopyter

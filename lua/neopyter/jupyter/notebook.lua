@@ -1,6 +1,5 @@
 local utils = require("neopyter.utils")
 local a = require("neopyter.async")
-local api = a.api
 
 --- @brief Neopyter provide `neopyter.Notebook` represent remote `Notebook` instance,
 --- which provides some RPC-based API to control remote `Notebook` instance.
@@ -42,12 +41,14 @@ function Notebook:new(o)
 end
 
 ---attach autocmd. While connecting with jupyterlab, will full sync
+---which means parsing whole notebook and there is a remote associated notebook in jupyterlab
+---@async
 function Notebook:attach()
     local config = require("neopyter").config
     if self.augroup == nil then
-        self.augroup = api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
+        self.augroup = a.api.nvim_create_augroup(string.format("neopyter-notebook-%d", self.bufnr), { clear = true })
         if config.jupyter.scroll.enable then
-            api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            a.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
                 buffer = self.bufnr,
                 callback = function()
                     if not self:safe_sync() then
@@ -65,7 +66,7 @@ function Notebook:attach()
             })
         end
 
-        api.nvim_create_autocmd({ "BufWritePre" }, {
+        a.api.nvim_create_autocmd({ "BufWritePre" }, {
             buffer = self.bufnr,
             callback = function()
                 if self:safe_sync() then
@@ -74,7 +75,7 @@ function Notebook:attach()
             end,
             group = self.augroup,
         })
-        api.nvim_buf_attach(self.bufnr, false, {
+        a.api.nvim_buf_attach(self.bufnr, false, {
             on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
                 vim.schedule(function()
                     a.run(function()
@@ -108,7 +109,7 @@ end
 
 --- detach autocmd
 function Notebook:detach()
-    api.nvim_del_augroup_by_id(self.augroup)
+    a.api.nvim_del_augroup_by_id(self.augroup)
     -- detach buf
     self.augroup = nil
 end
@@ -119,6 +120,7 @@ function Notebook:is_attached()
     return self.augroup ~= nil
 end
 
+---@async
 function Notebook:is_connecting()
     if self.client:is_connecting() then
         if self._is_exist ~= nil then
@@ -149,13 +151,14 @@ function Notebook:get_parser()
 end
 
 function Notebook:parse()
-    local lines = api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
+    local lines = a.api.nvim_buf_get_lines(self.bufnr, 0, -1, true)
     local inotebook = self:get_parser():parse_notebook(lines)
     self.metadata = inotebook.metadata
     self.cells = inotebook.cells
 end
 
 ---internal request
+---@async
 ---@param method string
 ---@param ... any
 ---@return any
@@ -165,6 +168,7 @@ function Notebook:_request(method, ...)
 end
 
 ---is exist corresponding notebook in remote server
+---@async
 function Notebook:is_exist()
     local val = self:_request("isFileExist")
     self._is_exist = val
@@ -172,15 +176,18 @@ function Notebook:is_exist()
 end
 
 --- whether corresponding `.ipynb` file opened in jupyter lab or not
+---@async
 ---@return boolean
 function Notebook:is_open()
     return self:_request("isFileOpen")
 end
 
+---@async
 function Notebook:open()
     return self:_request("openFile")
 end
 
+---@async
 function Notebook:open_or_reveal()
     return self:_request("openOrReveal")
 end
@@ -192,11 +199,13 @@ function Notebook:activate()
 end
 
 ---active cell
+---@async
 function Notebook:activate_cell(idx)
     return self:_request("activateCell", idx)
 end
 
 ---scroll to item
+---@async
 ---@param idx number
 ---@param align? neopyter.ScrollToAlign
 ---@param margin? number
@@ -205,6 +214,7 @@ function Notebook:scroll_to_item(idx, align, margin)
     return self:_request("scrollToItem", idx, align, margin)
 end
 
+---@async
 function Notebook:get_cell_num()
     return self:_request("getCellNum")
 end
@@ -273,6 +283,7 @@ function Notebook:get_cell_source(index)
     return nil
 end
 
+---@async
 function Notebook:full_sync()
     local cells = vim.iter(self.cells)
         :map(function(cell)
@@ -287,6 +298,7 @@ function Notebook:full_sync()
 end
 
 ---partial sync
+---@async
 ---@param start_row integer
 ---@param old_end_row integer
 ---@param new_end_row integer
@@ -334,42 +346,51 @@ function Notebook:partial_sync(start_row, old_end_row, new_end_row)
 end
 
 ---save ipynb, same as `Ctrl+S` on jupyter lab
+---@async
 ---@return boolean
 function Notebook:save()
     return self:_request("save")
 end
 
+---@async
 function Notebook:run_selected_cell()
     return self:_request("runSelectedCell")
 end
 
+---@async
 function Notebook:run_all_above()
     return self:_request("runAllAbove")
 end
 
+---@async
 function Notebook:run_all_below()
     return self:_request("runAllBelow")
 end
 
+---@async
 function Notebook:run_all()
     return self:_request("runAll")
 end
 
+---@async
 function Notebook:restart_kernel()
     return self:_request("restartKernel")
 end
 
+---@async
 function Notebook:restart_run_all()
     return self:_request("restartRunAll")
 end
 
 ---set notebook mode
+---@async
 ---@param mode "command"|"edit"
 function Notebook:set_mode(mode)
     return self:_request("setMode", mode)
 end
 
 ---code completion
+---@async
 ---@param options neopyter.CompletionParams
 ---@return neopyter.CompletionItem[]
 function Notebook:complete(options)
@@ -378,6 +399,7 @@ function Notebook:complete(options)
 end
 
 ---code completion, but kernel complete only
+---@async
 ---@param source string
 ---@param offset number
 ---@return {label: string, type: string, insertText:string, source: string}[]
@@ -385,6 +407,7 @@ function Notebook:kernel_complete(source, offset)
     return self:_request("kernelComplete", source, offset)
 end
 
+---@async
 function Notebook:run_cell_and_insert_below()
     self:run_selected_cell()
     local idx = self:get_cursor_cell_pos()
@@ -399,6 +422,7 @@ end
 
 ---run selected cell and select next
 ---fallback to run_cell_and_insert_below if selecting last cell (the behavior is same with `notebook:run-cell-and-select-next`)
+---@async
 function Notebook:run_cell_and_select_next()
     local idx = self:get_cursor_cell_pos()
     if idx == #self.cells then

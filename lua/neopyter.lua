@@ -5,7 +5,6 @@ local jupyter = require("neopyter.jupyter")
 local JupyterLab = require("neopyter.jupyter.jupyterlab")
 local PercentParser = require("neopyter.parser.percent")
 local a = require("neopyter.async")
-local api = a.api
 
 ---@class neopyter.Option
 ---@field remote_address? string
@@ -29,7 +28,7 @@ local neopyter = {
     delay_setup_done = false
 }
 
-local is_windows = vim.loop.os_uname().version:match("Windows")
+local is_windows = vim.uv.os_uname().version:match("Windows")
 
 ---@nodoc
 ---@doc-capture default-config
@@ -99,7 +98,7 @@ function neopyter.setup(config)
 
     if neopyter.config.auto_attach then
         local augroup = vim.api.nvim_create_augroup("neopyter", { clear = true })
-        api.nvim_create_autocmd({ "BufReadPost" }, {
+        a.api.nvim_create_autocmd({ "BufReadPost" }, {
             group = augroup,
             pattern = neopyter.config.file_pattern,
             callback = function()

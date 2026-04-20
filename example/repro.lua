@@ -9,7 +9,6 @@ require("lazy.minit").repro({
             lazy = false,
             dir = "../",
             dependencies = {
-                "nvim-lua/plenary.nvim",
                 "AbaoFromCUG/websocket.nvim", -- for mode='direct'
             },
             ---@type neopyter.Option

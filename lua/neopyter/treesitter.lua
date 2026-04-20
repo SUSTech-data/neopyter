@@ -1,9 +1,4 @@
-local Path = require("plenary.path")
 local utils = require("neopyter.utils")
-local a = require("neopyter.async")
-local uv = a.uv
-local fn = a.fn
-local api = a.api
 
 --- @brief Neopyter don't depend on `nvim-treesitter`, this module provides some utility related to `treesitter`, such as capture and match.
 ---
@@ -29,30 +24,35 @@ end
 function treesitter.load_query(query, lang, name)
     lang = lang or "python"
 
-    ---@type Path
-    local cache_path = Path:new(a.fn.tempname()) / "neopyter"
+    local cache_path = vim.fs.joinpath(vim.fn.tempname(), "neopyter")
     if name then
-        cache_path = cache_path / name
+        cache_path = vim.fs.joinpath(cache_path, name)
     end
-    ---@type Path
-    local target_path = cache_path / "queries" / lang / (query .. ".scm")
+    local target_path = vim.fs.joinpath(cache_path, "queries", lang, query .. ".scm")
 
-    ---@type Path
     local plugin_path = utils.get_plugin_path()
-    ---@type Path
     local source_path
     if name then
-        source_path = plugin_path / "res" / "queries" / lang / query / (name .. ".scm")
+        source_path = vim.fs.joinpath(plugin_path, "res", "queries", lang, query, name .. ".scm")
     else
-        source_path = plugin_path / "res" / "queries" / lang / (query .. ".scm")
+        source_path = vim.fs.joinpath(plugin_path, "res", "queries", lang, query .. ".scm")
     end
-    if not source_path:exists() then
+    if not vim.uv.fs_stat(source_path) then
         utils.notify_warn(string.format("The query %s don't exists in %s", query, source_path))
         return
     end
 
-    target_path:parent():mkdir({ parents = true, exists_ok = true })
-    source_path:copy({ destination = target_path, parents = true })
+    local target_dir = vim.fs.dirname(target_path)
+    if target_dir then
+        vim.fn.mkdir(target_dir, "p")
+    end
+
+    local ok, err = vim.uv.fs_copyfile(source_path, target_path)
+    if not ok then
+        utils.notify_warn(string.format("Failed to copy query from %s to %s: %s", source_path, target_path, err))
+        return
+    end
+
     vim.opt.rtp:prepend(tostring(cache_path))
 end
 
@@ -82,13 +82,13 @@ function treesitter.iter_captures(query, source, capture, start, stop, loop)
 
     local iter = query:iter_captures(root, lang_tree:source(), start, stop)
     return vim.iter(function()
-        local ret = { iter() }
-        if #ret < 1 and loop then
-            iter = query:iter_captures(root, lang_tree:source(), start, stop)
-            ret = { iter() }
-        end
-        return unpack(ret)
-    end)
+            local ret = { iter() }
+            if #ret < 1 and loop then
+                iter = query:iter_captures(root, lang_tree:source(), start, stop)
+                ret = { iter() }
+            end
+            return unpack(ret)
+        end)
         :filter(function(id, node)
             ---- FIX: https://github.com/neovim/neovim/issues/31963
             if stop then
@@ -212,4 +212,5 @@ function treesitter.include_whitespace(bufnr, textobject, selection_mode)
     end
     return { start_row, start_col, end_row, end_col }
 end
+
 return treesitter

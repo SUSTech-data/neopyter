@@ -157,7 +157,7 @@ Ultimately, `Neopyter` can control `Juppyter lab`. `Neopyter` can implement abil
 
 - 📔JupyterLab >= 4.0.0
 - ✌️ Neovim latest stable version or nightly version
-  - 👍`nvim-lua/plenary.nvim`
+  - 🌲`tree-sitter` parser of `python` and `r`
   - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
 ## JupyterLab Extension
@@ -186,8 +186,6 @@ Configure `JupyterLab` in side panel
 {
     "SUSTech-data/neopyter",
     dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-treesitter/nvim-treesitter', -- neopyter don't depend on `nvim-treesitter`, but does depend on treesitter parser of python
       'AbaoFromCUG/websocket.nvim',  -- for mode='direct'
     },
 
