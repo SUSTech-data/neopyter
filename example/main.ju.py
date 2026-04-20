@@ -1,7 +1,6 @@
 # %%
 def main():
-   print("Hello from example!")
-
+   print("Hello from neopyter!")
 
 # %%
 main()

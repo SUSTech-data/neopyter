@@ -20,9 +20,17 @@ function M.check()
         local languages = { "python", "r", "markdown" }
         vim.iter(languages):each(function(lang)
             if vim.treesitter.language.add(lang) then
-                health.ok(string.format("parser: %s parser is installed", lang))
+                health.ok(string.format("tree-sitter parser: %s is installed", lang))
             else
-                health.warn(string.format("parser: %s parser is not installed, please install via `:TSInstall %s`", lang, lang))
+                health.warn(string.format("tree-sitter parser: %s is not installed; please install via `:TSInstall %s`", lang, lang))
+            end
+            if lang == "markdown" then
+                return
+            end
+            if neopyter.parser[lang] then
+                health.ok(string.format("tree-sitter query: %s is set up", lang))
+            else
+                health.warn(string.format("tree-sitter query: %s is not set up yet; please set up neopyter after the tree-sitter parser is available", lang))
             end
         end)
 

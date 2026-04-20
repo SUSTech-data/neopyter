@@ -25,7 +25,9 @@ local api = a.api
 ---@nodoc
 ---@class neopyter.Neopyter
 ---@field parser {[string]: neopyter.Parser} Parser of language
-local neopyter = {}
+local neopyter = {
+    delay_setup_done = false
+}
 
 local is_windows = vim.loop.os_uname().version:match("Windows")
 
@@ -90,12 +92,6 @@ function neopyter.setup(config)
         require("neopyter.neoconf").setup()
     end
 
-    neopyter.load_parser()
-
-    highlight.setup()
-    textobject.setup()
-
-    injection.setup()
 
     jupyter.jupyterlab = JupyterLab:new({
         address = neopyter.config.remote_address,
@@ -107,6 +103,7 @@ function neopyter.setup(config)
             group = augroup,
             pattern = neopyter.config.file_pattern,
             callback = function()
+                neopyter.delay_setup()
                 vim.api.nvim_del_augroup_by_id(augroup)
                 jupyter.jupyterlab:attach()
                 if neopyter.config.auto_connect then
@@ -115,6 +112,17 @@ function neopyter.setup(config)
             end,
         })
     end
+end
+
+function neopyter.delay_setup()
+    if neopyter.delay_setup_done then
+        return
+    end
+    neopyter.load_parser()
+    highlight.setup()
+    textobject.setup()
+    injection.setup()
+    neopyter.delay_setup_done = true
 end
 
 ---load parser
