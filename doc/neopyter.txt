@@ -1,5 +1,5 @@
 *neopyter.txt*
-                                For NVIM v0.13.0    Last change: 2026 April 20
+                                For NVIM v0.13.0    Last change: 2026 April 21
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
@@ -73,7 +73,7 @@ SPECIFICATIONS                          *neopyter-introduction-specifications*
 REQUIREMENTS                              *neopyter-installation-requirements*
 
 - 📔JupyterLab >= 4.0.0
-- ✌️ Neovim latest stable version or nightly version
+- ✌️ Neovim latest stable version or nightly version, for `v0.11.*` please use `v0.11-compat` branch.
     - 🌲`tree-sitter` parser of `python` and `r`
     - 🤏`AbaoFromCUG/websocket.nvim` (optional for `mode="direct"`)
 
