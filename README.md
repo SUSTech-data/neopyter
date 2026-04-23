@@ -1,3 +1,12 @@
+
+<!-- panvimdoc-ignore-start -->
+<h1><div align="center">
+ <img alt="neopyter" width="300px" height="auto" src="./doc/neopyter-with-name.png">
+</div></h1>
+
+
+<!-- panvimdoc-ignore-end -->
+
 # Introduction
 
 The bridge between Neovim and Jupyter Lab, edit in Neovim and preview/run in Jupyter Lab.
