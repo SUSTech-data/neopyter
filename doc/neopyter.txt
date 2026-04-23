@@ -1,5 +1,5 @@
 *neopyter.txt*
-                                For NVIM v0.13.0    Last change: 2026 April 21
+                                For NVIM v0.13.0    Last change: 2026 April 23
 
 ==============================================================================
 Table of Contents                                 *neopyter-table-of-contents*
