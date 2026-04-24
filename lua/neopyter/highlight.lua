@@ -101,9 +101,9 @@ local function highlight_node(node, hl_group, mode, include_whitespace, priority
 end
 
 local function update_separator_highlight(buf)
-    api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
+    a.api.nvim_buf_clear_namespace(0, ns_highlight, 0, -1)
 
-    api.nvim_set_hl(ns_highlight, "NeopyterSeparator", { link = "CursorLine" })
+    a.api.nvim_set_hl(ns_highlight, "NeopyterSeparator", { link = "CursorLine" })
 
     local lang = ts.get_buf_lang(buf)
     local query = require("neopyter").parser[lang].separator_query
@@ -117,7 +117,6 @@ end
 ---@async
 function M.attach(buf, augroup)
     local config = require("neopyter").config.highlight
-    local updated = false
     if not config or not config.enable then
         return
     end

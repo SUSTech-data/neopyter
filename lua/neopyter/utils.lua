@@ -130,7 +130,7 @@ end
 function M.throttle(fn, timeout, ...)
     timeout = timeout or 20
     ---@cast timeout -nil
-    local timer = assert(a.uv.new_timer())
+    local timer = assert(vim.uv.new_timer())
     local args = { ... }
     return function()
         if timer:is_active() then

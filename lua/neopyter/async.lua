@@ -191,9 +191,6 @@ add("udp_recv_start", 2)
 add("getaddrinfo", 4)
 add("getnameinfo", 2)
 
--- timer
-add("new_timer", 0)
-
 
 async.api = vim.api
 async.api = setmetatable({}, {
@@ -211,6 +208,7 @@ async.api = setmetatable({}, {
 ---@param opts any
 ---@see vim.api.nvim_create_autocmd
 async.api.nvim_create_autocmd = function(event, opts)
+    async.safe_async()
     if opts ~= nil and vim.is_callable(opts.callback) then
         local callback = opts.callback
         opts.callback = function(...)
