@@ -1,9 +1,9 @@
-local a = require("vim._async")
+local a = vim.async or require("vim._async")
 
 
 
 --- @brief Neopyter's async module, which provides async functions and utilities for Neopyter.
---- Which is built on top of native async support (`vim._async`) in Neovim, and provides a more convenient API for users to use async functions in Neopyter.
+--- Which is built on top of native async support in Neovim, and provides a more convenient API for users to use async functions in Neopyter.
 --- The API of neopyter are mostly async, and must be called within an `async.run` context to guarantee the order of execution.
 ---
 --- Example: Call API in async context
@@ -48,7 +48,12 @@ function async.run(func, on_finish)
             end
         end
     end
-    a.run(func, on_finish)
+    if vim.async then
+        -- Keep background work independent of the calling task.
+        a.run(func):detach():on_complete(on_finish)
+    else
+        a.run(func, on_finish)
+    end
 end
 
 ---run function in async context, until timeout or complete
